@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #F0F1F5;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F7F8FA;
+  --color-surface-3: #EDEEF2;
+  --color-accent: #4E8CFF;
+  --color-accent-hover: #3A7BF5;
+  --color-accent-lt: rgba(78,140,255,0.08);
+  --color-accent-md: rgba(78,140,255,0.15);
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #333333;
+  --color-text-dim: #666666;
+  --color-text-faint: #999999;
+  --color-text-muted: #BBBBBB;
+  --color-border: #DDDEE3;
+  --color-border-md: #CCCED5;
+  --color-border-lt: #E8E9ED;
+  --color-success: #059669;
+  --color-error: #DC2626;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Interactive elements */
+button, [role="button"], a, select, label[for], input[type="checkbox"], input[type="radio"] {
+  cursor: pointer;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CCC; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #AAA; }

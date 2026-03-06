@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PersonaOutput",
+  "type": "object",
+  "required": ["candidates", "meta"],
+  "properties": {
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "score", "spec_long", "spec_short", "natural_long", "natural_short"],
+        "properties": {
+          "id": {"type": "string"},
+          "score": {"type": "number"},
+          "tags": {"type": "array", "items": {"type": "string"}},
+          "sources": {"type": "array", "items": {"type": "string"}},
+          "spec_long": {"$ref": "#/$defs/personaSpec"},
+          "spec_short": {"$ref": "#/$defs/personaSpec"},
+          "natural_long": {"$ref": "#/$defs/localizedText"},
+          "natural_short": {"$ref": "#/$defs/localizedText"}
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "field": {"type": "string"},
+          "zh": {"type": "string"},
+          "en": {"type": "string"}
+        }
+      }
+    },
+    "meta": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "localizedText": {
+      "type": "object",
+      "required": ["zh", "en"],
+      "properties": {
+        "zh": {"type": "string"},
+        "en": {"type": "string"}
+      }
+    },
+    "personaSpec": {
+      "type": "object",
+      "required": ["background", "personality", "voice"],
+      "properties": {
+        "identity": {"$ref": "#/$defs/localizedText"},
+        "background": {"$ref": "#/$defs/localizedText"},
+        "personality": {"$ref": "#/$defs/localizedText"},
+        "voice": {"$ref": "#/$defs/localizedText"},
+        "goals": {"$ref": "#/$defs/localizedText"},
+        "relationships": {"$ref": "#/$defs/localizedText"},
+        "conflicts": {"$ref": "#/$defs/localizedText"},
+        "habits": {"$ref": "#/$defs/localizedText"},
+        "skills": {"$ref": "#/$defs/localizedText"},
+        "values": {"$ref": "#/$defs/localizedText"},
+        "taboos": {"$ref": "#/$defs/localizedText"},
+        "usage_notes": {"$ref": "#/$defs/localizedText"},
+        "tags": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
