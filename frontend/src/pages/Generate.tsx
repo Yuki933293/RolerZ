@@ -146,7 +146,19 @@ export default function Generate() {
                 >
                   −
                 </button>
-                <span className="w-8 text-center text-[0.84rem] font-semibold text-text-primary select-none">{config.count}</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={config.count}
+                  onChange={e => {
+                    const v = e.target.value.replace(/\D/g, '');
+                    if (v === '') return;
+                    const n = Math.min(10, Math.max(1, parseInt(v, 10)));
+                    config.setCount(n);
+                  }}
+                  onBlur={() => { if (config.count < 1) config.setCount(1); if (config.count > 10) config.setCount(10); }}
+                  className="w-10 text-center text-[0.84rem] font-semibold text-text-primary outline-none bg-transparent border-x border-border py-1"
+                />
                 <button
                   onClick={() => { if (config.count < 10) config.setCount(config.count + 1); }}
                   disabled={config.count >= 10}
