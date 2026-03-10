@@ -164,6 +164,7 @@ const translations = {
     sidebarOther: '其他',
     myCharacters2: '我的角色',
     help: '帮助',
+    modelSettings: '模型设置',
 
     // Field labels
     fieldAppearance: '外貌设定',
@@ -339,6 +340,7 @@ const translations = {
     sidebarOther: '其他',
     myCharacters2: '我的角色',
     help: '幫助',
+    modelSettings: '模型設置',
 
     // Field labels
     fieldAppearance: '外貌設定',
@@ -514,6 +516,7 @@ const translations = {
     sidebarOther: 'Other',
     myCharacters2: 'My Characters',
     help: 'Help',
+    modelSettings: 'Model Settings',
 
     // Field labels
     fieldAppearance: 'Appearance',
