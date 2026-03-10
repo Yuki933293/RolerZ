@@ -165,6 +165,8 @@ const translations = {
     myCharacters2: '我的角色',
     help: '帮助',
     modelSettings: '模型设置',
+    themeMode: '深色模式',
+    exportData: '导出数据',
 
     // Field labels
     fieldAppearance: '外貌设定',
@@ -341,6 +343,8 @@ const translations = {
     myCharacters2: '我的角色',
     help: '幫助',
     modelSettings: '模型設置',
+    themeMode: '深色模式',
+    exportData: '導出數據',
 
     // Field labels
     fieldAppearance: '外貌設定',
@@ -517,6 +521,8 @@ const translations = {
     myCharacters2: 'My Characters',
     help: 'Help',
     modelSettings: 'Model Settings',
+    themeMode: 'Dark Mode',
+    exportData: 'Export Data',
 
     // Field labels
     fieldAppearance: 'Appearance',

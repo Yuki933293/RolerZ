@@ -22,6 +22,7 @@ interface ConfigStore {
   fetchedModels: string[];
   language: string;
   count: number;
+  theme: 'light' | 'dark';
   providerConfigs: Record<string, ProviderConfig>;
 
   setProvider: (p: string) => void;
@@ -34,6 +35,8 @@ interface ConfigStore {
   setFetchedModels: (m: string[]) => void;
   setLanguage: (l: string) => void;
   setCount: (c: number) => void;
+  setTheme: (t: 'light' | 'dark') => void;
+  toggleTheme: () => void;
   saveConfig: () => void;
   loadFromServer: () => Promise<void>;
   saveToServer: () => Promise<void>;
@@ -58,6 +61,7 @@ const DEFAULTS = {
   fetchedModels: [] as string[],
   language: 'zh',
   count: 3,
+  theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
   providerConfigs: {} as Record<string, ProviderConfig>,
 };
 
@@ -149,6 +153,15 @@ export const useConfig = create<ConfigStore>((set, get) => ({
         saveUserConfig(serializeForServer(state)).catch(() => {});
       }
     }, 0);
+  },
+  setTheme: (t) => {
+    set({ theme: t });
+    localStorage.setItem('theme', t);
+    document.documentElement.setAttribute('data-theme', t);
+  },
+  toggleTheme: () => {
+    const next = get().theme === 'light' ? 'dark' : 'light';
+    get().setTheme(next);
   },
 
   saveConfig: () => {

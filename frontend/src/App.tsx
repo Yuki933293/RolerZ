@@ -22,6 +22,8 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
   const navigate = useNavigate();
   const language = useConfig(s => s.language);
   const setLanguage = useConfig(s => s.setLanguage);
+  const theme = useConfig(s => s.theme);
+  const toggleTheme = useConfig(s => s.toggleTheme);
   const { token, username, logout, login } = useAuth();
   const t = useT(language);
 
@@ -147,43 +149,81 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-border rounded-xl shadow-lg py-1 min-w-[140px]">
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-border rounded-xl shadow-lg py-1 min-w-[180px]">
                     <div className="px-3 py-2 border-b border-border">
                       <div className="text-[0.78rem] font-semibold text-text-primary">{username}</div>
                       <div className="text-[0.65rem] text-success">{t('loggedIn') as string}</div>
                     </div>
+
+                    {/* Theme toggle */}
+                    <div className="px-3 py-2 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-[0.78rem] text-text-dim">
+                        {theme === 'dark' ? (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                          </svg>
+                        ) : (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="5" />
+                            <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                            <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                          </svg>
+                        )}
+                        {t('themeMode') as string}
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleTheme(); }}
+                        className={`relative w-9 h-5 rounded-full transition-colors ${theme === 'dark' ? 'bg-accent' : 'bg-border-md'}`}
+                      >
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${theme === 'dark' ? 'left-[18px]' : 'left-0.5'}`} />
+                      </button>
+                    </div>
+
+                    <div className="border-t border-border my-1" />
+
+                    {/* Account settings */}
                     <button
                       onClick={() => { setShowUserMenu(false); navigate('/profile'); }}
-                      className="w-full text-left px-3 py-2 text-[0.78rem] text-text-dim hover:bg-surface-2 transition-colors flex items-center gap-2"
-                    >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                      {t('myProfile') as string}
-                    </button>
-                    <button
-                      onClick={() => { setShowUserMenu(false); navigate('/model'); }}
                       className="w-full text-left px-3 py-2 text-[0.78rem] text-text-dim hover:bg-surface-2 transition-colors flex items-center gap-2"
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
-                      {t('modelSettings') as string}
+                      {t('accountSettings') as string}
                     </button>
+
+                    {/* Export data */}
                     <button
-                      onClick={() => { setShowUserMenu(false); navigate('/help'); }}
+                      onClick={async () => {
+                        setShowUserMenu(false);
+                        try {
+                          const { getHistory } = await import('./api/client');
+                          const history = await getHistory(9999, 0);
+                          const blob = new Blob([JSON.stringify(history, null, 2)], { type: 'application/json' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `persona-forge-export-${new Date().toISOString().split('T')[0]}.json`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        } catch { /* ignore */ }
+                      }}
                       className="w-full text-left px-3 py-2 text-[0.78rem] text-text-dim hover:bg-surface-2 transition-colors flex items-center gap-2"
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
                       </svg>
-                      {t('help') as string}
+                      {t('exportData') as string}
                     </button>
+
                     <div className="border-t border-border my-1" />
+
+                    {/* Logout */}
                     <button
                       onClick={() => { logout(); setShowUserMenu(false); }}
                       className="w-full text-left px-3 py-2 text-[0.78rem] text-error/70 hover:bg-error/5 transition-colors flex items-center gap-2"
@@ -304,6 +344,12 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
 export default function App() {
   const token = useAuth(s => s.token);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Apply saved theme on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  }, []);
 
   useEffect(() => {
     if (token) {
