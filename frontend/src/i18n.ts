@@ -141,6 +141,30 @@ const translations = {
     pwdMismatch: '两次输入的密码不一致',
     pwdChanged: '密码修改成功',
 
+    // Inspirations page
+    inspirationLibrary: '灵感库',
+    inspirationLibraryDesc: '浏览和管理全部灵感卡片，点击查看详情或编辑自定义内容',
+
+    // Help page
+    helpTitle: '帮助',
+    helpDesc: '快速了解如何使用角色锻造台',
+    helpQuickStart: '快速上手',
+    helpStep1Title: '配置模型',
+    helpStep1Desc: '前往「模型供应商」页面，选择 AI 提供商并填写 API 密钥，保存配置',
+    helpStep2Title: '创建角色',
+    helpStep2Desc: '在「创建」页面输入角色概念，可选择灵感卡辅助生成，点击生成按钮',
+    helpStep3Title: '查看结果',
+    helpStep3Desc: '生成的角色卡包含详细属性和自然语言描述，可一键复制文本或 JSON',
+    helpFaq: '常见问题',
+    helpFooter: '如有其他问题，请访问项目 GitHub 仓库提交 Issue',
+
+    // Sidebar sections
+    sidebarCreate: '创作',
+    sidebarManage: '管理',
+    sidebarOther: '其他',
+    myCharacters2: '我的角色',
+    help: '帮助',
+
     // Field labels
     fieldAppearance: '外貌设定',
     fieldBackground: '背景故事',
@@ -292,6 +316,30 @@ const translations = {
     pwdMismatch: '兩次輸入的密碼不一致',
     pwdChanged: '密碼修改成功',
 
+    // Inspirations page
+    inspirationLibrary: '靈感庫',
+    inspirationLibraryDesc: '瀏覽和管理全部靈感卡片，點擊查看詳情或編輯自定義內容',
+
+    // Help page
+    helpTitle: '幫助',
+    helpDesc: '快速了解如何使用角色鍛造台',
+    helpQuickStart: '快速上手',
+    helpStep1Title: '配置模型',
+    helpStep1Desc: '前往「模型供應商」頁面，選擇 AI 提供商並填寫 API 密鑰，保存配置',
+    helpStep2Title: '創建角色',
+    helpStep2Desc: '在「創建」頁面輸入角色概念，可選擇靈感卡輔助生成，點擊生成按鈕',
+    helpStep3Title: '查看結果',
+    helpStep3Desc: '生成的角色卡包含詳細屬性和自然語言描述，可一鍵複製文本或 JSON',
+    helpFaq: '常見問題',
+    helpFooter: '如有其他問題，請訪問項目 GitHub 倉庫提交 Issue',
+
+    // Sidebar sections
+    sidebarCreate: '創作',
+    sidebarManage: '管理',
+    sidebarOther: '其他',
+    myCharacters2: '我的角色',
+    help: '幫助',
+
     // Field labels
     fieldAppearance: '外貌設定',
     fieldBackground: '背景故事',
@@ -442,6 +490,30 @@ const translations = {
     pwdTooShort: 'Password must be at least 4 characters',
     pwdMismatch: 'Passwords do not match',
     pwdChanged: 'Password changed successfully',
+
+    // Inspirations page
+    inspirationLibrary: 'Inspiration Library',
+    inspirationLibraryDesc: 'Browse and manage all inspiration cards. Click to view details or edit custom content',
+
+    // Help page
+    helpTitle: 'Help',
+    helpDesc: 'Learn how to use Character Forge',
+    helpQuickStart: 'Quick Start',
+    helpStep1Title: 'Configure Model',
+    helpStep1Desc: 'Go to "Model Provider" page, select an AI provider, enter your API key, and save',
+    helpStep2Title: 'Create Character',
+    helpStep2Desc: 'Enter a character concept on the "Create" page, optionally select inspiration cards, then click Generate',
+    helpStep3Title: 'View Results',
+    helpStep3Desc: 'Generated character cards include detailed attributes and natural language descriptions. Copy as text or JSON',
+    helpFaq: 'FAQ',
+    helpFooter: 'For more questions, please visit the project GitHub repository and submit an Issue',
+
+    // Sidebar sections
+    sidebarCreate: 'Create',
+    sidebarManage: 'Manage',
+    sidebarOther: 'Other',
+    myCharacters2: 'My Characters',
+    help: 'Help',
 
     // Field labels
     fieldAppearance: 'Appearance',

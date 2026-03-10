@@ -5,6 +5,8 @@ import Generate from './pages/Generate';
 import ModelProvider from './pages/ModelProvider';
 import Discover from './pages/Discover';
 import Profile from './pages/Profile';
+import Inspirations from './pages/Inspirations';
+import Help from './pages/Help';
 import { useAuth } from './stores/useAuth';
 import { useConfig } from './stores/useConfig';
 import { login as apiLogin, register as apiRegister } from './api/client';
@@ -302,6 +304,8 @@ export default function App() {
                 <Route path="/" element={<Generate />} />
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/model" element={<ModelProvider />} />
+                <Route path="/inspirations" element={<Inspirations />} />
+                <Route path="/help" element={<Help />} />
                 <Route path="/profile" element={<Profile />} />
               </Routes>
             </div>

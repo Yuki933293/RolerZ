@@ -1,0 +1,138 @@
+import { useState } from 'react';
+import { useConfig } from '../stores/useConfig';
+import { useT } from '../i18n';
+
+interface FaqItem {
+  q: string;
+  a: string;
+}
+
+export default function Help() {
+  const lang = useConfig(s => s.language);
+  const t = useT(lang);
+  const isZh = lang === 'zh' || lang === 'zh-Hant';
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const steps = [
+    {
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+          <line x1="12" y1="22.08" x2="12" y2="12" />
+        </svg>
+      ),
+      title: t('helpStep1Title') as string,
+      desc: t('helpStep1Desc') as string,
+    },
+    {
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" />
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <path d="M16 3l1 2.5L19.5 7l-2.5 1L16 10.5 14.5 8 12 7l2.5-1z" />
+        </svg>
+      ),
+      title: t('helpStep2Title') as string,
+      desc: t('helpStep2Desc') as string,
+    },
+    {
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <line x1="3" y1="9" x2="21" y2="9" />
+          <line x1="9" y1="21" x2="9" y2="9" />
+        </svg>
+      ),
+      title: t('helpStep3Title') as string,
+      desc: t('helpStep3Desc') as string,
+    },
+  ];
+
+  const faqs: FaqItem[] = isZh ? [
+    { q: '支持哪些 AI 模型？', a: '目前支持 Claude (Anthropic)、OpenAI (GPT)、DeepSeek，以及任何 OpenAI 兼容接口的自定义模型。' },
+    { q: '什么是灵感卡？', a: '灵感卡是预设的角色特质模板，涵盖性格、表达方式、情感模式等 8 个维度。选择灵感卡可以引导 AI 生成更符合你期望的角色。登录后还可以编辑和自定义灵感卡内容。' },
+    { q: '自由创作和引导式构建有什么区别？', a: '自由创作：输入角色概念 + 选择灵感卡，一键生成角色卡。适合有明确想法的用户。\n引导式构建：AI 会逐步提问，帮你完善外貌、背景、性格等维度，适合从零开始构思角色。' },
+    { q: '生成的角色卡包含什么？', a: '每张角色卡包含：角色名、性格特征、背景故事、外貌描述、说话方式、开场白、内心冲突等维度，以及一段自然语言的角色描述文本。支持一键复制文本或 JSON 格式。' },
+    { q: '我的数据安全吗？', a: '你的 API 密钥和生成历史都保存在你部署的服务器上，不会发送到第三方。密码使用 PBKDF2 加盐哈希存储。' },
+    { q: '候选数量有什么作用？', a: '候选数量决定每次生成几个不同的角色方案（最多 10 个）。多个候选可以让你比较不同的角色诠释，选择最满意的一个。' },
+  ] : [
+    { q: 'Which AI models are supported?', a: 'Currently supports Claude (Anthropic), OpenAI (GPT), DeepSeek, and any custom model with an OpenAI-compatible API.' },
+    { q: 'What are Inspiration Cards?', a: 'Inspiration cards are preset character trait templates covering 8 dimensions: personality, expression, emotion, etc. Selecting them guides the AI to generate characters matching your expectations. Logged-in users can also edit and customize card content.' },
+    { q: 'What\'s the difference between Free Create and Guided Build?', a: 'Free Create: Enter a concept + select inspiration cards, generate in one click. Great for users with clear ideas.\nGuided Build: AI asks step-by-step questions about appearance, background, personality, etc. Ideal for building characters from scratch.' },
+    { q: 'What does a generated character card include?', a: 'Each card includes: name, personality, background story, appearance, speech style, opening line, inner conflicts, and a natural language description. Supports one-click copy as text or JSON.' },
+    { q: 'Is my data secure?', a: 'Your API keys and generation history are stored on your deployed server and never sent to third parties. Passwords use PBKDF2 salted hashing.' },
+    { q: 'What does candidate count do?', a: 'Candidate count determines how many different character variants are generated per request (up to 10). Multiple candidates let you compare different interpretations and pick your favorite.' },
+  ];
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="mb-6 pb-4 border-b border-border">
+        <div className="flex items-center gap-3.5 mb-1.5">
+          <h1 className="text-[1.75rem] font-light tracking-wide" style={{ fontFamily: "'Noto Serif SC', 'Inter', serif" }}>
+            {t('helpTitle') as string}
+          </h1>
+          <span className="bg-gradient-to-r from-green-50 to-emerald-50 text-emerald-600 font-mono text-[0.62rem] tracking-widest px-3 py-1 rounded-full font-semibold border border-emerald-200">
+            GUIDE
+          </span>
+        </div>
+        <p className="text-text-dim text-[0.88rem]">{t('helpDesc') as string}</p>
+      </div>
+
+      {/* Quick start steps */}
+      <div className="mb-8">
+        <h2 className="text-[0.92rem] font-semibold text-text-primary mb-4">{t('helpQuickStart') as string}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {steps.map((step, i) => (
+            <div key={i} className="bg-white border border-border rounded-xl p-5 relative">
+              <div className="absolute -top-3 -left-1 w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-[0.75rem] font-bold shadow-sm">
+                {i + 1}
+              </div>
+              <div className="flex items-center gap-2.5 mb-2.5 mt-1">
+                <span className="text-accent">{step.icon}</span>
+                <span className="text-[0.88rem] font-semibold text-text-primary">{step.title}</span>
+              </div>
+              <p className="text-[0.82rem] text-text-dim leading-relaxed">{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* FAQ */}
+      <div>
+        <h2 className="text-[0.92rem] font-semibold text-text-primary mb-4">{t('helpFaq') as string}</h2>
+        <div className="space-y-2">
+          {faqs.map((faq, i) => (
+            <div key={i} className="bg-white border border-border rounded-xl overflow-hidden">
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                className="w-full text-left px-5 py-3.5 flex items-center justify-between hover:bg-surface-2/50 transition-colors"
+              >
+                <span className="text-[0.88rem] font-medium text-text-primary">{faq.q}</span>
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  className={`text-text-faint transition-transform shrink-0 ml-3 ${openFaq === i ? 'rotate-90' : ''}`}
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+              {openFaq === i && (
+                <div className="px-5 pb-4 text-[0.84rem] text-text-dim leading-relaxed border-t border-border pt-3 whitespace-pre-line">
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer note */}
+      <div className="mt-8 p-4 bg-surface-2 border border-border rounded-xl text-center">
+        <p className="text-[0.82rem] text-text-dim">
+          {t('helpFooter') as string}
+        </p>
+      </div>
+    </div>
+  );
+}

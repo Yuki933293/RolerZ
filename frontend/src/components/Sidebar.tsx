@@ -25,6 +25,29 @@ const IconDiscover = () => (
   </svg>
 );
 
+const IconInspiration = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <line x1="3" y1="9" x2="21" y2="9" />
+    <line x1="9" y1="21" x2="9" y2="9" />
+  </svg>
+);
+
+const IconProfile = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const IconHelp = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </svg>
+);
+
 const PROVIDER_NAMES: Record<string, string> = {
   claude: 'Claude',
   openai: 'OpenAI',
@@ -38,10 +61,28 @@ export default function Sidebar() {
   const config = useConfig();
   const t = useT(config.language);
 
-  const NAV_ITEMS = [
-    { id: '/', label: t('create') as string, icon: <IconGenerate /> },
-    { id: '/model', label: t('modelProvider') as string, icon: <IconCube /> },
-    { id: '/discover', label: t('discover') as string, icon: <IconDiscover /> },
+  const NAV_SECTIONS = [
+    {
+      label: t('sidebarCreate') as string,
+      items: [
+        { id: '/', label: t('create') as string, icon: <IconGenerate /> },
+        { id: '/inspirations', label: t('inspirationLibrary') as string, icon: <IconInspiration /> },
+        { id: '/discover', label: t('discover') as string, icon: <IconDiscover /> },
+      ],
+    },
+    {
+      label: t('sidebarManage') as string,
+      items: [
+        { id: '/profile', label: t('myCharacters2') as string, icon: <IconProfile /> },
+        { id: '/model', label: t('modelProvider') as string, icon: <IconCube /> },
+      ],
+    },
+    {
+      label: t('sidebarOther') as string,
+      items: [
+        { id: '/help', label: t('help') as string, icon: <IconHelp /> },
+      ],
+    },
   ];
 
   const provName = PROVIDER_NAMES[config.provider] || config.provider;
@@ -51,28 +92,32 @@ export default function Sidebar() {
     <aside className="w-60 h-full bg-white border-r border-border flex flex-col">
       {/* Navigation */}
       <div className="px-3 py-3 flex-1">
-        <div className="text-[0.68rem] font-semibold text-text-faint tracking-wider uppercase mb-2 px-2">
-          {t('nav') as string}
-        </div>
-        <nav className="space-y-0.5">
-          {NAV_ITEMS.map(item => {
-            const isActive = location.pathname === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => navigate(item.id)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg text-[0.84rem] font-medium transition-colors ${
-                  isActive
-                    ? 'bg-accent/15 text-accent font-semibold'
-                    : 'text-text-dim hover:bg-surface-3'
-                }`}
-              >
-                <span className="inline-flex mr-2.5 align-middle">{item.icon}</span>
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
+        {NAV_SECTIONS.map((section, si) => (
+          <div key={si} className={si > 0 ? 'mt-4' : ''}>
+            <div className="text-[0.68rem] font-semibold text-text-faint tracking-wider uppercase mb-2 px-2">
+              {section.label}
+            </div>
+            <nav className="space-y-0.5">
+              {section.items.map(item => {
+                const isActive = location.pathname === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => navigate(item.id)}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg text-[0.84rem] font-medium transition-colors ${
+                      isActive
+                        ? 'bg-accent/15 text-accent font-semibold'
+                        : 'text-text-dim hover:bg-surface-3'
+                    }`}
+                  >
+                    <span className="inline-flex mr-2.5 align-middle">{item.icon}</span>
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        ))}
 
         <div className="border-t border-border my-3" />
 
