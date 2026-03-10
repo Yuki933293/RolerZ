@@ -153,12 +153,6 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
                       <div className="text-[0.65rem] text-success">{t('loggedIn') as string}</div>
                     </div>
                     <button
-                      onClick={() => { setShowUserMenu(false); navigate('/profile'); }}
-                      className="w-full text-left px-3 py-2 text-[0.78rem] text-text-dim hover:bg-surface-2 transition-colors"
-                    >
-                      {t('myProfile') as string}
-                    </button>
-                    <button
                       onClick={() => { logout(); setShowUserMenu(false); }}
                       className="w-full text-left px-3 py-2 text-[0.78rem] text-text-dim hover:bg-surface-2 transition-colors"
                     >
