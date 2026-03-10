@@ -58,7 +58,7 @@ export default function Help() {
     { q: '候选数量有什么作用？', a: '候选数量决定每次生成几个不同的角色方案（最多 10 个）。多个候选可以让你比较不同的角色诠释，选择最满意的一个。' },
   ] : [
     { q: 'Which AI models are supported?', a: 'Currently supports Claude (Anthropic), OpenAI (GPT), DeepSeek, and any custom model with an OpenAI-compatible API.' },
-    { q: 'What are Inspiration Cards?', a: 'Inspiration cards are preset character trait templates covering 8 dimensions: personality, expression, emotion, etc. Selecting them guides the AI to generate characters matching your expectations. Logged-in users can also edit and customize card content.' },
+    { q: 'What are Inspiration Cards?', a: 'Inspiration cards are preset character trait templates covering 11 dimensions: personality, speech style, emotion, appearance, scenario, quirk, etc. Selecting them guides the AI to generate characters matching your expectations. Logged-in users can also edit and customize card content.' },
     { q: 'What\'s the difference between Free Create and Guided Build?', a: 'Free Create: Enter a concept + select inspiration cards, generate in one click. Great for users with clear ideas.\nGuided Build: AI asks step-by-step questions about appearance, background, personality, etc. Ideal for building characters from scratch.' },
     { q: 'What does a generated character card include?', a: 'Each card includes: name, personality, background story, appearance, speech style, opening line, inner conflicts, and a natural language description. Supports one-click copy as text or JSON.' },
     { q: 'Is my data secure?', a: 'Your API keys and generation history are stored on your deployed server and never sent to third parties. Passwords use PBKDF2 salted hashing.' },

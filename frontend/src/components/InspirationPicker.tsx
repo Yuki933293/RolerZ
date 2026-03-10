@@ -9,25 +9,30 @@ import CardEditModal from './CardEditModal';
 import { useT } from '../i18n';
 
 const DEFAULT_CATEGORIES: Record<string, { zh: string; en: string }> = {
-  personality:  { zh: '性格核心', en: 'Personality Core' },
-  expression:   { zh: '表达方式', en: 'Expression Style' },
+  personality:  { zh: '性格特质', en: 'Personality' },
+  speech:       { zh: '语言风格', en: 'Speech Style' },
   emotion:      { zh: '情感模式', en: 'Emotion Pattern' },
-  relationship: { zh: '关系倾向', en: 'Relationship Style' },
+  relationship: { zh: '关系倾向', en: 'Relationship' },
   background:   { zh: '成长背景', en: 'Background' },
-  behavior:     { zh: '行为习惯', en: 'Behavior Pattern' },
-  motivation:   { zh: '内在动机', en: 'Core Motivation' },
-  conflict:     { zh: '冲突风格', en: 'Conflict Style' },
+  behavior:     { zh: '行为习惯', en: 'Behavior' },
+  motivation:   { zh: '内在动机', en: 'Motivation' },
+  conflict:     { zh: '冲突应对', en: 'Conflict Style' },
+  appearance:   { zh: '外貌风格', en: 'Appearance' },
+  scenario:     { zh: '场景设定', en: 'Scenario' },
+  quirk:        { zh: '独特癖好', en: 'Quirk' },
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  personality: '#4E8CFF', expression: '#F472B6', emotion: '#FBBF24',
+  personality: '#4E8CFF', speech: '#F472B6', emotion: '#FBBF24',
   relationship: '#34D399', background: '#A78BFA', behavior: '#60A5FA',
   motivation: '#FB7185', conflict: '#FB923C',
+  appearance: '#8B5CF6', scenario: '#14B8A6', quirk: '#F59E0B',
 };
 
 const DEFAULT_CATEGORY_ORDER = [
-  'personality', 'expression', 'emotion', 'relationship',
+  'personality', 'speech', 'emotion', 'relationship',
   'background', 'behavior', 'motivation', 'conflict',
+  'appearance', 'scenario', 'quirk',
 ];
 
 const TAG_LABELS: Record<string, string> = {
@@ -38,6 +43,12 @@ const TAG_LABELS: Record<string, string> = {
   sarcastic: '毒舌', sincere: '真诚', stoic: '隐忍', empathetic: '共情',
   protective: '保护欲', possessive: '占有欲', loyal: '忠诚',
   curiosity: '好奇心', justice: '正义', redemption: '救赎',
+  heterochromia: '异瞳', striking: '醒目', scar: '伤疤', resilience: '坚韧',
+  fashion: '穿搭', accessory: '配饰', physique: '体格', surprise: '意外',
+  apocalypse: '末世', survival: '生存', campus: '校园', urban: '都市',
+  supernatural: '超自然', confined: '密闭', tension: '紧张', time: '时间',
+  collecting: '收集', ritual: '仪式', night: '深夜', dual: '双面',
+  food: '美食', bonding: '羁绊', talent: '才艺', 'secret-skill': '隐藏技能',
 };
 
 interface Props {

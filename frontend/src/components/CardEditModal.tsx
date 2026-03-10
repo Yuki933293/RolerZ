@@ -20,6 +20,7 @@ const SNIPPET_LABELS: Record<string, string> = {
   style: '风格', habit: '习惯', fear: '恐惧', desire: '渴望',
   mask: '面具', truth: '真相', strength: '优势', weakness: '弱点',
   public: '公开面', private: '私下面', surface: '表层', deep: '深层',
+  appearance: '外貌', setting: '场景', atmosphere: '氛围', quirk: '癖好',
 };
 
 const TAG_LABELS: Record<string, string> = {
