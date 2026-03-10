@@ -87,6 +87,10 @@ class ChangePasswordRequest(BaseModel):
     old_password: str
     new_password: str
 
+class UpdateProfileRequest(BaseModel):
+    avatar_url: str | None = None
+    bio: str | None = None
+
 class FetchModelsRequest(BaseModel):
     provider: str
     api_key: str = ""
@@ -331,6 +335,44 @@ def delete_history(record_id: int, authorization: str | None = Header(None)):
     ok = db.delete_generation(user["user_id"], record_id)
     if not ok:
         raise HTTPException(status_code=404, detail="记录不存在")
+    return {"ok": True}
+
+
+@app.delete("/api/profile/history")
+def clear_all_history(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    count = db.clear_generation_history(user["user_id"])
+    return {"ok": True, "deleted": count}
+
+
+@app.get("/api/profile/info")
+def get_profile_info(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    profile = db.get_user_profile(user["user_id"])
+    if not profile:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    return profile
+
+
+@app.put("/api/profile/info")
+def update_profile_info(req: UpdateProfileRequest, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    db.update_user_profile(user["user_id"], avatar_url=req.avatar_url, bio=req.bio)
+    return {"ok": True}
+
+
+@app.delete("/api/profile/account")
+def delete_account(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    db.delete_user(user["user_id"])
     return {"ok": True}
 
 

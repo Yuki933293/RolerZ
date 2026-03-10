@@ -1,21 +1,34 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../stores/useAuth';
 import { useConfig } from '../stores/useConfig';
-import { getProfileStats, getHistory, deleteHistory, changePassword, type ProfileStats, type HistoryRecord } from '../api/client';
+import {
+  getProfileStats, getProfileInfo, updateProfileInfo,
+  getHistory, deleteHistory, changePassword, clearAllHistory, deleteAccount,
+  type ProfileStats, type HistoryRecord, type UserProfile,
+} from '../api/client';
 import CandidateCard from '../components/CandidateCard';
 import LoginPrompt from '../components/LoginPrompt';
 import { useT } from '../i18n';
 
+type Tab = 'history' | 'profile' | 'security' | 'data';
+
 export default function Profile() {
-  const { token, username } = useAuth();
+  const { token, username, logout: doLogout } = useAuth();
   const lang = useConfig(s => s.language);
   const t = useT(lang);
 
-  const [tab, setTab] = useState<'history' | 'settings'>('history');
+  const [tab, setTab] = useState<Tab>('history');
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Profile info
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [bio, setBio] = useState('');
+  const [profileMsg, setProfileMsg] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
 
   // Password change
   const [oldPwd, setOldPwd] = useState('');
@@ -25,13 +38,19 @@ export default function Profile() {
   const [pwdError, setPwdError] = useState(false);
   const [pwdLoading, setPwdLoading] = useState(false);
 
+  // Data management
+  const [dataMsg, setDataMsg] = useState('');
+
   useEffect(() => {
     if (!token) return;
     setLoading(true);
-    Promise.all([getProfileStats(), getHistory()])
-      .then(([s, h]) => {
+    Promise.all([getProfileStats(), getHistory(), getProfileInfo()])
+      .then(([s, h, p]) => {
         setStats(s);
         setHistory(h);
+        setProfile(p);
+        setAvatarUrl(p.avatar_url || '');
+        setBio(p.bio || '');
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -47,6 +66,19 @@ export default function Profile() {
       setHistory(prev => prev.filter(h => h.id !== id));
       if (stats) setStats({ ...stats, total_generations: stats.total_generations - 1 });
     } catch { /* ignore */ }
+  };
+
+  const handleSaveProfile = async () => {
+    setProfileMsg('');
+    setProfileSaving(true);
+    try {
+      await updateProfileInfo({ avatar_url: avatarUrl, bio });
+      setProfileMsg(t('profileSaved') as string);
+    } catch (e: unknown) {
+      setProfileMsg(e instanceof Error ? e.message : t('operationFailed') as string);
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -78,10 +110,32 @@ export default function Profile() {
     }
   };
 
-  const tabs = [
-    { id: 'history' as const, label: t('myCharacters') as string },
-    { id: 'settings' as const, label: t('accountSettings') as string },
+  const handleClearHistory = async () => {
+    if (!window.confirm(t('clearHistoryConfirm') as string)) return;
+    try {
+      await clearAllHistory();
+      setHistory([]);
+      if (stats) setStats({ ...stats, total_generations: 0, total_candidates: 0 });
+      setDataMsg(t('historyCleared') as string);
+    } catch { /* ignore */ }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(t('deleteAccountConfirm') as string)) return;
+    try {
+      await deleteAccount();
+      doLogout();
+    } catch { /* ignore */ }
+  };
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'history', label: t('myCharacters') as string },
+    { id: 'profile', label: t('profileInfo') as string },
+    { id: 'security', label: t('securitySettings') as string },
+    { id: 'data', label: t('dataManagement') as string },
   ];
+
+  const inputClass = 'w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none bg-surface';
 
   return (
     <div>
@@ -119,7 +173,7 @@ export default function Profile() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
         {tabs.map(tb => (
           <button
             key={tb.id}
@@ -154,7 +208,6 @@ export default function Profile() {
             <div className="space-y-4">
               {history.map(record => (
                 <div key={record.id} className="bg-white border border-border rounded-xl overflow-hidden">
-                  {/* Record header */}
                   <div
                     className="px-5 py-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-2/50 transition-colors"
                     onClick={() => setExpandedId(expandedId === record.id ? null : record.id)}
@@ -182,8 +235,6 @@ export default function Profile() {
                       </svg>
                     </div>
                   </div>
-
-                  {/* Expanded candidates */}
                   {expandedId === record.id && record.result_data?.candidates && (
                     <div className="px-5 pb-4 border-t border-border pt-3">
                       {record.result_data.candidates.map((c, i) => (
@@ -198,9 +249,67 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Settings tab */}
-      {tab === 'settings' && (
-        <div className="max-w-md">
+      {/* Profile info tab */}
+      {tab === 'profile' && (
+        <div className="max-w-lg space-y-5">
+          <div className="bg-white border border-border rounded-xl p-5">
+            <h3 className="text-[0.92rem] font-semibold text-text-primary mb-1">{t('profileInfo') as string}</h3>
+            <p className="text-[0.78rem] text-text-faint mb-4">{t('profileInfoDesc') as string}</p>
+
+            {/* Avatar preview + URL */}
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-16 h-16 rounded-full bg-surface-2 border border-border overflow-hidden shrink-0 flex items-center justify-center">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+                ) : (
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-faint">
+                    <path d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" />
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <label className="text-[0.75rem] text-text-dim mb-1 block">{t('avatarUrl') as string}</label>
+                <input
+                  type="text"
+                  value={avatarUrl}
+                  onChange={e => setAvatarUrl(e.target.value)}
+                  placeholder={t('avatarUrlPlaceholder') as string}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            {/* Bio */}
+            <div className="mb-4">
+              <label className="text-[0.75rem] text-text-dim mb-1 block">{t('bio') as string}</label>
+              <textarea
+                value={bio}
+                onChange={e => setBio(e.target.value)}
+                placeholder={t('bioPlaceholder') as string}
+                rows={3}
+                className={`${inputClass} resize-none`}
+              />
+            </div>
+
+            {profileMsg && (
+              <div className="text-[0.78rem] text-success mb-3">{profileMsg}</div>
+            )}
+
+            <button
+              onClick={handleSaveProfile}
+              disabled={profileSaving}
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white text-[0.84rem] font-semibold px-5 py-2 rounded-lg transition-all"
+            >
+              {profileSaving ? t('processing') as string : t('saveProfile') as string}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Security tab */}
+      {tab === 'security' && (
+        <div className="max-w-lg">
           <div className="bg-white border border-border rounded-xl p-5">
             <h3 className="text-[0.92rem] font-semibold text-text-primary mb-4">{t('changePassword') as string}</h3>
             <div className="space-y-3">
@@ -210,7 +319,7 @@ export default function Profile() {
                   type="password"
                   value={oldPwd}
                   onChange={e => setOldPwd(e.target.value)}
-                  className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                  className={inputClass}
                 />
               </div>
               <div>
@@ -219,7 +328,7 @@ export default function Profile() {
                   type="password"
                   value={newPwd}
                   onChange={e => setNewPwd(e.target.value)}
-                  className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                  className={inputClass}
                 />
               </div>
               <div>
@@ -229,7 +338,7 @@ export default function Profile() {
                   value={confirmPwd}
                   onChange={e => setConfirmPwd(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleChangePassword()}
-                  className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                  className={inputClass}
                 />
               </div>
               {pwdMsg && (
@@ -243,6 +352,38 @@ export default function Profile() {
                 {pwdLoading ? t('processing') as string : t('changePassword') as string}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Data management tab */}
+      {tab === 'data' && (
+        <div className="max-w-lg space-y-5">
+          {/* Clear history */}
+          <div className="bg-white border border-border rounded-xl p-5">
+            <h3 className="text-[0.92rem] font-semibold text-text-primary mb-1">{t('clearHistory') as string}</h3>
+            <p className="text-[0.78rem] text-text-faint mb-3">{t('clearHistoryDesc') as string}</p>
+            {dataMsg && <div className="text-[0.78rem] text-success mb-3">{dataMsg}</div>}
+            <button
+              onClick={handleClearHistory}
+              className="text-[0.84rem] font-medium px-4 py-2 rounded-lg border border-border text-text-dim hover:bg-surface-2 transition-colors"
+            >
+              {t('clearHistory') as string}
+            </button>
+          </div>
+
+          {/* Delete account */}
+          <div className="bg-white border border-error/20 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-[0.92rem] font-semibold text-error">{t('dangerZone') as string}</h3>
+            </div>
+            <p className="text-[0.78rem] text-text-faint mb-3">{t('deleteAccountDesc') as string}</p>
+            <button
+              onClick={handleDeleteAccount}
+              className="text-[0.84rem] font-medium px-4 py-2 rounded-lg border border-error/30 text-error hover:bg-error/5 transition-colors"
+            >
+              {t('deleteAccount') as string}
+            </button>
           </div>
         </div>
       )}

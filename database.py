@@ -29,6 +29,8 @@ def init_db() -> None:
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             salt TEXT NOT NULL,
+            avatar_url TEXT NOT NULL DEFAULT '',
+            bio TEXT NOT NULL DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS user_card_overrides (
@@ -318,5 +320,79 @@ def get_user_stats(user_id: int) -> dict:
     }
 
 
+def _migrate_users_table() -> None:
+    """Add avatar_url and bio columns if they don't exist (for existing DBs)."""
+    conn = _get_conn()
+    try:
+        cols = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+        if "avatar_url" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT NOT NULL DEFAULT ''")
+        if "bio" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN bio TEXT NOT NULL DEFAULT ''")
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_user_profile(user_id: int) -> dict | None:
+    """Returns user profile info (username, avatar_url, bio, created_at)."""
+    conn = _get_conn()
+    row = conn.execute(
+        "SELECT username, avatar_url, bio, created_at FROM users WHERE id = ?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    if row is None:
+        return None
+    return {
+        "username": row["username"],
+        "avatar_url": row["avatar_url"],
+        "bio": row["bio"],
+        "created_at": row["created_at"],
+    }
+
+
+def update_user_profile(user_id: int, avatar_url: str | None = None, bio: str | None = None) -> bool:
+    """Update user profile fields. Returns True on success."""
+    conn = _get_conn()
+    fields = []
+    values: list = []
+    if avatar_url is not None:
+        fields.append("avatar_url = ?")
+        values.append(avatar_url)
+    if bio is not None:
+        fields.append("bio = ?")
+        values.append(bio)
+    if not fields:
+        conn.close()
+        return True
+    values.append(user_id)
+    conn.execute(f"UPDATE users SET {', '.join(fields)} WHERE id = ?", values)
+    conn.commit()
+    conn.close()
+    return True
+
+
+def delete_user(user_id: int) -> bool:
+    """Delete a user and all related data (CASCADE). Returns True if deleted."""
+    conn = _get_conn()
+    cur = conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    deleted = cur.rowcount > 0
+    conn.close()
+    return deleted
+
+
+def clear_generation_history(user_id: int) -> int:
+    """Delete all generation history for a user. Returns number of deleted records."""
+    conn = _get_conn()
+    cur = conn.execute("DELETE FROM generation_history WHERE user_id = ?", (user_id,))
+    conn.commit()
+    count = cur.rowcount
+    conn.close()
+    return count
+
+
 # Auto-initialize on import
 init_db()
+_migrate_users_table()

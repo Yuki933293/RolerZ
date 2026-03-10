@@ -235,3 +235,29 @@ export function changePassword(oldPassword: string, newPassword: string) {
     body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
   });
 }
+
+export interface UserProfile {
+  username: string;
+  avatar_url: string;
+  bio: string;
+  created_at: string;
+}
+
+export function getProfileInfo() {
+  return request<UserProfile>('/api/profile/info');
+}
+
+export function updateProfileInfo(data: { avatar_url?: string; bio?: string }) {
+  return request('/api/profile/info', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export function clearAllHistory() {
+  return request<{ ok: boolean; deleted: number }>('/api/profile/history', { method: 'DELETE' });
+}
+
+export function deleteAccount() {
+  return request('/api/profile/account', { method: 'DELETE' });
+}
