@@ -61,6 +61,7 @@ const translations = {
     restart: '重新开始',
     inputPlaceholder: '输入你的回答...',
     send: '发送',
+    skip: '跳过',
     generateCard: '生成角色卡',
     allDimensionsDone: '所有维度已经收集完毕！点击下方按钮开始生成角色卡。',
     generatingCard: '正在生成角色卡，请稍候...',
@@ -73,6 +74,8 @@ const translations = {
     // CandidateCard
     copy: '复制',
     copied: '已复制',
+    favorite: '收藏',
+    unfavorite: '取消收藏',
     openingLine: '开场白',
     collapseDetails: '收起详细属性',
     showDetails: (n: number) => `展开详细属性 (${n})`,
@@ -86,7 +89,7 @@ const translations = {
     keyPoolManage: '管理密钥池',
     baseUrl: '接口地址',
     modelSelect: '模型选择',
-    modelId: '模型标识',
+    modelId: '模型名称',
     fetchModels: '获取模型列表',
     fetching: '获取中...',
     searchModel: '搜索模型...',
@@ -94,6 +97,12 @@ const translations = {
     saving: '保存中...',
     envKeyHint: '已配置环境变量，可留空使用服务器密钥',
     custom: '自定义',
+    myConfigs: '我的配置',
+    myConfigsDesc: '你已配置的供应商，点击切换，可删除不需要的配置',
+    noConfigs: '暂无已保存的配置',
+    addNew: '新增',
+    confirmDeleteConfig: '确定要删除这个配置吗？',
+    usingNow: '使用中',
 
     // InspirationPicker
     inspirationCards: '灵感卡片',
@@ -144,6 +153,20 @@ const translations = {
     // Inspirations page
     inspirationLibrary: '灵感库',
     inspirationLibraryDesc: '浏览和管理全部灵感卡片，点击查看详情或编辑自定义内容',
+
+    // Card tier system
+    tierShowcaseTitle: '卡片等级',
+    tierShowcaseDesc: '社区分享的卡片根据使用人数自动升级',
+    tierNormal: 'Normal',
+    tierRare: 'Rare',
+    tierEpic: 'Epic',
+    tierLegendary: 'Legendary',
+    tierMythic: 'Mythic',
+    tierUses: '次使用',
+
+    // Announcements page
+    announcements: '公告',
+    announcementsDesc: '了解平台最新动态和功能更新',
 
     // Help page
     helpTitle: '帮助',
@@ -259,6 +282,7 @@ const translations = {
     restart: '重新開始',
     inputPlaceholder: '輸入你的回答...',
     send: '發送',
+    skip: '跳過',
     generateCard: '生成角色卡',
     allDimensionsDone: '所有維度已經收集完畢！點擊下方按鈕開始生成角色卡。',
     generatingCard: '正在生成角色卡，請稍候...',
@@ -271,6 +295,8 @@ const translations = {
     // CandidateCard
     copy: '複製',
     copied: '已複製',
+    favorite: '收藏',
+    unfavorite: '取消收藏',
     openingLine: '開場白',
     collapseDetails: '收起詳細屬性',
     showDetails: (n: number) => `展開詳細屬性 (${n})`,
@@ -284,7 +310,7 @@ const translations = {
     keyPoolManage: '管理密鑰池',
     baseUrl: '接口地址',
     modelSelect: '模型選擇',
-    modelId: '模型標識',
+    modelId: '模型名稱',
     fetchModels: '獲取模型列表',
     fetching: '獲取中...',
     searchModel: '搜索模型...',
@@ -292,6 +318,12 @@ const translations = {
     saving: '保存中...',
     envKeyHint: '已配置環境變量，可留空使用伺服器密鑰',
     custom: '自定義',
+    myConfigs: '我的配置',
+    myConfigsDesc: '你已配置的供應商，點擊切換，可刪除不需要的配置',
+    noConfigs: '暫無已保存的配置',
+    addNew: '新增',
+    confirmDeleteConfig: '確定要刪除這個配置嗎？',
+    usingNow: '使用中',
 
     // InspirationPicker
     inspirationCards: '靈感卡片',
@@ -342,6 +374,20 @@ const translations = {
     // Inspirations page
     inspirationLibrary: '靈感庫',
     inspirationLibraryDesc: '瀏覽和管理全部靈感卡片，點擊查看詳情或編輯自定義內容',
+
+    // Card tier system
+    tierShowcaseTitle: '卡片等級',
+    tierShowcaseDesc: '社區分享的卡片根據使用人數自動升級',
+    tierNormal: 'Normal',
+    tierRare: 'Rare',
+    tierEpic: 'Epic',
+    tierLegendary: 'Legendary',
+    tierMythic: 'Mythic',
+    tierUses: '次使用',
+
+    // Announcements page
+    announcements: '公告',
+    announcementsDesc: '了解平台最新動態和功能更新',
 
     // Help page
     helpTitle: '幫助',
@@ -457,6 +503,7 @@ const translations = {
     restart: 'Restart',
     inputPlaceholder: 'Enter your answer...',
     send: 'Send',
+    skip: 'Skip',
     generateCard: 'Generate Character Card',
     allDimensionsDone: 'All dimensions collected! Click the button below to generate.',
     generatingCard: 'Generating character card, please wait...',
@@ -469,6 +516,8 @@ const translations = {
     // CandidateCard
     copy: 'Copy',
     copied: 'Copied',
+    favorite: 'Favorite',
+    unfavorite: 'Unfavorite',
     openingLine: 'Opening Line',
     collapseDetails: 'Collapse Details',
     showDetails: (n: number) => `Show Details (${n})`,
@@ -482,7 +531,7 @@ const translations = {
     keyPoolManage: 'Manage Key Pool',
     baseUrl: 'Base URL',
     modelSelect: 'Model Selection',
-    modelId: 'Model ID',
+    modelId: 'Model Name',
     fetchModels: 'Fetch Models',
     fetching: 'Fetching...',
     searchModel: 'Search models...',
@@ -490,6 +539,12 @@ const translations = {
     saving: 'Saving...',
     envKeyHint: 'Environment variable configured, leave empty to use server key',
     custom: 'Custom',
+    myConfigs: 'My Configs',
+    myConfigsDesc: 'Your configured providers. Click to switch, delete to remove.',
+    noConfigs: 'No saved configs yet',
+    addNew: 'Add',
+    confirmDeleteConfig: 'Delete this config?',
+    usingNow: 'Active',
 
     // InspirationPicker
     inspirationCards: 'Inspiration Cards',
@@ -540,6 +595,20 @@ const translations = {
     // Inspirations page
     inspirationLibrary: 'Inspiration Library',
     inspirationLibraryDesc: 'Browse and manage all inspiration cards. Click to view details or edit custom content',
+
+    // Card tier system
+    tierShowcaseTitle: 'Card Tiers',
+    tierShowcaseDesc: 'Community-shared cards automatically upgrade based on usage',
+    tierNormal: 'Normal',
+    tierRare: 'Rare',
+    tierEpic: 'Epic',
+    tierLegendary: 'Legendary',
+    tierMythic: 'Mythic',
+    tierUses: ' uses',
+
+    // Announcements page
+    announcements: 'Announcements',
+    announcementsDesc: 'Stay updated with the latest platform news and feature updates',
 
     // Help page
     helpTitle: 'Help',

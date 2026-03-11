@@ -20,6 +20,7 @@ const SPEC_LABELS: Record<string, string> = {
 export default function CandidateCard({ candidate, index, language }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState('');
+  const [favorited, setFavorited] = useState(false);
   const t = useT(language);
   const showDetails = t('showDetails') as (n: number) => string;
 
@@ -66,7 +67,7 @@ export default function CandidateCard({ candidate, index, language }: Props) {
   };
 
   return (
-    <div className="bg-white border border-border rounded-[14px] p-5 mb-4 shadow-xs">
+    <div className={`bg-white border rounded-[14px] p-5 mb-4 shadow-xs transition-colors ${favorited ? 'border-amber-400 ring-1 ring-amber-400/20' : 'border-border'}`}>
       {/* Header */}
       <div className="flex items-start justify-between mb-3.5">
         <div className="flex items-center gap-3">
@@ -79,6 +80,16 @@ export default function CandidateCard({ candidate, index, language }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Favorite button */}
+          <button
+            onClick={() => setFavorited(f => !f)}
+            title={favorited ? t('unfavorite') as string : t('favorite') as string}
+            className={`p-1.5 rounded-md transition-colors ${favorited ? 'text-amber-400 hover:text-amber-500' : 'text-text-faint hover:text-amber-400'}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </button>
           {/* Copy buttons */}
           <div className="flex gap-1">
             <button
