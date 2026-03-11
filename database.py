@@ -31,6 +31,7 @@ def init_db() -> None:
             salt TEXT NOT NULL,
             avatar_url TEXT NOT NULL DEFAULT '',
             bio TEXT NOT NULL DEFAULT '',
+            is_admin INTEGER NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS user_card_overrides (
@@ -102,8 +103,12 @@ def create_user(username: str, password: str) -> int | None:
             "INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)",
             (username, pw_hash, salt),
         )
+        uid = cur.lastrowid
+        # First registered user (id=1) is auto-admin
+        if uid == 1:
+            conn.execute("UPDATE users SET is_admin = 1 WHERE id = 1")
         conn.commit()
-        return cur.lastrowid
+        return uid
     except sqlite3.IntegrityError:
         return None
     finally:
