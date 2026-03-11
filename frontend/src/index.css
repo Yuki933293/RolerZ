@@ -287,13 +287,13 @@ button, [role="button"], a, select, label[for], input[type="checkbox"], input[ty
     0 0 24px rgba(100,160,230,0.22);
 }
 
-/* Tier 4: Legendary — warm champagne gold */
+/* Tier 4: Legendary — rose-champagne gold */
 .card-tier-legendary .holo-card-inner {
-  background: linear-gradient(160deg, #faf5eb 0%, #f0e4c8 50%, #e6d5a8 100%) !important;
+  background: linear-gradient(160deg, #f3eae4 0%, #e8d5c8 50%, #dfc8b4 100%) !important;
   transition: box-shadow 0.4s ease;
 }
 .card-tier-legendary .card-base {
-  background: linear-gradient(160deg, #faf5eb 0%, #f0e4c8 50%, #e6d5a8 100%) !important;
+  background: linear-gradient(160deg, #f3eae4 0%, #e8d5c8 50%, #dfc8b4 100%) !important;
 }
 .card-tier-legendary .holo-card-inner::before {
   border-color: transparent;

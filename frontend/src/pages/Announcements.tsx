@@ -83,7 +83,7 @@ const TIER_CONFIG = [
   { tier: 'normal',    threshold: 0,      label: 'tierNormal',    bg: ['#f3f4f6', '#e5e7eb'] as [string, string] },
   { tier: 'rare',      threshold: 500,    label: 'tierRare',      bg: ['#edeaf2', '#ccc8d8'] as [string, string] },
   { tier: 'epic',      threshold: 5000,   label: 'tierEpic',      bg: ['#e8f2ff', '#c8ddf5'] as [string, string] },
-  { tier: 'legendary', threshold: 50000,  label: 'tierLegendary', bg: ['#faf5eb', '#e6d5a8'] as [string, string] },
+  { tier: 'legendary', threshold: 50000,  label: 'tierLegendary', bg: ['#f3eae4', '#dfc8b4'] as [string, string] },
   { tier: 'mythic',    threshold: 100000, label: 'tierMythic',    bg: ['#1a1a2e', '#0f3460'] as [string, string] },
 ];
 
