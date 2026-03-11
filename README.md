@@ -17,29 +17,7 @@ update.sh                — 服务器更新脚本
 start.sh                 — 本地开发启动脚本
 ```
 
-## 本地开发
-
-### 环境要求
-- Python 3.10+
-- Node.js 22+（Vite 7 要求 ≥20.19 或 ≥22.12）
-
-### 启动
-
-```bash
-# 一键启动前后端
-./start.sh
-
-# 或分别启动
-# 后端
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
-
-# 前端
-cd frontend && npm install && npm run dev
-```
-
-启动后访问 `http://localhost:5173`，首个注册用户自动成为管理员。
-
-## 部署
+## 本地开发 & 部署
 
 详见 [DEPLOY.md](DEPLOY.md)
 

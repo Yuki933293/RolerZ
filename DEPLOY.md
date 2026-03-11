@@ -1,11 +1,28 @@
-# RolerZ 部署指南
+# RolerZ 开发 & 部署指南
 
-## 服务器要求
+## 环境要求
 
-- Ubuntu 22.04
-- 1 核 2G 内存起步
 - Python 3.10+
 - Node.js 22+（Vite 7 要求 ≥20.19 或 ≥22.12）
+- 服务器：Ubuntu 22.04，1 核 2G 内存起步
+
+---
+
+## 本地开发
+
+```bash
+# 一键启动前后端
+./start.sh
+
+# 或分别启动
+# 后端
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+# 前端
+cd frontend && npm install && npm run dev
+```
+
+启动后访问 `http://localhost:5173`，首个注册用户自动成为管理员。
 
 ---
 
