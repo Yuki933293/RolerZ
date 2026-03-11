@@ -9,6 +9,7 @@ import Inspirations from './pages/Inspirations';
 import Help from './pages/Help';
 import Announcements from './pages/Announcements';
 import UserManagement from './pages/UserManagement';
+import AdminDashboard from './pages/AdminDashboard';
 import { useAuth } from './stores/useAuth';
 import { useConfig } from './stores/useConfig';
 import { login as apiLogin, register as apiRegister } from './api/client';
@@ -388,6 +389,7 @@ export default function App() {
                 <Route path="/help" element={<Help />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
               </Routes>
             </div>
           </main>

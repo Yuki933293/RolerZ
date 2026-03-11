@@ -257,6 +257,30 @@ const translations = {
     adminDeleteUserConfirm: (u: string) => `确定要删除用户「${u}」吗？该用户的所有数据将永久丢失。`,
     adminNoUsers: '暂无用户',
     adminTotalUsers: '用户总数',
+
+    // Export
+    exportTavernPNG: '导出 TavernPNG（兼容 SillyTavern）',
+    exportChatPreview: '对话预览',
+    shareToCommunity: '分享到社区',
+    shared: '已分享',
+    communityEmpty: '还没有分享的角色，快去创建并分享吧！',
+    sortLatest: '最新',
+    sortPopular: '最热',
+    filterByTag: '按标签筛选',
+    allTags: '全部',
+    likeCount: (n: number) => `${n} 赞`,
+    viewDetail: '查看详情',
+    deleteShare: '取消分享',
+    deleteShareConfirm: '确定要取消分享该角色吗？',
+
+    // Admin dashboard
+    adminDashboard: '管理仪表盘',
+    statTotalUsers: '总用户数',
+    statTotalGenerations: '总生成数',
+    statTotalShared: '社区分享数',
+    statTodayUsers: '今日新增',
+    statTodayGenerations: '今日生成',
+    generationTrend: '7日生成趋势',
   },
 
   'zh-Hant': {
@@ -517,6 +541,30 @@ const translations = {
     adminDeleteUserConfirm: (u: string) => `確定要刪除用戶「${u}」嗎？該用戶的所有數據將永久丟失。`,
     adminNoUsers: '暫無用戶',
     adminTotalUsers: '用戶總數',
+
+    // Export
+    exportTavernPNG: '匯出 TavernPNG（相容 SillyTavern）',
+    exportChatPreview: '對話預覽',
+    shareToCommunity: '分享到社群',
+    shared: '已分享',
+    communityEmpty: '還沒有分享的角色，快去創建並分享吧！',
+    sortLatest: '最新',
+    sortPopular: '最熱',
+    filterByTag: '按標籤篩選',
+    allTags: '全部',
+    likeCount: (n: number) => `${n} 讚`,
+    viewDetail: '查看詳情',
+    deleteShare: '取消分享',
+    deleteShareConfirm: '確定要取消分享該角色嗎？',
+
+    // Admin dashboard
+    adminDashboard: '管理儀表盤',
+    statTotalUsers: '總用戶數',
+    statTotalGenerations: '總生成數',
+    statTotalShared: '社群分享數',
+    statTodayUsers: '今日新增',
+    statTodayGenerations: '今日生成',
+    generationTrend: '7日生成趨勢',
   },
 
   en: {
@@ -777,6 +825,30 @@ const translations = {
     adminDeleteUserConfirm: (u: string) => `Delete user "${u}"? All their data will be permanently lost.`,
     adminNoUsers: 'No users',
     adminTotalUsers: 'Total users',
+
+    // Export
+    exportTavernPNG: 'Export TavernPNG (SillyTavern compatible)',
+    exportChatPreview: 'Chat Preview',
+    shareToCommunity: 'Share to Community',
+    shared: 'Shared',
+    communityEmpty: 'No shared characters yet. Create one and share it!',
+    sortLatest: 'Latest',
+    sortPopular: 'Popular',
+    filterByTag: 'Filter by tag',
+    allTags: 'All',
+    likeCount: (n: number) => `${n} likes`,
+    viewDetail: 'View Details',
+    deleteShare: 'Remove Share',
+    deleteShareConfirm: 'Remove this character from the community?',
+
+    // Admin dashboard
+    adminDashboard: 'Admin Dashboard',
+    statTotalUsers: 'Total Users',
+    statTotalGenerations: 'Total Generations',
+    statTotalShared: 'Community Shares',
+    statTodayUsers: 'New Today',
+    statTodayGenerations: 'Generated Today',
+    generationTrend: '7-Day Generation Trend',
   },
 } as const;
 

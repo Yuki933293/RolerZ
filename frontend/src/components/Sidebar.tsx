@@ -65,6 +65,13 @@ const IconUsers = () => (
   </svg>
 );
 
+const IconDashboard = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+    <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+  </svg>
+);
+
 const PROVIDER_NAMES: Record<string, string> = {
   claude: 'Claude', openai: 'OpenAI', gemini: 'Gemini', deepseek: 'DeepSeek',
   xai: 'xAI', moonshot: 'Moonshot', zhipu: 'Zhipu', groq: 'Groq',
@@ -106,6 +113,7 @@ export default function Sidebar() {
     ...(isAdmin ? [{
       label: t('sidebarAdmin') as string,
       items: [
+        { id: '/admin/dashboard', label: t('adminDashboard') as string, icon: <IconDashboard /> },
         { id: '/admin/users', label: t('adminUserManagement') as string, icon: <IconUsers /> },
       ],
     }] : []),

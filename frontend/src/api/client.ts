@@ -321,3 +321,88 @@ export function setUserAdmin(userId: number, isAdmin: boolean) {
 export function adminDeleteUser(userId: number) {
   return request(`/api/admin/users/${userId}`, { method: 'DELETE' });
 }
+
+// ── Chat preview ──
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export function chatPreview(data: {
+  messages: ChatMessage[];
+  system_prompt: string;
+  provider: string;
+  model?: string;
+  api_key?: string;
+  base_url?: string;
+}) {
+  return request<{ reply: string }>('/api/chat/preview', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// ── Community ──
+export interface SharedPersona {
+  id: number;
+  name: string;
+  summary: string;
+  tags: string[];
+  spec_data: Record<string, string>;
+  natural_text: string;
+  score: number;
+  language: string;
+  likes: number;
+  liked: boolean;
+  author: string;
+  user_id: number;
+  created_at: string;
+}
+
+export function sharePersona(data: {
+  name: string;
+  summary: string;
+  tags: string[];
+  spec_data: Record<string, unknown>;
+  natural_text: string;
+  score: number;
+  language: string;
+}) {
+  return request<{ ok: boolean; id: number }>('/api/community/share', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function getCommunityPersonas(params?: { limit?: number; offset?: number; sort?: string; tag?: string }) {
+  const q = new URLSearchParams();
+  if (params?.limit) q.set('limit', String(params.limit));
+  if (params?.offset) q.set('offset', String(params.offset));
+  if (params?.sort) q.set('sort', params.sort);
+  if (params?.tag) q.set('tag', params.tag);
+  return request<SharedPersona[]>(`/api/community/personas?${q}`);
+}
+
+export function togglePersonaLike(personaId: number) {
+  return request<{ ok: boolean; liked: boolean }>(`/api/community/personas/${personaId}/like`, {
+    method: 'POST',
+  });
+}
+
+export function deleteSharedPersona(personaId: number) {
+  return request(`/api/community/personas/${personaId}`, { method: 'DELETE' });
+}
+
+// ── Admin stats ──
+export interface AdminStats {
+  total_users: number;
+  total_generations: number;
+  total_shared: number;
+  today_users: number;
+  today_generations: number;
+  generation_trend: { date: string; count: number }[];
+}
+
+export function getAdminStats() {
+  return request<AdminStats>('/api/admin/stats');
+}

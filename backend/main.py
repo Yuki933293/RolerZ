@@ -143,6 +143,14 @@ class AnnouncementRequest(BaseModel):
 class SetAdminRequest(BaseModel):
     is_admin: bool
 
+class ChatPreviewRequest(BaseModel):
+    messages: list[dict]  # [{"role": "user"|"assistant", "content": "..."}]
+    system_prompt: str
+    provider: str = "claude"
+    model: str | None = None
+    api_key: str | None = None
+    base_url: str | None = None
+
 
 # ── JWT helpers ─────────────────────────────────────────────────────────
 def create_access_token(user_id: int, username: str) -> str:
@@ -500,6 +508,66 @@ def admin_delete_user(user_id: int, authorization: str | None = Header(None)):
     return {"ok": True}
 
 
+# ── Admin: dashboard stats ────────────────────────────────────────
+@app.get("/api/admin/stats")
+def admin_stats(authorization: str | None = Header(None)):
+    _require_admin(authorization)
+    return db.get_admin_stats()
+
+
+# ── Community: shared personas ────────────────────────────────────
+class SharePersonaRequest(BaseModel):
+    name: str
+    summary: str = ""
+    tags: list[str] = []
+    spec_data: dict = {}
+    natural_text: str = ""
+    score: float = 0
+    language: str = "zh"
+
+
+@app.post("/api/community/share")
+def share_persona(req: SharePersonaRequest, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    pid = db.share_persona(
+        user["user_id"], req.name, req.summary, req.tags,
+        req.spec_data, req.natural_text, req.score, req.language,
+    )
+    return {"ok": True, "id": pid}
+
+
+@app.get("/api/community/personas")
+def list_community_personas(
+    limit: int = 50, offset: int = 0, sort: str = "latest", tag: str = "",
+    authorization: str | None = Header(None),
+):
+    user = get_current_user(authorization)
+    user_id = user["user_id"] if user else None
+    return db.list_shared_personas(limit, offset, sort, tag, user_id)
+
+
+@app.post("/api/community/personas/{persona_id}/like")
+def toggle_like(persona_id: int, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    liked = db.toggle_persona_like(user["user_id"], persona_id)
+    return {"ok": True, "liked": liked}
+
+
+@app.delete("/api/community/personas/{persona_id}")
+def delete_shared(persona_id: int, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    ok = db.delete_shared_persona(user["user_id"], persona_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="角色不存在或无权删除")
+    return {"ok": True}
+
+
 # ── User config ────────────────────────────────────────────────────
 @app.get("/api/config")
 def get_user_config(authorization: str | None = Header(None)):
@@ -648,6 +716,50 @@ def generate(req: GenerateRequest, authorization: str | None = Header(None)):
         return result
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ── Chat preview ───────────────────────────────────────────────────────
+@app.post("/api/chat/preview")
+def chat_preview(req: ChatPreviewRequest, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+
+    client = create_llm_client(
+        provider=req.provider,
+        model=req.model or None,
+        api_key=req.api_key or None,
+        base_url=req.base_url or None,
+        max_tokens=2048,
+    )
+
+    messages = [{"role": m["role"], "content": m["content"]} for m in req.messages]
+
+    try:
+        if req.provider == "claude":
+            # Anthropic messages API supports multi-turn natively
+            response = client._client.messages.create(
+                model=client.model,
+                max_tokens=2048,
+                temperature=0.8,
+                system=req.system_prompt,
+                messages=messages,
+            )
+            reply = response.content[0].text if response.content else ""
+        else:
+            # OpenAI-compatible: prepend system message
+            full_messages = [{"role": "system", "content": req.system_prompt}] + messages
+            response = client._client.chat.completions.create(
+                model=client.model,
+                messages=full_messages,
+                max_tokens=2048,
+                temperature=0.8,
+            )
+            reply = response.choices[0].message.content or ""
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    return {"reply": reply}
 
 
 # ── Wizard ──────────────────────────────────────────────────────────────

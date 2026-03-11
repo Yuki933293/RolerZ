@@ -82,6 +82,28 @@ def init_db() -> None:
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             UNIQUE(user_id, group_id)
         );
+        CREATE TABLE IF NOT EXISTS shared_personas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            summary TEXT NOT NULL DEFAULT '',
+            tags TEXT NOT NULL DEFAULT '[]',
+            spec_data TEXT NOT NULL DEFAULT '{}',
+            natural_text TEXT NOT NULL DEFAULT '',
+            score REAL NOT NULL DEFAULT 0,
+            language TEXT NOT NULL DEFAULT 'zh',
+            likes INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS persona_likes (
+            user_id INTEGER NOT NULL,
+            persona_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, persona_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (persona_id) REFERENCES shared_personas(id) ON DELETE CASCADE
+        );
     """)
     conn.commit()
     conn.close()
@@ -500,6 +522,144 @@ def clear_generation_history(user_id: int) -> int:
     count = cur.rowcount
     conn.close()
     return count
+
+
+# ── Shared personas (community) ──
+
+def share_persona(user_id: int, name: str, summary: str, tags: list[str],
+                  spec_data: dict, natural_text: str, score: float, language: str) -> int:
+    """Share a persona to the community. Returns persona id."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "INSERT INTO shared_personas (user_id, name, summary, tags, spec_data, natural_text, score, language) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (user_id, name, summary, json.dumps(tags), json.dumps(spec_data), natural_text, score, language),
+    )
+    conn.commit()
+    pid = cur.lastrowid
+    conn.close()
+    return pid
+
+
+def list_shared_personas(limit: int = 50, offset: int = 0, sort: str = "latest",
+                         tag: str = "", current_user_id: int | None = None) -> list[dict]:
+    """List shared personas with author info and like status."""
+    conn = _get_conn()
+    where = ""
+    params: list = []
+    if tag:
+        where = "WHERE sp.tags LIKE ?"
+        params.append(f'%"{tag}"%')
+
+    order = "sp.created_at DESC" if sort == "latest" else "sp.likes DESC, sp.created_at DESC"
+
+    rows = conn.execute(
+        f"SELECT sp.id, sp.name, sp.summary, sp.tags, sp.spec_data, sp.natural_text, "
+        f"sp.score, sp.language, sp.likes, sp.created_at, sp.user_id, "
+        f"u.username as author "
+        f"FROM shared_personas sp "
+        f"JOIN users u ON sp.user_id = u.id "
+        f"{where} "
+        f"ORDER BY {order} "
+        f"LIMIT ? OFFSET ?",
+        params + [limit, offset],
+    ).fetchall()
+
+    result = []
+    for r in rows:
+        d = dict(r)
+        d["tags"] = json.loads(d["tags"])
+        d["spec_data"] = json.loads(d["spec_data"])
+        # Check if current user liked this persona
+        if current_user_id:
+            liked = conn.execute(
+                "SELECT 1 FROM persona_likes WHERE user_id = ? AND persona_id = ?",
+                (current_user_id, d["id"]),
+            ).fetchone()
+            d["liked"] = liked is not None
+        else:
+            d["liked"] = False
+        result.append(d)
+
+    conn.close()
+    return result
+
+
+def toggle_persona_like(user_id: int, persona_id: int) -> bool:
+    """Toggle like on a persona. Returns True if now liked, False if unliked."""
+    conn = _get_conn()
+    existing = conn.execute(
+        "SELECT 1 FROM persona_likes WHERE user_id = ? AND persona_id = ?",
+        (user_id, persona_id),
+    ).fetchone()
+
+    if existing:
+        conn.execute("DELETE FROM persona_likes WHERE user_id = ? AND persona_id = ?",
+                      (user_id, persona_id))
+        conn.execute("UPDATE shared_personas SET likes = likes - 1 WHERE id = ?", (persona_id,))
+        liked = False
+    else:
+        conn.execute("INSERT INTO persona_likes (user_id, persona_id) VALUES (?, ?)",
+                      (user_id, persona_id))
+        conn.execute("UPDATE shared_personas SET likes = likes + 1 WHERE id = ?", (persona_id,))
+        liked = True
+
+    conn.commit()
+    conn.close()
+    return liked
+
+
+def delete_shared_persona(user_id: int, persona_id: int) -> bool:
+    """Delete a shared persona (only by owner). Returns True if deleted."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "DELETE FROM shared_personas WHERE id = ? AND user_id = ?",
+        (persona_id, user_id),
+    )
+    conn.commit()
+    ok = cur.rowcount > 0
+    conn.close()
+    return ok
+
+
+def get_shared_persona_count() -> int:
+    """Get total number of shared personas."""
+    conn = _get_conn()
+    row = conn.execute("SELECT COUNT(*) as cnt FROM shared_personas").fetchone()
+    conn.close()
+    return row["cnt"]
+
+
+# ── Admin stats ──
+
+def get_admin_stats() -> dict:
+    """Get admin dashboard statistics."""
+    conn = _get_conn()
+    users = conn.execute("SELECT COUNT(*) as cnt FROM users").fetchone()["cnt"]
+    generations = conn.execute("SELECT COUNT(*) as cnt FROM generation_history").fetchone()["cnt"]
+    shared = conn.execute("SELECT COUNT(*) as cnt FROM shared_personas").fetchone()["cnt"]
+    today_users = conn.execute(
+        "SELECT COUNT(*) as cnt FROM users WHERE date(created_at) = date('now')"
+    ).fetchone()["cnt"]
+    today_generations = conn.execute(
+        "SELECT COUNT(*) as cnt FROM generation_history WHERE date(created_at) = date('now')"
+    ).fetchone()["cnt"]
+    # Recent 7-day generation trend
+    trend = conn.execute(
+        "SELECT date(created_at) as day, COUNT(*) as cnt "
+        "FROM generation_history "
+        "WHERE created_at >= datetime('now', '-7 days') "
+        "GROUP BY date(created_at) ORDER BY day"
+    ).fetchall()
+    conn.close()
+    return {
+        "total_users": users,
+        "total_generations": generations,
+        "total_shared": shared,
+        "today_users": today_users,
+        "today_generations": today_generations,
+        "generation_trend": [{"date": r["day"], "count": r["cnt"]} for r in trend],
+    }
 
 
 # Auto-initialize on import

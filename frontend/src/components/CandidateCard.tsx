@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import type { Candidate } from '../api/client';
+import { sharePersona } from '../api/client';
 import { useT } from '../i18n';
+import { exportTavernPNG } from '../utils/tavernExport';
+import ChatPreview from './ChatPreview';
 
 interface Props {
   candidate: Candidate;
@@ -21,6 +24,9 @@ export default function CandidateCard({ candidate, index, language }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState('');
   const [favorited, setFavorited] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [shared, setShared] = useState(false);
   const t = useT(language);
   const showDetails = t('showDetails') as (n: number) => string;
 
@@ -66,6 +72,32 @@ export default function CandidateCard({ candidate, index, language }: Props) {
     handleCopy(JSON.stringify(candidate, null, 2), 'json');
   };
 
+  const handleExportPNG = async () => {
+    setExporting(true);
+    try {
+      await exportTavernPNG(candidate, language);
+    } catch { /* ignore */ }
+    setExporting(false);
+  };
+
+  const handleShare = async () => {
+    if (shared) return;
+    const name = spec?.identity || spec?.name || 'Character';
+    const summary = natural?.slice(0, 200) || '';
+    try {
+      await sharePersona({
+        name,
+        summary,
+        tags: candidate.tags || [],
+        spec_data: candidate.spec_long as Record<string, unknown>,
+        natural_text: natural || '',
+        score: candidate.score,
+        language,
+      });
+      setShared(true);
+    } catch { /* ignore */ }
+  };
+
   return (
     <div className={`bg-white border rounded-[14px] p-5 mb-4 shadow-xs transition-colors ${favorited ? 'border-amber-400 ring-1 ring-amber-400/20' : 'border-border'}`}>
       {/* Header */}
@@ -80,6 +112,28 @@ export default function CandidateCard({ candidate, index, language }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Share button */}
+          <button
+            onClick={handleShare}
+            title={shared ? t('shared') as string : t('shareToCommunity') as string}
+            className={`p-1.5 rounded-md transition-colors ${shared ? 'text-success' : 'text-text-faint hover:text-green-500'}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+          </button>
+          {/* Chat preview button */}
+          <button
+            onClick={() => setChatOpen(true)}
+            title={t('exportChatPreview') as string}
+            className="p-1.5 rounded-md text-text-faint hover:text-blue-500 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
           {/* Favorite button */}
           <button
             onClick={() => setFavorited(f => !f)}
@@ -111,6 +165,14 @@ export default function CandidateCard({ candidate, index, language }: Props) {
               }`}
             >
               {copied === 'json' ? t('copied') as string : 'JSON'}
+            </button>
+            <button
+              onClick={handleExportPNG}
+              disabled={exporting}
+              className="text-[0.7rem] px-2.5 py-1 rounded-md border transition-colors bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200 text-blue-600 hover:from-blue-100 hover:to-cyan-100 disabled:opacity-40"
+              title={t('exportTavernPNG') as string}
+            >
+              {exporting ? '...' : 'PNG'}
             </button>
           </div>
           {/* Score */}
@@ -197,6 +259,10 @@ export default function CandidateCard({ candidate, index, language }: Props) {
             </div>
           )}
         </div>
+      )}
+
+      {chatOpen && (
+        <ChatPreview candidate={candidate} language={language} onClose={() => setChatOpen(false)} />
       )}
     </div>
   );
