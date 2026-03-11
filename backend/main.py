@@ -140,6 +140,9 @@ class AnnouncementRequest(BaseModel):
     body_en: str = ""
     sort_order: int = 0
 
+class SetAdminRequest(BaseModel):
+    is_admin: bool
+
 
 # ── JWT helpers ─────────────────────────────────────────────────────────
 def create_access_token(user_id: int, username: str) -> str:
@@ -465,6 +468,35 @@ def delete_announcement(ann_id: str, authorization: str | None = Header(None)):
     ok = db.delete_announcement(ann_id)
     if not ok:
         raise HTTPException(status_code=404, detail="公告不存在")
+    return {"ok": True}
+
+
+# ── Admin: user management ────────────────────────────────────────
+@app.get("/api/admin/users")
+def list_users(authorization: str | None = Header(None)):
+    _require_admin(authorization)
+    return db.list_users()
+
+
+@app.put("/api/admin/users/{user_id}/admin")
+def set_user_admin(user_id: int, req: SetAdminRequest, authorization: str | None = Header(None)):
+    admin = _require_admin(authorization)
+    if admin["user_id"] == user_id:
+        raise HTTPException(status_code=400, detail="不能修改自己的管理员状态")
+    ok = db.set_admin(user_id, req.is_admin)
+    if not ok:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    return {"ok": True}
+
+
+@app.delete("/api/admin/users/{user_id}")
+def admin_delete_user(user_id: int, authorization: str | None = Header(None)):
+    admin = _require_admin(authorization)
+    if admin["user_id"] == user_id:
+        raise HTTPException(status_code=400, detail="不能删除自己的账号")
+    ok = db.delete_user(user_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="用户不存在")
     return {"ok": True}
 
 

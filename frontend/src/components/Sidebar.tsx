@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useConfig } from '../stores/useConfig';
+import { useAuth } from '../stores/useAuth';
 import { useT } from '../i18n';
 
 const IconGenerate = () => (
@@ -55,6 +56,15 @@ const IconHelp = () => (
   </svg>
 );
 
+const IconUsers = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
 const PROVIDER_NAMES: Record<string, string> = {
   claude: 'Claude', openai: 'OpenAI', gemini: 'Gemini', deepseek: 'DeepSeek',
   xai: 'xAI', moonshot: 'Moonshot', zhipu: 'Zhipu', groq: 'Groq',
@@ -67,6 +77,7 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const config = useConfig();
+  const { isAdmin } = useAuth();
   const t = useT(config.language);
 
   const NAV_SECTIONS = [
@@ -92,6 +103,12 @@ export default function Sidebar() {
         { id: '/help', label: t('help') as string, icon: <IconHelp /> },
       ],
     },
+    ...(isAdmin ? [{
+      label: t('sidebarAdmin') as string,
+      items: [
+        { id: '/admin/users', label: t('adminUserManagement') as string, icon: <IconUsers /> },
+      ],
+    }] : []),
   ];
 
   const provName = PROVIDER_NAMES[config.provider] || config.provider;

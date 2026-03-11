@@ -297,3 +297,27 @@ export function updateAnnouncement(annId: string, data: Omit<Announcement, 'crea
 export function deleteAnnouncement(annId: string) {
   return request(`/api/announcements/${annId}`, { method: 'DELETE' });
 }
+
+// ── Admin: user management ──
+export interface AdminUser {
+  id: number;
+  username: string;
+  is_admin: number;
+  created_at: string;
+  generation_count: number;
+}
+
+export function getAdminUsers() {
+  return request<AdminUser[]>('/api/admin/users');
+}
+
+export function setUserAdmin(userId: number, isAdmin: boolean) {
+  return request(`/api/admin/users/${userId}/admin`, {
+    method: 'PUT',
+    body: JSON.stringify({ is_admin: isAdmin }),
+  });
+}
+
+export function adminDeleteUser(userId: number) {
+  return request(`/api/admin/users/${userId}`, { method: 'DELETE' });
+}

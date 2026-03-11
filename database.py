@@ -462,6 +462,36 @@ def delete_user(user_id: int) -> bool:
     return deleted
 
 
+# ── Admin: user management ──
+
+def list_users() -> list[dict]:
+    """Returns all users with basic info for admin panel."""
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT u.id, u.username, u.is_admin, u.created_at, "
+        "COALESCE(g.gen_count, 0) as generation_count "
+        "FROM users u "
+        "LEFT JOIN (SELECT user_id, COUNT(*) as gen_count FROM generation_history GROUP BY user_id) g "
+        "ON u.id = g.user_id "
+        "ORDER BY u.id"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def set_admin(user_id: int, is_admin_val: bool) -> bool:
+    """Set or revoke admin status. Returns True if user exists."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "UPDATE users SET is_admin = ? WHERE id = ?",
+        (1 if is_admin_val else 0, user_id),
+    )
+    conn.commit()
+    ok = cur.rowcount > 0
+    conn.close()
+    return ok
+
+
 def clear_generation_history(user_id: int) -> int:
     """Delete all generation history for a user. Returns number of deleted records."""
     conn = _get_conn()
