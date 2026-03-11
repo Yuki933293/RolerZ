@@ -62,7 +62,7 @@ export default function ChatWizard() {
       const res = await wizardStart({
         concept: conceptInput.trim(),
         provider: config.provider,
-        model: config.modelName || undefined,
+        model: config.modelName || config.modelId || undefined,
         api_key: config.apiKey || undefined,
         base_url: config.baseUrl || undefined,
         count: config.count,
@@ -85,15 +85,20 @@ export default function ChatWizard() {
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || currentQuestions.length === 0) return;
-    const answer = input.trim();
+  const OPTIONAL_FIELDS = new Set(['goals', 'conflicts']);
+
+  const handleSend = async (skipField = false) => {
+    if (currentQuestions.length === 0) return;
     const field = currentQuestions[0].field;
+    const isOptional = OPTIONAL_FIELDS.has(field);
+    const answer = skipField ? '' : input.trim();
+    if (!answer && !isOptional) return;
     setInput('');
     setLoading(true);
     setError('');
 
-    const userMsg: Message = { role: 'user', content: answer };
+    const isZh = config.language === 'zh' || config.language === 'zh-Hant';
+    const userMsg: Message = { role: 'user', content: answer || (isZh ? '（跳过）' : '(skipped)') };
     setMessages(prev => [...prev, userMsg]);
     setAnsweredFields(prev => [...prev, field]);
 
@@ -156,6 +161,7 @@ export default function ChatWizard() {
   };
 
   const progress = Math.round((answeredFields.length / totalFields) * 100);
+  const isOptionalField = currentQuestions.length > 0 && OPTIONAL_FIELDS.has(currentQuestions[0]?.field);
 
   // ── Not started yet ──
   if (!started) {
@@ -272,12 +278,21 @@ export default function ChatWizard() {
             disabled={loading}
           />
           <button
-            onClick={handleSend}
-            disabled={loading || !input.trim()}
+            onClick={() => handleSend()}
+            disabled={loading || (!input.trim() && !isOptionalField)}
             className="bg-accent hover:bg-accent-hover disabled:opacity-40 text-white px-5 py-3 rounded-xl font-semibold text-[0.85rem] transition-colors flex-shrink-0"
           >
             {t('send') as string}
           </button>
+          {isOptionalField && (
+            <button
+              onClick={() => handleSend(true)}
+              disabled={loading}
+              className="border border-border text-text-dim hover:bg-surface-3 disabled:opacity-40 px-4 py-3 rounded-xl text-[0.85rem] transition-colors flex-shrink-0"
+            >
+              {t('skip') as string}
+            </button>
+          )}
         </div>
       ) : started && !results ? (
         <button
