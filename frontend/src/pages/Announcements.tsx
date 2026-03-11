@@ -80,39 +80,37 @@ const TYPE_STYLE: Record<AnnouncementType, { label: string; labelEn: string; cls
 
 /* ── Tier config ── */
 const TIER_CONFIG = [
-  { tier: 'normal',    threshold: 0,      label: 'tierNormal',    bg: ['#f5f6f8', '#f5f6f8'] as [string, string] },
-  { tier: 'rare',      threshold: 500,    label: 'tierRare',      bg: ['#eef4ff', '#dce6f9'] as [string, string] },
-  { tier: 'epic',      threshold: 5000,   label: 'tierEpic',      bg: ['#eef4ff', '#dce6f9'] as [string, string] },
-  { tier: 'legendary', threshold: 50000,  label: 'tierLegendary', bg: ['#fef9ef', '#eedbb0'] as [string, string] },
-  { tier: 'mythic',    threshold: 100000, label: 'tierMythic',    bg: ['#fef9ef', '#eedbb0'] as [string, string] },
+  { tier: 'normal',    threshold: 0,      label: 'tierNormal',    bg: ['#f3f4f6', '#e5e7eb'] as [string, string] },
+  { tier: 'rare',      threshold: 500,    label: 'tierRare',      bg: ['#edeaf2', '#ccc8d8'] as [string, string] },
+  { tier: 'epic',      threshold: 5000,   label: 'tierEpic',      bg: ['#e8f2ff', '#c8ddf5'] as [string, string] },
+  { tier: 'legendary', threshold: 50000,  label: 'tierLegendary', bg: ['#faf5eb', '#e6d5a8'] as [string, string] },
+  { tier: 'mythic',    threshold: 100000, label: 'tierMythic',    bg: ['#1a1a2e', '#0f3460'] as [string, string] },
 ];
 
 /* Per-tier feature descriptions */
 const TIER_FEATURES: Record<string, { zh: string; en: string }[]> = {
   normal: [
     { zh: '静态卡片', en: 'Static card' },
-    { zh: '纯色背景', en: 'Flat background' },
+    { zh: '灰色背景', en: 'Grey background' },
   ],
   rare: [
     { zh: '静态卡片', en: 'Static card' },
-    { zh: '银色边框光晕', en: 'Silver border glow' },
+    { zh: '银紫渐变', en: 'Silver lavender gradient' },
   ],
   epic: [
     { zh: '3D 倾斜效果', en: '3D tilt effect' },
-    { zh: '银色边框光晕', en: 'Silver border glow' },
+    { zh: '冰蓝渐变', en: 'Ice blue gradient' },
   ],
   legendary: [
     { zh: '3D 倾斜效果', en: '3D tilt effect' },
     { zh: '全息虹彩层', en: 'Holographic layer' },
-    { zh: '金色渐变背景', en: 'Gold gradient' },
+    { zh: '香槟金渐变', en: 'Champagne gold gradient' },
   ],
   mythic: [
     { zh: '3D 倾斜效果', en: '3D tilt effect' },
-    { zh: '全息虹彩层', en: 'Holographic layer' },
-    { zh: '金色渐变背景', en: 'Gold gradient' },
+    { zh: '暗金背景', en: 'Dark gold background' },
     { zh: '金光扫过动画', en: 'Gold sweep shimmer' },
-    { zh: '彩虹流动边框', en: 'Rainbow border' },
-    { zh: '金色粒子飘浮', en: 'Gold particles' },
+    { zh: '金尘粒子飘浮', en: 'Gold luminous particles' },
   ],
 };
 
@@ -155,9 +153,15 @@ function TierCard({ tier, threshold, label, bg, isZh, lang, features }: {
     el.style.setProperty('--my', '50%');
   }, [hasMouseTracking]);
 
-  const glowColor = tier === 'legendary' || tier === 'mythic'
+  const glowColor = tier === 'mythic'
     ? 'rgba(212,175,55,0.25)'
-    : 'rgba(160,180,230,0.25)';
+    : tier === 'legendary'
+      ? 'rgba(255,128,0,0.25)'
+      : tier === 'epic'
+        ? 'rgba(0,112,221,0.25)'
+        : tier === 'rare'
+          ? 'rgba(140,120,180,0.25)'
+          : 'rgba(0,112,221,0.25)';
 
   return (
     <div className="flex gap-5 items-start">
@@ -175,7 +179,6 @@ function TierCard({ tier, threshold, label, bg, isZh, lang, features }: {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
-        {tier === 'mythic' && <div className="mythic-rainbow" />}
         <div className="holo-card-inner">
           <div className="card-base" />
           <div className="holo-layer" />

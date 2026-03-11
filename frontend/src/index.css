@@ -231,126 +231,142 @@ button, [role="button"], a, select, label[for], input[type="checkbox"], input[ty
 
 /* ── Card Tier System ── */
 
-/* Tier 1: Normal — plain flat card, no gradient, no effects */
+/* Tier 1: Normal — flat grey, no effects (Common) */
 .card-tier-normal .holo-layer,
 .card-tier-normal .holo-lines,
 .card-tier-normal .holo-spot { display: none; }
 .card-tier-normal .holo-card-inner {
   transform: none;
-  background: #f5f6f8 !important;
+  background: linear-gradient(160deg, #f3f4f6 0%, #e5e7eb 100%) !important;
 }
 .card-tier-normal .card-base {
-  background: #f5f6f8 !important;
+  background: linear-gradient(160deg, #f3f4f6 0%, #e5e7eb 100%) !important;
 }
 .card-tier-normal .holo-card-inner::before {
   border-color: rgba(0,0,0,0.06);
 }
 
-/* Tier 2: Rare — static with subtle silver border; hover activates glow */
+/* Tier 2: Rare — silver with lavender undertone */
 .card-tier-rare .holo-layer,
 .card-tier-rare .holo-lines,
 .card-tier-rare .holo-spot { display: none; }
 .card-tier-rare .holo-card-inner {
   transform: none;
-  border: 1.5px solid rgba(175,185,215,0.4);
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  background: linear-gradient(160deg, #edeaf2 0%, #d8d3e2 50%, #ccc8d8 100%) !important;
+  transition: box-shadow 0.4s ease;
+}
+.card-tier-rare .card-base {
+  background: linear-gradient(160deg, #edeaf2 0%, #d8d3e2 50%, #ccc8d8 100%) !important;
 }
 .card-tier-rare .holo-card-inner::before {
-  border-color: transparent;
+  border-color: rgba(0,0,0,0.06);
 }
 .card-tier-rare:hover .holo-card-inner {
-  border-color: rgba(140,160,220,0.8);
   box-shadow:
-    0 4px 24px rgba(0,0,0,0.08),
-    0 0 20px rgba(150,175,235,0.5),
-    0 0 8px rgba(190,205,245,0.4);
+    0 4px 20px rgba(120,100,160,0.12),
+    0 0 18px rgba(160,140,200,0.18);
 }
 
-/* Tier 3: Epic — static silver border; hover activates 3D tilt + glow */
+/* Tier 3: Epic — ice blue */
 .card-tier-epic .holo-layer,
 .card-tier-epic .holo-lines,
 .card-tier-epic .holo-spot { display: none; }
 .card-tier-epic .holo-card-inner {
-  border: 1.5px solid rgba(160,175,220,0.45);
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  background: linear-gradient(160deg, #e8f2ff 0%, #c8ddf5 100%) !important;
+  transition: box-shadow 0.4s ease;
+}
+.card-tier-epic .card-base {
+  background: linear-gradient(160deg, #e8f2ff 0%, #c8ddf5 100%) !important;
 }
 .card-tier-epic .holo-card-inner::before {
-  border-color: transparent;
+  border-color: rgba(0,0,0,0.06);
 }
 .card-tier-epic:hover .holo-card-inner {
-  border-color: rgba(130,155,225,0.8);
   box-shadow:
-    0 8px 32px rgba(0,0,0,0.12),
-    0 0 24px rgba(140,170,235,0.5),
-    0 0 10px rgba(180,200,245,0.4);
+    0 8px 28px rgba(0,80,180,0.12),
+    0 0 24px rgba(100,160,230,0.22);
 }
 
-/* Tier 4: Legendary — same as Mythic but without rainbow border, gold sweep, gold particles */
+/* Tier 4: Legendary — warm champagne gold */
 .card-tier-legendary .holo-card-inner {
-  background: linear-gradient(160deg, #fef9ef 0%, #f5e6c8 50%, #eedbb0 100%) !important;
+  background: linear-gradient(160deg, #faf5eb 0%, #f0e4c8 50%, #e6d5a8 100%) !important;
   transition: box-shadow 0.4s ease;
 }
 .card-tier-legendary .card-base {
-  background: linear-gradient(160deg, #fef9ef 0%, #f5e6c8 50%, #eedbb0 100%) !important;
+  background: linear-gradient(160deg, #faf5eb 0%, #f0e4c8 50%, #e6d5a8 100%) !important;
 }
 .card-tier-legendary .holo-card-inner::before {
   border-color: transparent;
 }
 .card-tier-legendary:hover .holo-card-inner {
   box-shadow:
-    0 8px 32px rgba(180,140,30,0.2),
-    0 0 35px rgba(212,175,55,0.4),
-    0 0 15px rgba(160,120,255,0.15);
+    0 8px 28px rgba(180,150,60,0.15),
+    0 0 28px rgba(200,170,80,0.2);
 }
 
-/* Tier 5: Mythic — gold bg + rainbow border; hover explodes all effects */
+/* Legendary holo — warm-tinted iridescence on champagne bg */
+.card-tier-legendary .holo-layer {
+  background:
+    radial-gradient(
+      circle at var(--mx) var(--my),
+      rgba(255,240,200,0.3) 0%,
+      transparent 60%
+    ),
+    linear-gradient(
+      115deg,
+      transparent 20%,
+      rgba(200,160,50,0.12) 36%,
+      rgba(180,140,220,0.10) 46%,
+      rgba(100,200,180,0.08) 56%,
+      rgba(200,160,50,0.12) 66%,
+      transparent 80%
+    );
+  background-size: 100% 100%, 200% 200%;
+  background-position: 0 0, calc(var(--mx)) calc(var(--my));
+}
+.card-tier-legendary .holo-spot {
+  background: radial-gradient(
+    circle at var(--mx) var(--my),
+    rgba(255,230,150,0.3) 0%,
+    transparent 50%
+  );
+}
+
+/* Tier 5: Mythic — dark luxury bg with gold accents */
 .card-tier-mythic .holo-card-inner {
-  background: linear-gradient(160deg, #fef9ef 0%, #f5e6c8 50%, #eedbb0 100%) !important;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
   transition: box-shadow 0.4s ease;
 }
 .card-tier-mythic .card-base {
-  background: linear-gradient(160deg, #fef9ef 0%, #f5e6c8 50%, #eedbb0 100%) !important;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
 }
 .card-tier-mythic .holo-card-inner::before {
-  border-color: transparent;
+  border-color: rgba(212,175,55,0.3);
+}
+.card-tier-mythic .card-content {
+  color: #f0e6d0;
+}
+.card-tier-mythic .card-content .text-text-primary {
+  color: #f0e6d0 !important;
+}
+.card-tier-mythic .card-content .text-text-faint {
+  color: rgba(212,175,55,0.7) !important;
 }
 
-/* Rainbow rotating border — conic-gradient behind the card, outside holo-card-inner */
-.card-tier-mythic .mythic-rainbow {
-  position: absolute;
-  inset: -3px;
-  border-radius: inherit;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 0.7;
-  transition: opacity 0.4s ease;
-}
-.card-tier-mythic:hover .mythic-rainbow {
-  opacity: 1;
-}
-.card-tier-mythic .mythic-rainbow::before {
-  content: '';
-  position: absolute;
-  inset: -50%;
-  background: conic-gradient(
-    #ff6b6b, #ffd93d, #6bcf7f, #4ecdc4, #45b7d1, #a78bfa, #ff6b9d, #ff6b6b
-  );
-  animation: mythic-rainbow-spin 4s linear infinite;
-}
-@keyframes mythic-rainbow-spin {
-  to { transform: rotate(360deg); }
-}
+/* Mythic — hide holo layers, rely on gold sweep + particles */
+.card-tier-mythic .holo-layer,
+.card-tier-mythic .holo-lines,
+.card-tier-mythic .holo-spot { display: none; }
 
-/* Hover: full effects explosion */
+/* Hover: golden aura explosion */
 .card-tier-mythic:hover .holo-card-inner {
   box-shadow:
-    0 8px 32px rgba(180,140,30,0.2),
-    0 0 35px rgba(212,175,55,0.4),
-    0 0 15px rgba(160,120,255,0.15);
+    0 8px 32px rgba(180,140,30,0.3),
+    0 0 40px rgba(212,175,55,0.35),
+    0 0 20px rgba(160,120,255,0.12);
 }
 
-/* Gold sweep — hidden by default, appears on hover */
+/* Gold sweep — always visible, brighter on dark bg */
 .card-tier-mythic .gold-sweep {
   position: absolute;
   inset: 0;
@@ -358,11 +374,6 @@ button, [role="button"], a, select, label[for], input[type="checkbox"], input[ty
   border-radius: inherit;
   pointer-events: none;
   z-index: 5;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-.card-tier-mythic:hover .gold-sweep {
-  opacity: 1;
 }
 .card-tier-mythic .gold-sweep::after {
   content: '';
@@ -373,11 +384,13 @@ button, [role="button"], a, select, label[for], input[type="checkbox"], input[ty
   height: 200%;
   background: linear-gradient(
     105deg,
-    transparent 38%,
-    rgba(255,215,0,0.18) 43%,
-    rgba(255,248,220,0.45) 50%,
-    rgba(255,215,0,0.18) 57%,
-    transparent 62%
+    transparent 35%,
+    rgba(255,215,0,0.12) 40%,
+    rgba(255,248,220,0.35) 48%,
+    rgba(255,215,0,0.5) 50%,
+    rgba(255,248,220,0.35) 52%,
+    rgba(255,215,0,0.12) 60%,
+    transparent 65%
   );
   transform: skewX(-25deg);
   animation: gold-sweep 3.5s ease-in-out infinite;
@@ -387,7 +400,7 @@ button, [role="button"], a, select, label[for], input[type="checkbox"], input[ty
   100% { left: 150%; }
 }
 
-/* Mythic particle sparkles — hidden by default, appear on hover */
+/* Mythic gold particles — always visible, glowing on dark bg */
 .card-tier-mythic .mythic-particles {
   position: absolute;
   inset: 0;
@@ -395,29 +408,27 @@ button, [role="button"], a, select, label[for], input[type="checkbox"], input[ty
   overflow: hidden;
   pointer-events: none;
   z-index: 5;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-.card-tier-mythic:hover .mythic-particles {
-  opacity: 1;
 }
 .card-tier-mythic .mythic-particles span {
   position: absolute;
-  width: 3px;
-  height: 3px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,215,0,0.9), transparent);
-  animation: mythic-float 3s ease-in-out infinite;
+  background: radial-gradient(circle, #fff8e0 0%, rgba(255,215,0,0.6) 40%, transparent 70%);
+  box-shadow: 0 0 10px 4px rgba(255,200,50,0.4), 0 0 20px 6px rgba(255,215,0,0.15);
+  animation: mythic-drift ease-in-out infinite;
 }
-.card-tier-mythic .mythic-particles span:nth-child(1) { left: 15%; top: 20%; animation-delay: 0s; }
-.card-tier-mythic .mythic-particles span:nth-child(2) { left: 75%; top: 35%; animation-delay: 0.8s; }
-.card-tier-mythic .mythic-particles span:nth-child(3) { left: 40%; top: 70%; animation-delay: 1.6s; }
-.card-tier-mythic .mythic-particles span:nth-child(4) { left: 85%; top: 80%; animation-delay: 0.4s; }
-.card-tier-mythic .mythic-particles span:nth-child(5) { left: 25%; top: 55%; animation-delay: 1.2s; }
-.card-tier-mythic .mythic-particles span:nth-child(6) { left: 60%; top: 15%; animation-delay: 2.0s; }
-@keyframes mythic-float {
-  0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
-  50% { opacity: 1; transform: translateY(-8px) scale(1.2); }
+/* Varied sizes (4–6px) and positions with staggered timing */
+.card-tier-mythic .mythic-particles span:nth-child(1) { width: 4px; height: 4px; left: 12%; top: 18%; animation-duration: 10s; animation-delay: 0s; }
+.card-tier-mythic .mythic-particles span:nth-child(2) { width: 5px; height: 5px; left: 72%; top: 28%; animation-duration: 12s; animation-delay: 1.5s; }
+.card-tier-mythic .mythic-particles span:nth-child(3) { width: 4px; height: 4px; left: 38%; top: 65%; animation-duration: 11s; animation-delay: 3s; }
+.card-tier-mythic .mythic-particles span:nth-child(4) { width: 6px; height: 6px; left: 82%; top: 75%; animation-duration: 14s; animation-delay: 0.8s; }
+.card-tier-mythic .mythic-particles span:nth-child(5) { width: 5px; height: 5px; left: 22%; top: 50%; animation-duration: 13s; animation-delay: 2.2s; }
+.card-tier-mythic .mythic-particles span:nth-child(6) { width: 4px; height: 4px; left: 58%; top: 12%; animation-duration: 11s; animation-delay: 4s; }
+@keyframes mythic-drift {
+  0%   { opacity: 0.4; transform: translate(0, 0) scale(0.8); }
+  25%  { opacity: 0.9; transform: translate(6px, -12px) scale(1); }
+  50%  { opacity: 0.7; transform: translate(-4px, -20px) scale(1.1); }
+  75%  { opacity: 0.95; transform: translate(8px, -10px) scale(0.9); }
+  100% { opacity: 0.4; transform: translate(0, 0) scale(0.8); }
 }
 
 /* ── Expand overlay ── */
