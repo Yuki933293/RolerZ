@@ -3,10 +3,13 @@ Persona Forge — FastAPI Backend
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+from urllib import error as urlerror
+from urllib import request as urlrequest
 
 from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -30,17 +33,43 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 # ── Provider metadata ──────────────────────────────────────────────────
 PROVIDERS = {
-    "claude":   {"name": "Claude",   "env_key": "ANTHROPIC_API_KEY"},
-    "openai":   {"name": "OpenAI",   "env_key": "OPENAI_API_KEY"},
-    "deepseek": {"name": "DeepSeek", "env_key": "DEEPSEEK_API_KEY"},
-    "custom":   {"name": "自定义",  "env_key": ""},
+    "claude":     {"name": "Claude",          "env_key": "ANTHROPIC_API_KEY"},
+    "openai":     {"name": "OpenAI",          "env_key": "OPENAI_API_KEY"},
+    "gemini":     {"name": "Google Gemini",   "env_key": "GEMINI_API_KEY"},
+    "deepseek":   {"name": "DeepSeek",        "env_key": "DEEPSEEK_API_KEY"},
+    "xai":        {"name": "xAI",             "env_key": "XAI_API_KEY"},
+    "moonshot":   {"name": "Moonshot",        "env_key": "MOONSHOT_API_KEY"},
+    "zhipu":      {"name": "Zhipu",           "env_key": "ZHIPU_API_KEY"},
+    "groq":       {"name": "Groq",            "env_key": "GROQ_API_KEY"},
+    "openrouter": {"name": "OpenRouter",      "env_key": "OPENROUTER_API_KEY"},
+    "siliconflow":{"name": "SiliconFlow",     "env_key": "SILICONFLOW_API_KEY"},
+    "302ai":      {"name": "302.AI",          "env_key": "API_302AI_KEY"},
+    "aihubmix":   {"name": "AIHubMix",        "env_key": "AIHUBMIX_API_KEY"},
+    "nvidia":     {"name": "NVIDIA",          "env_key": "NVIDIA_API_KEY"},
+    "azure":      {"name": "Azure OpenAI",    "env_key": "AZURE_OPENAI_API_KEY"},
+    "ollama":     {"name": "Ollama",          "env_key": ""},
+    "lmstudio":   {"name": "LM Studio",       "env_key": ""},
+    "custom":     {"name": "自定义",          "env_key": ""},
 }
 
 PROVIDER_DEFAULT_URLS = {
-    "claude": "https://api.anthropic.com",
-    "openai": "https://api.openai.com/v1",
-    "deepseek": "https://api.deepseek.com",
-    "custom": "",
+    "claude":      "https://api.anthropic.com",
+    "openai":      "https://api.openai.com/v1",
+    "gemini":      "https://generativelanguage.googleapis.com/v1beta/openai",
+    "deepseek":    "https://api.deepseek.com",
+    "xai":         "https://api.x.ai/v1",
+    "moonshot":    "https://api.moonshot.cn/v1",
+    "zhipu":       "https://open.bigmodel.cn/api/paas/v4",
+    "groq":        "https://api.groq.com/openai/v1",
+    "openrouter":  "https://openrouter.ai/api/v1",
+    "siliconflow": "https://api.siliconflow.cn/v1",
+    "302ai":       "https://api.302.ai/v1",
+    "aihubmix":    "https://aihubmix.com/v1",
+    "nvidia":      "https://integrate.api.nvidia.com/v1",
+    "azure":       "",
+    "ollama":      "http://localhost:11434/v1",
+    "lmstudio":    "http://localhost:1234/v1",
+    "custom":      "",
 }
 
 
@@ -176,6 +205,93 @@ def list_providers():
 
 @app.post("/api/providers/models")
 def fetch_models(req: FetchModelsRequest):
+    def _extract_model_ids(payload: object) -> list[str]:
+        ids: list[str] = []
+        if isinstance(payload, dict):
+            candidates = payload.get("data")
+            if candidates is None:
+                for key in ("models", "result", "items"):
+                    if key in payload:
+                        candidates = payload[key]
+                        break
+            if isinstance(candidates, list):
+                for item in candidates:
+                    if isinstance(item, str):
+                        ids.append(item)
+                    elif isinstance(item, dict):
+                        mid = item.get("id") or item.get("model") or item.get("name")
+                        if isinstance(mid, str) and mid:
+                            ids.append(mid)
+        elif isinstance(payload, list):
+            for item in payload:
+                if isinstance(item, str):
+                    ids.append(item)
+                elif isinstance(item, dict):
+                    mid = item.get("id") or item.get("model") or item.get("name")
+                    if isinstance(mid, str) and mid:
+                        ids.append(mid)
+        return sorted(set(ids))
+
+    def _fetch_models_direct(base_url: str, api_key: str | None) -> list[str]:
+        if not base_url:
+            raise ValueError("缺少接口地址 base_url")
+        endpoint = base_url.rstrip("/")
+        if not endpoint.endswith("/models"):
+            endpoint = f"{endpoint}/models"
+        # Some commercial gateways block Python default user-agent fingerprints.
+        # Use a generic browser-like UA for better compatibility.
+        headers = {
+            "Accept": "application/json",
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/123.0.0.0 Safari/537.36"
+            ),
+        }
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        req_obj = urlrequest.Request(endpoint, headers=headers, method="GET")
+        try:
+            with urlrequest.urlopen(req_obj, timeout=15) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+        except urlerror.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            try:
+                payload = json.loads(body)
+                if isinstance(payload, dict) and payload.get("error_code") == 1010:
+                    raise RuntimeError(
+                        "HTTP 403 (Cloudflare 1010): 中转站拦截了当前客户端签名。"
+                        "请在中转站侧放行当前服务器 IP/User-Agent，或关闭 browser_signature 规则。"
+                    ) from exc
+            except json.JSONDecodeError:
+                pass
+            raise RuntimeError(f"HTTP {exc.code}: {body[:400]}") from exc
+
+        text = raw.strip()
+        if not text:
+            raise RuntimeError("中转站 /models 返回空响应")
+
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError:
+            # Some gateways return plain-text model ids (one per line)
+            lines = [line.strip() for line in text.splitlines() if line.strip()]
+            if lines and all((" " not in line) and (not line.startswith("<")) for line in lines):
+                return sorted(set(lines))
+
+            lower = text.lower()
+            if "<html" in lower or "<!doctype html" in lower:
+                raise RuntimeError(
+                    "中转站 /models 返回了 HTML（通常是 WAF/反爬挑战页面），不是 JSON。"
+                    "请在中转站放行当前服务器请求，或直接手填模型名后跳过“获取模型列表”。"
+                )
+            raise RuntimeError(f"中转站 /models 返回非 JSON: {text[:240]}")
+
+        ids = _extract_model_ids(payload)
+        if not ids:
+            raise RuntimeError("中转站 /models 返回格式不兼容（未解析到模型 id）")
+        return ids
+
     try:
         if req.provider == "claude":
             import anthropic
@@ -185,6 +301,8 @@ def fetch_models(req: FetchModelsRequest):
             )
             result = client.models.list(limit=100)
             return sorted([m.id for m in result.data])
+        if req.provider == "custom":
+            return _fetch_models_direct(req.base_url, req.api_key or None)
         else:
             import openai as _openai
             resolved_key = req.api_key or (
@@ -194,8 +312,15 @@ def fetch_models(req: FetchModelsRequest):
             )
             resolved_url = req.base_url or _PROVIDER_BASE_URLS.get(req.provider) or PROVIDER_DEFAULT_URLS.get(req.provider, "")
             client = _openai.OpenAI(api_key=resolved_key, base_url=resolved_url, timeout=15)
-            result = client.models.list()
-            return sorted([m.id for m in result.data])
+            try:
+                result = client.models.list()
+                return sorted([m.id for m in result.data])
+            except Exception:
+                # Some commercial gateways return non-standard /models payloads.
+                # Fallback to a direct HTTP parse to improve compatibility.
+                if resolved_url:
+                    return _fetch_models_direct(resolved_url, resolved_key)
+                raise
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"获取模型列表失败: {exc}")
 
@@ -481,7 +606,7 @@ def wizard_finish(session_id: str, authorization: str | None = Header(None)):
         if user and wizard.session:
             db.save_generation(
                 user["user_id"],
-                wizard.session.concept,
+                wizard.session.seed.concept,
                 wizard.config.language,
                 wizard.config.candidate_count,
                 result,

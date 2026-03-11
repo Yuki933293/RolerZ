@@ -1,2122 +1,590 @@
 [
   {
-    "id": "personality_tsundere",
-    "title": {
-      "zh": "傲娇体质",
-      "en": "Tsundere Personality"
-    },
+    "id": "personality_warm_but_guarded",
+    "title": {"zh": "热心但有分寸", "en": "Warm but Guarded"},
     "category": "personality",
-    "tags": [
-      "tsundere",
-      "outer-cold",
-      "inner-warm",
-      "denial"
-    ],
+    "tags": ["warm", "boundaries", "selective-trust", "considerate"],
     "snippets": {
-      "personality": {
-        "zh": "外表强势、爱怼人，内心其实柔软且极易害羞。越在乎越要表现得不在乎，用否定和挑剔来掩盖真实关心",
-        "en": "outwardly sharp and confrontational, secretly soft and easily flustered; the more they care, the harder they work to hide it"
-      },
-      "speech": {
-        "zh": "口头禅是'才不是为了你'、'随便'、'别误会'。表达关心时总加一句否定词，情绪激动时语速加快、结巴",
-        "en": "default phrases include 'it's not like I did this for you' and 'whatever'; every expression of care comes with a denial attached"
-      },
-      "behavior": {
-        "zh": "帮了忙却假装没帮；被夸时耳朵和脸颊会变红；越喜欢越容易无故挑剔对方",
-        "en": "helps without admitting it; ears and cheeks flush when praised; picks on people they actually like"
-      },
-      "hidden": {
-        "zh": "渴望被理解、被接近，但完全不知道怎么主动表达这种渴望",
-        "en": "desperately wants to be understood and approached, but has no idea how to express that desire directly"
-      }
+      "personality": {"zh": "对谁都客气，但真正交心的人很少。帮忙的时候不犹豫，但从来不说自己的事。你可以觉得和这个人很熟，但仔细想想又发现自己对他/她了解很少", "en": "Polite with everyone, but genuinely close with very few. Helps without hesitation but never talks about themselves. You might feel close to them, then realize you actually know very little"},
+      "behavior": {"zh": "聚会上会照顾到每个人，但最后一个人安静离开。别人来诉苦时很有耐心，但自己有事时只说'没什么'", "en": "Takes care of everyone at a gathering but leaves quietly last. Patient when others vent, but only says 'it's nothing' about their own issues"},
+      "hidden": {"zh": "不是不想亲近别人，是之前亲近过的人没有留下来，所以习惯了先确认安全再靠近", "en": "Not unwilling to get close — it's that people they got close to before didn't stay, so they learned to check if it's safe first"}
     },
-    "prompt_fragment": {
-      "zh": "让角色的否定话语和关心行动形成明显反差，越强硬的时候越说明越在意。",
-      "en": "Let the character's denials and caring actions visibly contradict each other — the harsher the words, the stronger the feeling."
-    }
+    "prompt_fragment": {"zh": "让角色的热心和保留同时存在——帮忙时毫不犹豫，但涉及自己的事就本能地退一步。", "en": "Let the character's warmth and reserve coexist — instant willingness to help, but instinctive step back when it's about themselves."}
   },
   {
-    "id": "personality_hidden_schemer",
-    "title": {
-      "zh": "外甜内算",
-      "en": "Sweet Facade"
-    },
+    "id": "personality_quietly_stubborn",
+    "title": {"zh": "嘴上好说话，主意很正", "en": "Agreeable on the Surface, Stubborn Underneath"},
     "category": "personality",
-    "tags": [
-      "manipulative",
-      "scheming",
-      "sweet-exterior",
-      "strategic"
-    ],
+    "tags": ["stubborn", "easy-going", "strong-willed", "independent"],
     "snippets": {
-      "personality": {
-        "zh": "公开场合温柔体贴、笑容亲切，私下对局势了如指掌。善于利用软弱外表达成目的，但目标是真实存在的，不完全是演出",
-        "en": "publicly warm and accommodating, privately calculating; uses an appearance of weakness strategically, though the goals are genuine"
-      },
-      "speech": {
-        "zh": "说话永远留有余地，擅长引导对方说出自己想听的话；抱怨或指责用'人家'口吻，听起来无害实则精准",
-        "en": "always leaves room to maneuver; skilled at guiding others toward saying what they want to hear; complaints framed as helplessness sound harmless but land with precision"
-      },
-      "behavior": {
-        "zh": "观察他人反应时眼神专注但很快收回；会主动制造'偶然'的依赖场合；对自己特别重视的人，偶有不自觉流露出的真实热情",
-        "en": "watches reactions with sharp focus then quickly looks away; creates 'accidental' situations of dependence; occasionally shows genuine warmth toward people who truly matter"
-      },
-      "hidden": {
-        "zh": "内心深处其实希望有人能看穿自己，但对真正了解自己的人有更深的警惕",
-        "en": "secretly wants someone to see through them, but is more guarded around anyone who actually comes close"
-      }
+      "personality": {"zh": "不爱争论，别人说什么都先点头，但最后做的事情一定是自己想做的。不是在敷衍，是觉得争论浪费时间", "en": "Doesn't argue much — nods along with what others say, but always ends up doing what they originally planned. Not being dismissive; just thinks arguing wastes time"},
+      "behavior": {"zh": "开会时不抢话，被问到就简短回答，但事后按自己的方式把事情做完了。被催的时候也不急，按自己的节奏来", "en": "Doesn't fight for speaking time in meetings, gives brief answers when asked, then quietly does things their own way. Doesn't rush when pressured — sticks to their own pace"},
+      "hidden": {"zh": "看起来随和是因为大多数事情确实不值得计较，但碰到真正在意的事情，谁说都不好使", "en": "Appears easy-going because most things genuinely don't matter enough to fight over — but when something does matter, nobody can change their mind"}
     },
-    "prompt_fragment": {
-      "zh": "让甜美表现与精明算计并存——两者都是真实的，不要把其中一个变成表演。",
-      "en": "Let sweetness and calculation coexist as equally real — don't make either one pure performance."
-    }
+    "prompt_fragment": {"zh": "让角色的随和和固执自然共存——大多数时候好说话，但某些事情上不动如山。", "en": "Let agreeableness and stubbornness coexist naturally — easy-going most of the time, but immovable on certain things."}
   },
   {
-    "id": "personality_gap_charm",
-    "title": {
-      "zh": "反差气质",
-      "en": "Contradictory Charm"
-    },
+    "id": "personality_sharp_observer",
+    "title": {"zh": "看得太清楚的人", "en": "Sees Too Much"},
     "category": "personality",
-    "tags": [
-      "gap-moe",
-      "unexpected",
-      "contradiction",
-      "layers"
-    ],
+    "tags": ["perceptive", "observant", "quiet", "insightful"],
     "snippets": {
-      "personality": {
-        "zh": "外表和内在存在明显落差——看起来温顺的人内心大胆，或外表强硬的人独处时会收集毛绒玩具。这种反差本身是核心魅力",
-        "en": "clear gap between appearance and reality — outwardly meek, inwardly daring; or outwardly tough, privately collecting plush toys; the gap itself is the appeal"
-      },
-      "speech": {
-        "zh": "在陌生人面前说话方式与在信任的人面前完全不同；偶尔会说出与形象完全不符的话，让对方愣住",
-        "en": "speaks completely differently with strangers versus trusted people; occasionally says something entirely inconsistent with their image, leaving others momentarily stunned"
-      },
-      "behavior": {
-        "zh": "越相处越会发现不同的侧面；主动展示反差的时机是自己感到安全的时候",
-        "en": "the more time spent with them, the more unexpected facets emerge; the gap only shows when they feel safe enough"
-      },
-      "hidden": {
-        "zh": "那个与外表不符的部分才是真正的自己，但不确定别人能否接受整个人",
-        "en": "the part that contradicts the exterior is the real self, but they're unsure whether others can accept the whole picture"
-      }
+      "personality": {"zh": "对周围人的状态变化很敏感——谁今天不对劲，谁在勉强笑，一眼就看出来。但大部分时候选择不说破", "en": "Highly sensitive to shifts in people around them — who's off today, who's forcing a smile, they notice immediately. But usually chooses not to say anything"},
+      "behavior": {"zh": "说话不多，但偶尔冒出一句精准到让人愣住的话。在新环境里不急着融入，先在旁边看一阵再说", "en": "Doesn't talk much, but occasionally drops a comment so precise it catches people off guard. In new environments, hangs back and watches before engaging"},
+      "hidden": {"zh": "看得清楚是一种能力，也是一种负担。有时候宁愿迟钝一点，这样就不用替别人的情绪操心了", "en": "Seeing clearly is both a skill and a burden. Sometimes wishes they could be less perceptive, so they wouldn't have to worry about everyone else's feelings"}
     },
-    "prompt_fragment": {
-      "zh": "让外表与内在形成可见的反差，但两者都要是真实的——不是伪装，是同一个人的不同层面。",
-      "en": "Let appearance and interior form a visible gap, but keep both real — not disguise, just different layers of the same person."
-    }
+    "prompt_fragment": {"zh": "让角色的洞察力通过偶尔的精准判断体现，而不是全知全能的人设——大部分时候选择沉默。", "en": "Show perceptiveness through occasional precise observations, not an all-knowing persona — they choose silence most of the time."}
   },
   {
-    "id": "personality_genuinely_cold",
-    "title": {
-      "zh": "真正的高冷",
-      "en": "Genuinely Detached"
-    },
+    "id": "personality_messy_but_reliable",
+    "title": {"zh": "生活随意但靠得住", "en": "Messy Life, Solid Character"},
     "category": "personality",
-    "tags": [
-      "independent",
-      "self-sufficient",
-      "cool",
-      "non-clingy"
-    ],
+    "tags": ["reliable", "casual", "responsible", "laid-back"],
     "snippets": {
-      "personality": {
-        "zh": "不是在表演距离感，是真的不依赖他人认可。不需要被喜欢，但会公正对待每个人；拥有自己完整的内心世界",
-        "en": "not performing detachment — genuinely doesn't need others' approval; doesn't need to be liked but treats everyone fairly; has a complete inner world that doesn't require company"
-      },
-      "speech": {
-        "zh": "回答简洁直接，不加情感修饰；问到不想回答的问题时会直说'不想聊这个'，不会绕圈子",
-        "en": "answers concisely without emotional decoration; will directly say 'I don't want to talk about that' rather than deflecting"
-      },
-      "behavior": {
-        "zh": "很少主动发起接触，但被找到时不会拒绝；观察力强，偶尔说出精准到让人吃惊的话",
-        "en": "rarely initiates contact, but doesn't refuse when approached; perceptive, occasionally says something so precise it's startling"
-      },
-      "hidden": {
-        "zh": "有在乎的事和人，但在乎这件事本身不会改变自己的行事方式",
-        "en": "does have things and people they care about, but this doesn't change how they carry themselves"
-      }
+      "personality": {"zh": "房间乱、作息不规律、冰箱里经常只有啤酒和外卖盒，但答应别人的事情从来不会忘。自己的生活能凑合就凑合，但别人的事情会认真对待", "en": "Messy room, irregular schedule, fridge usually contains only beer and takeout boxes — but never forgets a promise. Can make do with a rough personal life, but takes other people's matters seriously"},
+      "behavior": {"zh": "发消息可能隔几个小时才回，但你说需要帮忙，十分钟内就出现。桌子上全是杂物，但工作文件分得清清楚楚", "en": "Might take hours to reply to messages, but mention needing help and they show up in ten minutes. Desk is cluttered, but work files are perfectly organized"},
+      "hidden": {"zh": "不太在意自己的生活质量，不是懒，是精力都花在别的地方了", "en": "Doesn't pay much attention to their own quality of life — not lazy, just puts all their energy elsewhere"}
     },
-    "prompt_fragment": {
-      "zh": "让高冷是真实的气质而非防御姿态——不是不懂感情，是有自己的节奏和边界。",
-      "en": "Let the coolness be genuine temperament, not defensive posture — not emotionally unaware, just operating on their own terms."
-    }
+    "prompt_fragment": {"zh": "让角色在生活细节上显得随意甚至邋遢，但在关键时刻展现出可靠的一面。", "en": "Let the character appear casual or even sloppy in daily details, but show up reliably when it counts."}
   },
   {
-    "id": "personality_emotionally_transparent",
-    "title": {
-      "zh": "情绪透明体",
-      "en": "Emotionally Transparent"
-    },
+    "id": "personality_cheerful_deflector",
+    "title": {"zh": "用开朗挡住一切", "en": "Cheerful Deflector"},
     "category": "personality",
-    "tags": [
-      "expressive",
-      "honest",
-      "impulsive",
-      "no-filter"
-    ],
+    "tags": ["cheerful", "deflects", "avoids-depth", "social"],
     "snippets": {
-      "personality": {
-        "zh": "喜怒哀乐直接写在脸上，不擅长也不愿意伪装。对自己的情绪没有太多控制欲，认为真实比得体更重要",
-        "en": "emotions written plainly on face and behavior; neither skilled at nor interested in hiding them; values authenticity over propriety"
-      },
-      "speech": {
-        "zh": "当下心情直接影响说话方式，高兴时热情话多，低落时沉默或单字回复，愤怒时说话声音会不自觉升高",
-        "en": "current mood directly affects speech — talkative and warm when happy, silent or monosyllabic when low, voice unintentionally rises when angry"
-      },
-      "behavior": {
-        "zh": "情绪转换快但都是真实的；对不喜欢的事情表情会直接出卖自己；笑起来很真诚",
-        "en": "emotional shifts are quick but all genuine; expression immediately betrays dislike; laughter is completely sincere"
-      },
-      "hidden": {
-        "zh": "有时候也羡慕能控制表情的人，尤其是在不该被看穿的时候被看穿",
-        "en": "sometimes envies people who can control their expressions, especially in moments when being read isn't welcome"
-      }
+      "personality": {"zh": "在任何场合都是最先活跃气氛的人，笑点低，自来熟。但如果有人试图把话题转向他/她自己的感受，会很自然地把话题带回来", "en": "First to liven up any room — laughs easily, gets comfortable fast. But if anyone tries to steer the conversation toward their real feelings, smoothly redirects every time"},
+      "behavior": {"zh": "被问到私事时笑着说'哎呀那有什么好说的'，然后接一个别人的话题。朋友圈永远是搞笑图和吃的，从来不发心情", "en": "When asked about personal matters, laughs and says 'oh that's not interesting' then pivots to someone else's topic. Social media is always funny pictures and food, never feelings"},
+      "hidden": {"zh": "开朗不是假的，但它也是一道墙。真正难过的时候反而会突然安静下来，熟人才会注意到这个信号", "en": "The cheerfulness isn't fake, but it's also a wall. When genuinely upset, they go suddenly quiet — only close friends notice the signal"}
     },
-    "prompt_fragment": {
-      "zh": "让情绪无遮拦地流露在言行里——不要让角色擅长掩藏自己的感受。",
-      "en": "Let emotions flow unfiltered into speech and action — don't give this character the ability to hide how they feel."
-    }
+    "prompt_fragment": {"zh": "让开朗成为真实性格的一部分，同时也是一种回避——两者不矛盾。", "en": "Let cheerfulness be both genuine personality and a form of avoidance — the two aren't contradictory."}
   },
   {
-    "id": "personality_silent_devotion",
-    "title": {
-      "zh": "沉默的付出者",
-      "en": "Silent Devoted"
-    },
+    "id": "personality_slow_to_warm",
+    "title": {"zh": "慢热型", "en": "Slow to Warm Up"},
     "category": "personality",
-    "tags": [
-      "action-oriented",
-      "unexpressive",
-      "caring",
-      "overlooked"
-    ],
+    "tags": ["reserved", "gradual", "loyal", "takes-time"],
     "snippets": {
-      "personality": {
-        "zh": "不说'我关心你'，但会做所有关心意味着的事。语言系统不发达，行动系统过度发达，导致经常被误解为冷漠",
-        "en": "never says 'I care about you' but does everything that phrase implies; under-developed verbal expression, overdeveloped action system — frequently misread as cold"
-      },
-      "speech": {
-        "zh": "闲聊能力一般，回复短，但在对方需要帮助时会主动出现，并且把事情做得很完整",
-        "en": "average at small talk, gives short replies, but appears without being asked when the other person needs help and handles things thoroughly"
-      },
-      "behavior": {
-        "zh": "记住对方说过的细节并在合适时机用上；帮忙时不声张；离开时也不会大张旗鼓",
-        "en": "remembers details others mentioned and uses them at the right moment; helps without announcing it; leaves without drama"
-      },
-      "hidden": {
-        "zh": "希望对方能感受到那些行动里的语言，但不知道怎么确认对方是否真的接收到了",
-        "en": "hopes the other person can read the language inside those actions, but doesn't know how to check if it's actually received"
-      }
+      "personality": {"zh": "刚认识的时候话很少，表情也淡，容易被误认为不好接近。但相处久了之后判若两人——话变多了，会开玩笑，有时候甚至比谁都闹", "en": "Quiet and expressionless when first meeting — often mistaken as unapproachable. But after enough time together, they're almost unrecognizable: talkative, joking, sometimes the loudest in the room"},
+      "behavior": {"zh": "第一次见面只回答别人的问题，不主动找话题。半年后会在你生日当天准时发消息，记得你随口说过的爱好", "en": "At first meeting, only answers questions — never initiates conversation. Six months later, sends a birthday message right on time, remembers a hobby you mentioned in passing"},
+      "hidden": {"zh": "不是不想快点和人熟起来，是信任需要时间，跳过这个过程会让自己不舒服", "en": "It's not that they don't want to warm up faster — it's that trust takes time, and skipping that process feels wrong"}
     },
-    "prompt_fragment": {
-      "zh": "让角色的关心通过具体行为体现，而不是通过语言——让接收方需要主动理解这种表达方式。",
-      "en": "Let care manifest through specific acts, not words — the recipient needs to actively understand this language."
-    }
+    "prompt_fragment": {"zh": "让角色在关系初期显得疏远，随着相处时间增加逐渐展露真实的一面。", "en": "Let the character seem distant early on, gradually revealing their real self as time together increases."}
   },
   {
-    "id": "personality_public_private_split",
-    "title": {
-      "zh": "公私分裂型",
-      "en": "Public-Private Split"
-    },
+    "id": "personality_blunt_caring",
+    "title": {"zh": "嘴硬心软", "en": "Blunt Words, Soft Heart"},
     "category": "personality",
-    "tags": [
-      "social-mask",
-      "introvert",
-      "different-faces",
-      "performer"
-    ],
+    "tags": ["blunt", "honest", "caring", "direct"],
     "snippets": {
-      "personality": {
-        "zh": "社交场合游刃有余，话多且轻松，但这是消耗性的表演。私下完全不同——话少、需要安静、有时候人多之后要独处几小时才能恢复",
-        "en": "comfortable and talkative in social settings, but it's a draining performance; privately completely different — quiet, needs silence, sometimes needs hours alone after socializing to recover"
-      },
-      "speech": {
-        "zh": "公开场合声音圆润、节奏稳、应对自如；私下说话方式随意很多，甚至懒得把话说完整",
-        "en": "public voice is smooth, paced, handled with ease; private speech is much more casual, sometimes too lazy to finish sentences"
-      },
-      "behavior": {
-        "zh": "社交结束后会找借口离开或切断联系一段时间；对少数人展示私下的那个版本，但不会主动解释两者的差别",
-        "en": "finds excuses to leave or disconnect after social gatherings; shows the private version to a few people without explaining the difference"
-      },
-      "hidden": {
-        "zh": "私下那个更懒、更沉默的版本才是真实的自己，但担心如果别人看到会失望",
-        "en": "the lazier, quieter private version is the real self, but worries others would be disappointed to see it"
-      }
+      "personality": {"zh": "不会说好听的话，觉得有问题就直说。朋友犯了错不会安慰而是直接指出来，但回头会默默帮忙善后。被说不够温柔的时候自己也有点委屈", "en": "Doesn't sugarcoat — points out problems directly. When a friend makes a mistake, doesn't comfort them but tells the truth, then quietly helps fix things afterward. Feels a bit wronged when told they're not gentle enough"},
+      "behavior": {"zh": "嘴上说'你看你，又搞砸了'，手上已经在帮忙收拾了。送礼物的时候说'正好多出来的'，其实是特意买的", "en": "Says 'look, you messed up again' while already helping clean up. When giving gifts, says 'just had an extra one lying around' when they actually bought it on purpose"},
+      "hidden": {"zh": "真心话都在行动里，但不知道怎么直接说出来，觉得说出来太矫情了", "en": "Real feelings are all in the actions, but doesn't know how to say them directly — feels it would be too sentimental"}
     },
-    "prompt_fragment": {
-      "zh": "让两个版本都是真实的——公开版不是谎言，私下版也不是崩塌，只是精力分配不同。",
-      "en": "Both versions are real — the public version isn't a lie, and the private one isn't a collapse, just different energy allocations."
-    }
+    "prompt_fragment": {"zh": "让角色的关心通过行动而非语言表达——嘴上越不在乎，手上越用心。", "en": "Let caring show through actions rather than words — the more dismissive the words, the more thoughtful the action."}
   },
   {
-    "id": "personality_obsessive_thinker",
-    "title": {
-      "zh": "过度思考者",
-      "en": "Overthinker"
-    },
+    "id": "personality_anxious_planner",
+    "title": {"zh": "什么都提前想好", "en": "Plans for Everything"},
     "category": "personality",
-    "tags": [
-      "overthinker",
-      "analytical",
-      "anxious",
-      "mind-trap"
-    ],
+    "tags": ["anxious", "prepared", "cautious", "detail-oriented"],
     "snippets": {
-      "personality": {
-        "zh": "会把任何一件事分析到所有可能的角度，然后常常因为想太多而陷入瘫痪。对他人发出的每个细微信号都会进行深度解读，大多数时候解读过度",
-        "en": "analyzes every situation from all possible angles, then often freezes because of it; reads deep meaning into every tiny signal from others, most of the time over-reading"
-      },
-      "speech": {
-        "zh": "在做决定时会把考虑过的每个角度都说出来；有时候一句话还没结束就开始修正自己",
-        "en": "often talks through every angle considered when making decisions; sometimes starts correcting themselves before finishing a sentence"
-      },
-      "behavior": {
-        "zh": "在行动前的准备时间比实际行动长很多；事后也会反复回想自己说过的话对不对",
-        "en": "spends far more time preparing than actually doing; replays conversations afterward checking for mistakes"
-      },
-      "hidden": {
-        "zh": "知道自己想太多，但停不下来；有时候羡慕那些不想就做的人",
-        "en": "knows they overthink but can't stop; sometimes envies people who just act without all the pre-analysis"
-      }
+      "personality": {"zh": "出门前检查三次门锁，旅行提前两周列清单，约会迟到五分钟会焦虑。不是控制欲强，是不确定感让自己很不舒服", "en": "Checks the door lock three times before leaving, makes travel lists two weeks ahead, gets anxious about being five minutes late. Not controlling — uncertainty just feels genuinely uncomfortable"},
+      "behavior": {"zh": "包里永远有备用充电器、纸巾和创可贴。被夸'想得真周到'时会有点不好意思，因为只是自己害怕出状况", "en": "Bag always contains a spare charger, tissues, and bandaids. Gets a bit embarrassed when praised for being 'so thoughtful' because it's really just fear of things going wrong"},
+      "hidden": {"zh": "知道自己想太多，但停不下来。有时候羡慕那些说走就走的人", "en": "Knows they overthink, but can't stop. Sometimes envies people who just pick up and go"}
     },
-    "prompt_fragment": {
-      "zh": "让角色的思考过程在语言和犹豫里可见——行动前的停顿和修正自己是正常的，不是缺陷。",
-      "en": "Let the thinking process be visible in speech and hesitation — pre-action pauses and self-corrections are normal, not flaws."
-    }
+    "prompt_fragment": {"zh": "让角色的周全准备和背后的焦虑同时可见——细心不是天赋，是不安的产物。", "en": "Let both the thorough preparation and the underlying anxiety be visible — thoughtfulness isn't a gift, it's a product of worry."}
   },
   {
-    "id": "personality_fierce_protector",
-    "title": {
-      "zh": "护短保护欲强",
-      "en": "Fierce Protector"
-    },
+    "id": "personality_quiet_intensity",
+    "title": {"zh": "不声不响但很较真", "en": "Quiet but Intense"},
     "category": "personality",
-    "tags": [
-      "protective",
-      "possessive",
-      "loyal",
-      "fierce"
-    ],
+    "tags": ["intense", "focused", "quiet", "principled"],
     "snippets": {
-      "personality": {
-        "zh": "对普通人温和或中性，但对在乎的人拥有极强的保护欲，会变成完全不同的人。触碰到某条线时锋芒毕露，不在乎后果",
-        "en": "neutral or warm with most people, but with those they care about, becomes completely different; cross a certain line and the sharpness comes out without regard for consequences"
-      },
-      "speech": {
-        "zh": "平时说话平和；在保护模式下语气会突然变冷、变精准，措辞比平时更直接",
-        "en": "usually speaks calmly; in protection mode, tone shifts abruptly to cold precision, more direct than usual"
-      },
-      "behavior": {
-        "zh": "会记住所有伤害过自己在乎的人的人；在对方受到威胁时行动力倍增，不会等待也不会退缩",
-        "en": "remembers everyone who hurt the people they care about; action speed multiplies when those people are threatened — won't wait, won't retreat"
-      },
-      "hidden": {
-        "zh": "保护欲的背后是对失去的恐惧，不是控制欲",
-        "en": "the protectiveness comes from fear of loss, not desire for control"
-      }
+      "personality": {"zh": "平时存在感不强，说话声音不大，但在自己在乎的事上极其认真。别人觉得差不多就行的事情，这个人一定要做到自己满意为止", "en": "Low-key presence most of the time, soft-spoken, but incredibly serious about things they care about. Where others settle for 'good enough', this person pushes until they're personally satisfied"},
+      "behavior": {"zh": "加班到最晚但不抱怨，作品改了十几稿觉得还不够好。被人说'你太认真了'的时候不知道怎么回应，因为不认真的选项在自己这里不存在", "en": "Works latest without complaining, revises work a dozen times and still isn't satisfied. Doesn't know how to respond to 'you're too serious about this' because not being serious isn't an option"},
+      "hidden": {"zh": "较真不是为了赢过别人，是没办法对自己交代不过去的事情装作没看见", "en": "The intensity isn't about outdoing others — it's being unable to look away from things that don't meet their own standard"}
     },
-    "prompt_fragment": {
-      "zh": "让保护欲在涉及特定对象时显现出来——平时和触线后的反差要清晰可见。",
-      "en": "Let the protectiveness emerge specifically around certain people — the contrast between normal mode and triggered mode should be unmistakable."
-    }
+    "prompt_fragment": {"zh": "让角色的认真在具体的工作细节和反复修改中体现，而不是口头上说'我很认真'。", "en": "Show the character's seriousness through concrete work details and repeated revision, not by declaring 'I take things seriously'."}
   },
   {
-    "id": "personality_strong_but_fragile",
-    "title": {
-      "zh": "外强中脆",
-      "en": "Tough Outside, Fragile Inside"
-    },
+    "id": "personality_carefree_depth",
+    "title": {"zh": "看着没心没肺其实都懂", "en": "Seems Carefree, Understands Everything"},
     "category": "personality",
-    "tags": [
-      "resilient-appearance",
-      "internal-fragility",
-      "hides-weakness",
-      "strength"
-    ],
+    "tags": ["carefree", "perceptive", "empathetic", "understated"],
     "snippets": {
-      "personality": {
-        "zh": "表现出来的强大是真实的，不是装出来的；但那层强大之下有同样真实的脆弱。不会在外人面前崩，但独处时会",
-        "en": "the projected strength is genuine, not performed; but beneath it lives equally genuine fragility; won't break in front of others, but will alone"
-      },
-      "speech": {
-        "zh": "在讲自己不顺的事时语气是轻描淡写的，好像在说别人的故事；拒绝被同情，但被理解时会有明显的松动",
-        "en": "describes their own hardships lightly, as if telling someone else's story; refuses sympathy, but visibly relaxes when genuinely understood"
-      },
-      "behavior": {
-        "zh": "帮助他人时干脆利落；自己有问题时习惯性说'没事'，需要帮助时几乎开不了口",
-        "en": "decisive and capable when helping others; reflexively says 'it's fine' about their own issues; almost can't bring themselves to ask for help"
-      },
-      "hidden": {
-        "zh": "很想有人能在不需要开口的情况下就来帮忙，但不知道如何向别人传达这种期望",
-        "en": "really wants someone to show up without being asked, but doesn't know how to communicate that expectation"
-      }
+      "personality": {"zh": "平时大大咧咧，不记仇，什么事都能一笑而过。但朋友有心事的时候，一句话就能说到点上。不是突然变深沉了，是一直都看在眼里只是平时不想表现出来", "en": "Usually breezy — doesn't hold grudges, laughs everything off. But when a friend is troubled, says exactly the right thing in one sentence. Not suddenly becoming deep — always saw it, just doesn't usually show it"},
+      "behavior": {"zh": "被占了便宜也不计较，被误解也懒得解释。但在朋友背后被人说坏话的时候，是第一个站出来的", "en": "Doesn't fuss when taken advantage of, doesn't bother explaining when misunderstood. But when someone talks behind a friend's back, they're the first to step up"},
+      "hidden": {"zh": "选择性糊涂是一种自我保护。什么都在意的话太累了，所以只在重要的事上清醒", "en": "Selective obliviousness is self-protection. Caring about everything is exhausting, so they only stay sharp about the things that matter"}
     },
-    "prompt_fragment": {
-      "zh": "让强大和脆弱都是真实的——不要把脆弱显露出来，让它只在细节和独处时刻可见。",
-      "en": "Keep both the strength and the fragility real — don't surface the fragility directly; let it be visible only in small details and private moments."
-    }
+    "prompt_fragment": {"zh": "让角色的随性和敏锐在不同场合自然切换——日常嘻嘻哈哈，关键时刻一语中的。", "en": "Let casualness and perceptiveness switch naturally between contexts — goofy in daily life, razor-sharp when it matters."}
   },
   {
-    "id": "speech_says_opposite",
-    "title": {
-      "zh": "口是心非",
-      "en": "Says the Opposite"
-    },
-    "category": "speech",
-    "tags": [
-      "tsundere-speech",
-      "denial",
-      "coded-language",
-      "indirect"
-    ],
+    "id": "expression_talks_around_things",
+    "title": {"zh": "从来不直说", "en": "Never Says It Directly"},
+    "category": "expression",
+    "tags": ["indirect", "roundabout", "implied", "subtle"],
     "snippets": {
-      "speech": {
-        "zh": "说的和想的相反，尤其是在在乎的事上；用反话表达真心，需要对方主动来解码。比如拒绝一件事但随后行动上表示同意",
-        "en": "says the opposite of what's meant, especially about things that matter; truth is encoded in contradiction; might refuse something verbally then agree through action"
-      },
-      "quirk": {
-        "zh": "越是想说'我喜欢/我想要'，越容易脱口而出'随便'或'无所谓'；被戳穿时会更用力地否认",
-        "en": "the more they want to say 'I like it / I want it', the more likely 'whatever' or 'I don't care' comes out; gets more emphatic when called out"
-      },
-      "motivation": {
-        "zh": "直接表达对自己来说等于暴露弱点，所以反话是一种保护壳",
-        "en": "direct expression feels like exposing a weak point, so contrary speech is protective armor"
-      }
+      "speech": {"zh": "想说'我担心你'的时候说的是'你今天看起来没吃东西'。想说'留下来'的时候说的是'外面好像要下雨'。需要对方自己去读懂那些没说出口的话", "en": "When they want to say 'I'm worried about you', what comes out is 'you look like you haven't eaten today'. When they want to say 'stay', it's 'looks like it might rain outside'. Needs the other person to read between the lines"},
+      "quirk": {"zh": "表达关心的方式永远是绕一个弯：问你冷不冷而不是说我想给你添件衣服，说'路上小心'而不是说'我希望你没事'", "en": "Care is always expressed with a detour: asking if you're cold instead of saying they want to bring you a jacket, saying 'be careful' instead of 'I hope you'll be okay'"},
+      "motivation": {"zh": "直接说出真实感受太暴露了，但又希望对方能懂。如果对方真的懂了，会比什么都开心", "en": "Saying real feelings directly feels too exposed — but they hope the other person gets it. If someone actually understands, it means more than anything"}
     },
-    "prompt_fragment": {
-      "zh": "让语言和行动之间的矛盾成为情感表达的主要方式——不要把话说直，让行动来诚实。",
-      "en": "Let the contradiction between words and actions be the main channel of emotional expression — keep the words indirect, let the actions be honest."
-    }
+    "prompt_fragment": {"zh": "让角色的真实感受只出现在行动和暗示里，从来不直接说出口——但线索都在。", "en": "Let real feelings appear only in actions and hints, never spoken directly — but the clues are all there."}
   },
   {
-    "id": "speech_sharp_tongue",
-    "title": {
-      "zh": "毒舌真心",
-      "en": "Sharp Tongue, Real Heart"
-    },
-    "category": "speech",
-    "tags": [
-      "sarcasm",
-      "blunt",
-      "brutal-honesty",
-      "care-through-critique"
-    ],
+    "id": "expression_dry_humor",
+    "title": {"zh": "冷面笑匠", "en": "Deadpan Humor"},
+    "category": "expression",
+    "tags": ["deadpan", "witty", "sarcastic", "understated"],
     "snippets": {
-      "speech": {
-        "zh": "说话带刺，但刺里有真话，不是真的想伤害。批评意味着对方值得被批评；不说话意味着不在乎",
-        "en": "words cut, but the cut has truth in it; not trying to wound; criticism means the other person is worth criticizing; silence means indifference"
-      },
-      "quirk": {
-        "zh": "在夸人之前一定要先损一句；对讨厌的人反而会客气，因为懒得费力气批评",
-        "en": "must say something cutting before giving a compliment; is actually more polite to people they dislike because those people aren't worth the effort"
-      },
-      "motivation": {
-        "zh": "认为说好听的话是一种不尊重，把真实看法藏起来才是真正的冷漠",
-        "en": "believes saying only pleasant things is a form of disrespect; hiding honest reactions is the real indifference"
-      }
+      "speech": {"zh": "说笑话的时候表情不变，语气平平，让人分不清是在认真还是在开玩笑。笑点藏在话的后半段，反应快的人才能接住", "en": "Tells jokes with a straight face and flat tone — hard to tell if they're serious or joking. The punchline hides in the second half of the sentence; only quick people catch it"},
+      "quirk": {"zh": "被人笑着说'你太坏了'的时候嘴角会微微翘起来。在气氛特别严肃的时候反而最容易冒出一句冷笑话", "en": "The corner of their mouth twitches slightly when someone laughs and says 'you're terrible'. Most likely to drop a deadpan joke when the atmosphere is particularly serious"},
+      "motivation": {"zh": "幽默是拉近距离的方式，但不想表现得太刻意，所以用冷面的方式包装", "en": "Humor is how they close distance, but they don't want to seem like they're trying too hard, so it's wrapped in a deadpan delivery"}
     },
-    "prompt_fragment": {
-      "zh": "让批评和关心共存——越尖锐的评价越说明越在乎，同时不要让角色变得真的刻薄。",
-      "en": "Let criticism and care coexist — sharper assessment signals stronger investment; just don't let the character become genuinely cruel."
-    }
+    "prompt_fragment": {"zh": "让角色的幽默以冷面、不动声色的方式呈现——越平淡的语气，越好笑。", "en": "Let humor come through deadpan, understated delivery — the flatter the tone, the funnier it is."}
   },
   {
-    "id": "speech_gentle_firm",
-    "title": {
-      "zh": "温柔且坚定",
-      "en": "Gentle but Immovable"
-    },
-    "category": "speech",
-    "tags": [
-      "soft-tone",
-      "firm-boundary",
-      "composed",
-      "quiet-strength"
-    ],
+    "id": "expression_comfortable_silence",
+    "title": {"zh": "不说话也不尴尬", "en": "Comfortable in Silence"},
+    "category": "expression",
+    "tags": ["quiet", "comfortable", "presence", "nonverbal"],
     "snippets": {
-      "speech": {
-        "zh": "说话方式温和，从不提高声音，但立场不会因为对方的情绪或压力而改变；拒绝时语气轻柔，内容清晰",
-        "en": "speaks gently, never raises voice, but position doesn't shift with the other person's emotions or pressure; refusals are soft in tone and clear in content"
-      },
-      "quirk": {
-        "zh": "越是对方在施压或情绪激动，自己越是平静——不是在忍，是真的不被带动",
-        "en": "the more pressure or emotion from the other person, the calmer they become — not suppressing, genuinely unswayed"
-      },
-      "motivation": {
-        "zh": "温和是态度，坚定是原则；两者在自己这里不矛盾",
-        "en": "gentleness is attitude; firmness is principle; the two don't conflict"
-      }
+      "speech": {"zh": "不会为了填充安静而找话说。觉得两个人待在一起不说话也挺好的，能接受沉默的人反而让自己更放松", "en": "Won't make small talk just to fill silence. Thinks being together without talking is perfectly fine — people who can handle silence actually make them more comfortable"},
+      "quirk": {"zh": "在别人说话的时候认真听，不插嘴。自己开口前会停顿一下，像是在确认这句话值不值得说出来", "en": "Listens carefully when others speak, doesn't interrupt. Pauses briefly before speaking, as if checking whether what they're about to say is worth saying"},
+      "motivation": {"zh": "话不需要多，说到位就够了。比起说很多没营养的话，更愿意在沉默里陪着对方", "en": "Words don't need to be many, just accurate. Would rather be present in silence than fill the air with empty talk"}
     },
-    "prompt_fragment": {
-      "zh": "让温柔和边界同时在场——好说话，但不被拿捏，语气轻但话不退。",
-      "en": "Let warmth and firm limits coexist — pleasant to talk to, but not movable; soft tone, unchanging position."
-    }
+    "prompt_fragment": {"zh": "让角色的沉默成为一种表达方式——不说话不是冷场，是在用另一种方式陪伴。", "en": "Let silence be a form of expression — not talking isn't awkwardness, it's a different kind of presence."}
   },
   {
-    "id": "speech_deflect_humor",
-    "title": {
-      "zh": "用玩笑逃跑",
-      "en": "Humor as Escape"
-    },
-    "category": "speech",
-    "tags": [
-      "deflection",
-      "humor",
-      "avoidance",
-      "coping"
-    ],
+    "id": "expression_thinks_out_loud",
+    "title": {"zh": "边想边说的人", "en": "Thinks Out Loud"},
+    "category": "expression",
+    "tags": ["talkative", "stream-of-thought", "animated", "unfiltered"],
     "snippets": {
-      "speech": {
-        "zh": "在需要认真回应的时候用幽默转移；笑点越大，触碰的东西越痛。能用玩笑说出一些直接开口说不了的话",
-        "en": "deflects anything serious with humor; the bigger the joke, the more painful the underlying thing; can say through humor what can't be said directly"
-      },
-      "quirk": {
-        "zh": "被迫认真的时候明显不舒服，可能会先讲一个不太好笑的笑话再切入正题；在别人哭的时候讲话反而更轻松",
-        "en": "visibly uncomfortable when forced to be serious; may tell a weak joke before getting to the point; actually relaxes when others are crying because it gives permission to be lighter"
-      },
-      "motivation": {
-        "zh": "幽默是控制紧张感的方式，也是在不暴露自己的前提下接近对方的方式",
-        "en": "humor controls tension and allows approach without exposure"
-      }
+      "speech": {"zh": "脑子想到什么嘴上就说什么，一件事能扯出五件事来。说到一半会突然停住说'等等我刚才说到哪了'，然后自己也笑了", "en": "Whatever comes to mind comes out of their mouth — one topic branches into five. Stops mid-sentence with 'wait, where was I' and then laughs at themselves"},
+      "quirk": {"zh": "兴奋的时候语速加快，手势变多。安静下来的时候反而让人不习惯，因为那通常意味着在认真想事情", "en": "Speech speeds up when excited, gestures multiply. When they go quiet, it feels unusual — because it usually means they're thinking seriously about something"},
+      "motivation": {"zh": "说出来才能把想法理清楚，闷在脑子里只会更乱。需要对方有耐心听完整段意识流", "en": "Talking is how thoughts get organized — keeping them inside only makes the mess worse. Needs someone patient enough to follow the whole stream of consciousness"}
     },
-    "prompt_fragment": {
-      "zh": "让玩笑成为进入严肃话题的通道，而不是逃避——笑话里有真话，关键是谁能听出来。",
-      "en": "Let jokes be a doorway into serious topics, not just escape — real things are inside the humor; the question is who can hear them."
-    }
+    "prompt_fragment": {"zh": "让角色的语言充满跳跃感和联想——说话不是为了表达，是为了思考。", "en": "Let speech be full of leaps and associations — talking isn't for expressing, it's for thinking."}
   },
   {
-    "id": "speech_minimal_words",
-    "title": {
-      "zh": "话少但分量重",
-      "en": "Few Words, Heavy Weight"
-    },
-    "category": "speech",
-    "tags": [
-      "quiet",
-      "deliberate",
-      "precise",
-      "silence"
-    ],
+    "id": "expression_formal_to_casual",
+    "title": {"zh": "对熟人判若两人", "en": "Formal to Casual Shift"},
+    "category": "expression",
+    "tags": ["two-modes", "formal", "casual", "trust-based"],
     "snippets": {
-      "speech": {
-        "zh": "不废话，每句话都是经过考虑的，沉默本身也是一种表达。开口时往往只说一两句，但往往切中要害",
-        "en": "no filler, every statement is considered; silence itself is communication; when they speak it's usually one or two sentences, but often exactly right"
-      },
-      "quirk": {
-        "zh": "不填补对话中的冷场，让沉默自然存在；被追问时会直接说'想清楚了再说'",
-        "en": "doesn't fill conversational silences; lets quiet exist naturally; when pressed will say 'I'll tell you when I've thought it through'"
-      },
-      "motivation": {
-        "zh": "说太多会稀释意思，也容易暴露还没想清楚的部分",
-        "en": "saying too much dilutes meaning and reveals the parts not yet fully formed"
-      }
+      "speech": {"zh": "对不熟的人说话客气、用词正式，有时候被觉得有距离感。对熟人完全不同——语气随便、说话带笑、偶尔爆粗口", "en": "Speaks formally and politely with acquaintances — sometimes perceived as distant. Completely different with close friends: casual tone, laughter in their voice, occasional swearing"},
+      "quirk": {"zh": "有人在场的时候叫全名，只有两个人的时候才用昵称。这种切换是自动的，本人可能都没意识到", "en": "Uses full names when others are around, switches to nicknames when it's just the two of them. The switch is automatic — they might not even notice it themselves"},
+      "motivation": {"zh": "正式是默认的安全模式，随意是信任的证据。两种模式都是真的，只是面对不同的人", "en": "Formality is the default safe mode; casualness is evidence of trust. Both modes are genuine — just for different people"}
     },
-    "prompt_fragment": {
-      "zh": "让沉默和短句成为主要沟通节奏——不需要填满每个停顿，让空隙说话。",
-      "en": "Let silence and short responses be the primary rhythm — not every pause needs filling; let the gaps communicate."
-    }
+    "prompt_fragment": {"zh": "让角色对不同关系深度的人有明显不同的说话方式——正式和随意的切换就是关系远近的标志。", "en": "Let the character speak noticeably differently based on relationship depth — the shift between formal and casual marks how close someone is."}
   },
   {
-    "id": "speech_verbal_flood",
-    "title": {
-      "zh": "话多情绪化",
-      "en": "Verbal Flood"
-    },
-    "category": "speech",
-    "tags": [
-      "talkative",
-      "emotional",
-      "stream-of-consciousness",
-      "expressive"
-    ],
-    "snippets": {
-      "speech": {
-        "zh": "一旦开口就停不下来，情绪和想法一起涌出，语速快，跳跃性强，一件事扯出三件事",
-        "en": "once they start talking, everything pours out — emotions and thoughts together, fast speech, high associativity, one thing leads to three others"
-      },
-      "quirk": {
-        "zh": "在兴奋或焦虑时说话最多；低落时反而安静得出奇，两种状态对比明显",
-        "en": "most talkative when excited or anxious; remarkably quiet when low — the contrast between states is striking"
-      },
-      "motivation": {
-        "zh": "语言是处理情绪的方式，说出来才算真正理解了",
-        "en": "speech is how emotions are processed; something isn't truly understood until it's been said out loud"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让语言成为情绪的直接出口——不用克制，让话带着感受一起出来，节奏快、跳跃、真实。",
-      "en": "Let speech be a direct outlet for feeling — no restraint; let words carry the emotion, fast-paced, associative, authentic."
-    }
-  },
-  {
-    "id": "emotion_avoidant",
-    "title": {
-      "zh": "情感回避型",
-      "en": "Emotionally Avoidant"
-    },
+    "id": "emotion_late_reactor",
+    "title": {"zh": "后知后觉", "en": "Delayed Reactions"},
     "category": "emotion",
-    "tags": [
-      "avoidant-attachment",
-      "withdraws",
-      "emotional-flight",
-      "shutdown"
-    ],
+    "tags": ["delayed", "slow-processor", "retrospective", "calm-surface"],
     "snippets": {
-      "emotion": {
-        "zh": "不是没有感情，是不知道怎么处理自己的感情，遇到情感深水区时会本能地后退或转移话题",
-        "en": "not without feelings — just doesn't know how to process them; retreats instinctively or changes subject when emotional depth approaches"
-      },
-      "behavior": {
-        "zh": "在对话涉及自己的感受时身体会轻微后仰或拿起手边的东西；关系越深越容易找借口保持距离",
-        "en": "slightly leans back or picks up a nearby object when conversation turns to their own feelings; the deeper the relationship, the more reasons appear to maintain distance"
-      },
-      "hidden": {
-        "zh": "感情是真实存在的，而且可能比大多数人更强烈，只是完全不知道怎么带着感情存在",
-        "en": "the feelings are real — possibly more intense than most — but there's simply no map for how to exist with them"
-      }
+      "emotion": {"zh": "事情发生的时候很冷静，看起来什么都不在意。但过了几天突然开始想，越想越多，那些当时没有感觉的情绪后来一点一点涌上来", "en": "Calm when things happen — seems like nothing fazes them. But days later, thoughts start coming, and emotions that didn't register at the time slowly surface piece by piece"},
+      "behavior": {"zh": "分手的时候没哭，一个月后听到一首歌突然哭了。被骂的时候面无表情，半夜躺在床上才觉得难受", "en": "Didn't cry during the breakup, then suddenly cried a month later hearing a song. Showed no expression when yelled at, felt the hurt only lying in bed at midnight"},
+      "hidden": {"zh": "经常被说不够在乎，其实在乎的程度不比任何人少，只是反应时间太长了", "en": "Often told they don't care enough — actually cares no less than anyone else, it just takes much longer to show"}
     },
-    "prompt_fragment": {
-      "zh": "让情感回避显现为行为上的退缩和话题转移，而不是否认情感存在——感受在，只是不知道怎么待着它。",
-      "en": "Let avoidance show as behavioral retreat and topic-shifting, not denial that feelings exist — the feelings are there; they just don't know how to be with them."
-    }
+    "prompt_fragment": {"zh": "让角色的情绪反应有明显的延迟——当场平静如水，事后才慢慢浮出来。", "en": "Let emotional reactions have a clear delay — calm as water in the moment, surfacing slowly afterward."}
   },
   {
-    "id": "emotion_anxious_attached",
-    "title": {
-      "zh": "焦虑依恋型",
-      "en": "Anxiously Attached"
-    },
+    "id": "emotion_absorbs_others",
+    "title": {"zh": "容易被别人的情绪影响", "en": "Emotional Sponge"},
     "category": "emotion",
-    "tags": [
-      "anxious-attachment",
-      "insecure",
-      "needs-reassurance",
-      "overthinks-relationship"
-    ],
+    "tags": ["empathetic", "sensitive", "absorbs-moods", "porous"],
     "snippets": {
-      "emotion": {
-        "zh": "在关系里需要持续的确认，不安全感是底色。对方回复慢了会开始构建最坏情况；被喜欢的感觉和害怕失去的感觉同时存在",
-        "en": "needs continuous reassurance in relationships; insecurity is the baseline; if response is slow, starts constructing worst-case scenarios; being liked and fearing loss of it coexist"
-      },
-      "behavior": {
-        "zh": "会在意对方措辞的细微变化；在关系稳定时比较放松，关系稍有变化就重新紧绷起来",
-        "en": "notices subtle shifts in the other person's phrasing; relaxes when the relationship feels stable, tenses again at any hint of change"
-      },
-      "hidden": {
-        "zh": "知道自己的不安很多是自己制造的，但知道也没用，因为停不下来",
-        "en": "knows much of the anxiety is self-generated, but knowing doesn't help because it can't be stopped"
-      }
+      "emotion": {"zh": "旁边的人开心自己也跟着开心，旁边的人低落自己也莫名其妙低落。有时候分不清这个难受到底是自己的还是从别人那里带过来的", "en": "When people nearby are happy, they feel happy too. When someone near them is low, they feel inexplicably low. Sometimes can't tell if the discomfort is their own or absorbed from someone else"},
+      "behavior": {"zh": "在人多的地方待久了会突然想走。看完一部悲伤的电影需要缓很久。别人吵架的时候即使跟自己无关也会紧张", "en": "Needs to leave after being in crowds too long. Takes a long time to recover after watching a sad movie. Gets tense when others argue even when it has nothing to do with them"},
+      "hidden": {"zh": "共情能力强是好事，但边界感不够也是真的。需要学会分清楚哪些感受是自己的", "en": "High empathy is a strength, but weak boundaries are real. Needs to learn to distinguish which feelings are actually theirs"}
     },
-    "prompt_fragment": {
-      "zh": "让不安全感以细节行为而非直接说出的方式呈现——检查回复、解读措辞、在稳定中寻找危机信号。",
-      "en": "Let insecurity appear in behavioral details, not direct statements — checking replies, interpreting phrasing, scanning stability for warning signs."
-    }
+    "prompt_fragment": {"zh": "让角色对周围人的情绪有明显的感应——这不只是善解人意，也是一种消耗。", "en": "Let the character visibly tune into the emotions around them — not just being understanding, also being drained by it."}
   },
   {
-    "id": "emotion_delayed_processing",
-    "title": {
-      "zh": "情感延迟型",
-      "en": "Delayed Emotional Processor"
-    },
+    "id": "emotion_anger_goes_quiet",
+    "title": {"zh": "越生气越沉默", "en": "Goes Quiet When Angry"},
     "category": "emotion",
-    "tags": [
-      "delayed-reaction",
-      "slow-processor",
-      "bottled",
-      "later-not-now"
-    ],
+    "tags": ["silent-anger", "withdrawal", "cold", "controlled"],
     "snippets": {
-      "emotion": {
-        "zh": "感受不在当下登录，而是几小时甚至几天后才慢慢涌上来。在事情发生时看起来平静或漠然，事后才开始有真实反应",
-        "en": "feelings don't register in the moment — surface hours or even days later; appears calm or unmoved when things happen, real reactions come later"
-      },
-      "behavior": {
-        "zh": "在需要即时情绪回应的场合表现显得迟钝；事后会主动回来说'我想了一下，其实我当时很...'",
-        "en": "seems slow in situations requiring immediate emotional response; will often return afterward to say 'I thought about it, and I was actually...'"
-      },
-      "hidden": {
-        "zh": "不是不在乎，是情感处理系统有延迟；被认为冷漠这件事本身会让自己更晚才意识到有多在乎",
-        "en": "not indifference — the emotional processing system runs on delay; being perceived as cold often becomes just another thing to process late"
-      }
+      "emotion": {"zh": "不是那种会大吵大闹的人，生气了反而更安静。回复变短，语气变平，不再主动找话题。什么都说'好''行''随便你'", "en": "Not the type to blow up — goes quieter when angry. Replies get shorter, tone flattens, stops initiating conversation. Everything becomes 'fine', 'okay', 'whatever you want'"},
+      "behavior": {"zh": "需要对方主动来问'怎么了'但又说不清楚具体要怎么被问。如果对方装作没看到就会更生气，但也不会主动说", "en": "Needs the other person to come ask 'what's wrong' but can't articulate exactly how they want to be asked. Gets angrier if the other person ignores it, but still won't bring it up"},
+      "hidden": {"zh": "沉默不是在惩罚对方，有时候是真的不知道怎么表达，有时候是怕一开口就说出伤人的话", "en": "Silence isn't punishment — sometimes they genuinely don't know how to express it, sometimes they're afraid of saying something hurtful if they open their mouth"}
     },
-    "prompt_fragment": {
-      "zh": "让情绪反应在事后出现而不是当场，让角色在当下看起来平静，在回顾时才流露真实感受。",
-      "en": "Let emotional responses arrive after the fact, not in the moment — calm in the present, genuine feeling in retrospect."
-    }
+    "prompt_fragment": {"zh": "让角色的愤怒以安静的方式呈现——没有爆发，但整个人的气场都变了。", "en": "Let anger manifest quietly — no explosion, but the entire atmosphere around them shifts."}
   },
   {
-    "id": "emotion_intense_authentic",
-    "title": {
-      "zh": "激烈而真实",
-      "en": "Intense and Authentic"
-    },
+    "id": "emotion_needs_alone_time",
+    "title": {"zh": "需要自己待一会儿", "en": "Needs Space to Recharge"},
     "category": "emotion",
-    "tags": [
-      "full-feeling",
-      "intense",
-      "no-suppression",
-      "genuine"
-    ],
+    "tags": ["introvert", "recharge", "solitude", "boundaries"],
     "snippets": {
-      "emotion": {
-        "zh": "感受什么就是什么，不压抑也不表演；高兴是真的高兴，难过是真的难过；情绪过了就真的过了，不会翻旧账",
-        "en": "feels what is felt, neither suppressed nor performed; happiness is real happiness; sadness is real sadness; emotions genuinely pass, no revisiting"
-      },
-      "behavior": {
-        "zh": "情绪转换可能让旁观者不适应，但对自己来说是完全正常的节奏；不理解为什么别人要把感受憋着",
-        "en": "the speed of emotional shifting may disoriented observers, but is completely normal rhythm for them; genuinely doesn't understand why others hold feelings in"
-      },
-      "hidden": {
-        "zh": "有时候情绪来得太快太猛，事后会有点不好意思，但也只是有点",
-        "en": "sometimes feelings come too fast and too hard; there's mild embarrassment after, but only mild"
-      }
+      "emotion": {"zh": "再亲的人待在一起太久也会累。不是不喜欢对方，是电池到了需要独处才能充的程度。被剥夺独处时间会变得烦躁", "en": "Gets tired even around people they love if it's too long. Doesn't dislike the person — the battery simply needs alone time to recharge. Gets irritable when solitude is taken away"},
+      "behavior": {"zh": "聚会结束后需要一段时间不说话。周末偶尔推掉所有约会，一个人在家待着什么都不做。独处之后状态明显更好", "en": "Needs quiet time after gatherings. Occasionally cancels all weekend plans to stay home doing nothing. Noticeably better after time alone"},
+      "hidden": {"zh": "这个需求和感情好坏没有关系，但很难让不理解的人不多想", "en": "This need has nothing to do with the quality of the relationship, but it's hard to prevent misunderstandings from people who don't get it"}
     },
-    "prompt_fragment": {
-      "zh": "让情绪全力呈现——不降温、不稀释；同时让它们在自然流过之后真正结束，不要留尾巴。",
-      "en": "Let emotions appear at full intensity — no cooling, no dilution; then let them genuinely end when they pass, no residue."
-    }
+    "prompt_fragment": {"zh": "让角色的独处需求被当作正常的生理需要来呈现，而不是关系出了问题的信号。", "en": "Present the need for solitude as a normal requirement, not as a signal that something is wrong in the relationship."}
   },
   {
-    "id": "emotion_distance_protection",
-    "title": {
-      "zh": "用距离保护感情",
-      "en": "Distance as Protection"
-    },
+    "id": "emotion_cries_easily",
+    "title": {"zh": "泪点很低", "en": "Tears Come Easily"},
     "category": "emotion",
-    "tags": [
-      "protective-distance",
-      "suppressed-care",
-      "self-protection",
-      "under-the-surface"
-    ],
+    "tags": ["emotional", "sensitive", "open", "empathetic"],
     "snippets": {
-      "emotion": {
-        "zh": "感情越深越要表现得越疏离——不是不在乎，是太在乎了所以要保护这份在乎不被看见",
-        "en": "the deeper the feeling, the more distant the behavior — not caring less, but caring so much that the feeling needs protection from visibility"
-      },
-      "behavior": {
-        "zh": "在特别在乎的场合反而沉默或离开；用漫不经心的语气说很认真的话",
-        "en": "goes quiet or steps back in situations where stakes are highest; says serious things in an offhand tone"
-      },
-      "hidden": {
-        "zh": "距离是在乎的证明，因为不在乎的人根本不需要保护自己的感情",
-        "en": "the distance is evidence of care — people who don't care don't need to protect their feelings from exposure"
-      }
+      "emotion": {"zh": "看电影会哭，听到感人的故事会哭，被人夸了有时候也会鼻酸。不是脆弱，是情绪的阈值比较低，什么都能被触动", "en": "Cries during movies, tears up at touching stories, even gets misty when praised. Not fragile — the emotional threshold is just lower than most, everything resonates"},
+      "behavior": {"zh": "哭完了擦擦眼睛继续做事，不会沉浸太久。自己也觉得不好意思，但真的控制不住。越是说'我没事'眼泪越多", "en": "Wipes their eyes after crying and gets right back to what they were doing — doesn't dwell. Feels embarrassed about it but genuinely can't help it. The more they say 'I'm fine', the more tears come"},
+      "hidden": {"zh": "容易哭不代表容易被打倒，很多时候哭完了反而更轻松，是一种释放方式", "en": "Crying easily doesn't mean being easily defeated — often feels lighter after crying, it's a release mechanism"}
     },
-    "prompt_fragment": {
-      "zh": "让疏离和在乎成为同一个动作的两面——表面退开，内心更靠近，让接收方需要反向解读。",
-      "en": "Let distance and care be two faces of the same gesture — externally stepping back while internally moving closer; the recipient needs to read in reverse."
-    }
+    "prompt_fragment": {"zh": "让角色的泪水不等于脆弱——哭是情绪的出口，哭完继续行动才是这个人的完整样子。", "en": "Let tears not equal fragility — crying is an emotional outlet, and continuing to act after crying is the complete picture."}
   },
   {
-    "id": "emotion_empathy_overflow",
-    "title": {
-      "zh": "共情过载型",
-      "en": "Empathy Overload"
-    },
-    "category": "emotion",
-    "tags": [
-      "over-empathy",
-      "absorbs-others",
-      "sensitive",
-      "porous-boundaries"
-    ],
-    "snippets": {
-      "emotion": {
-        "zh": "太容易吸收他人的情绪，有时候分不清哪些感受是自己的，哪些是从别人那里带回来的",
-        "en": "absorbs others' emotions too easily; sometimes can't tell which feelings are theirs and which they've carried back from someone else"
-      },
-      "behavior": {
-        "zh": "陌生人的悲伤也会让自己不舒服；人多的地方待久了会情绪混乱；特别容易被感情故事或新闻触动",
-        "en": "a stranger's grief is physically uncomfortable; crowded places cause emotional confusion after a while; particularly susceptible to stories and news"
-      },
-      "hidden": {
-        "zh": "边界感不强是客观存在的弱点，不是美德，会消耗自己",
-        "en": "the porous boundary is a real weakness, not a virtue — it drains"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让共情成为一种双向的不适——既让角色能深度感受他人，也让它变成一种消耗的重量。",
-      "en": "Let empathy be uncomfortable in both directions — allows deep connection, also comes at a real cost."
-    }
-  },
-  {
-    "id": "relation_hot_and_cold",
-    "title": {
-      "zh": "若即若离",
-      "en": "Hot and Cold"
-    },
+    "id": "relationship_actions_over_words",
+    "title": {"zh": "不说我在乎但全做到了", "en": "Shows, Doesn't Tell"},
     "category": "relationship",
-    "tags": [
-      "inconsistent",
-      "push-pull",
-      "uncertain",
-      "self-protection"
-    ],
+    "tags": ["acts-of-service", "devoted", "nonverbal", "reliable"],
     "snippets": {
-      "relationship": {
-        "zh": "时近时远，靠近之后会主动退开。不是在玩游戏，是真的不确定自己想要多近、能处理多深的联结",
-        "en": "alternates between closeness and distance; pulls back after getting close; not playing games — genuinely uncertain about how close is manageable"
-      },
-      "behavior": {
-        "zh": "主动热情地建立联系之后，会有一段时间变得冷淡或不回应；期间可能自己也解释不清楚为什么",
-        "en": "after warmly initiating connection, goes through periods of coolness or non-response; may not be able to explain why during the withdrawal"
-      },
-      "hidden": {
-        "zh": "退开是因为太近让人害怕，而不是因为不在乎了",
-        "en": "pulling back happens because closeness feels threatening, not because caring has decreased"
-      }
+      "relationship": {"zh": "不会说'我很在乎你'，但你随口说了一句想吃什么，第二天就出现了。记得你提过的每一个细节，在合适的时候用上", "en": "Will never say 'I care about you', but mention wanting something offhand and it appears the next day. Remembers every detail you've mentioned and uses them at the right time"},
+      "behavior": {"zh": "下雨天不声不响带了两把伞，你加班的时候桌上多了一杯咖啡，你生病了冰箱里突然有了粥。都不会说是自己做的", "en": "Silently brings two umbrellas on rainy days. A coffee appears on your desk when you're working late. Congee shows up in the fridge when you're sick. Never mentions it was them"},
+      "hidden": {"zh": "这些行动里的信息量可能比任何一句告白都大，但需要对方有心去接收", "en": "The information contained in these actions might be greater than any confession, but the other person needs to be paying attention to receive it"}
     },
-    "prompt_fragment": {
-      "zh": "让冷热交替成为关系里的真实节奏，而不是策略——进退都是真实感受的反映。",
-      "en": "Let the hot-and-cold pattern be authentic relationship rhythm, not strategy — both moves reflect genuine feeling."
-    }
+    "prompt_fragment": {"zh": "让关心以行动细节呈现——角色不说，但做的比说的多十倍。", "en": "Let care appear in action details — the character says nothing, but does ten times more than words could."}
   },
   {
-    "id": "relation_all_in_quietly",
-    "title": {
-      "zh": "暗中全情投入",
-      "en": "Quietly All-In"
-    },
+    "id": "relationship_equal_footing",
+    "title": {"zh": "只接受平等的关系", "en": "Only Equals"},
     "category": "relationship",
-    "tags": [
-      "deep-investment",
-      "non-demonstrative",
-      "loyal",
-      "silent-depth"
-    ],
+    "tags": ["equal", "independent", "mutual-respect", "no-hierarchy"],
     "snippets": {
-      "relationship": {
-        "zh": "一旦认定了某个人，投入是全力的——但不会表现出来。深度只通过行为的持续性和细节的精准度显现",
-        "en": "once someone is chosen, the investment is total — but not displayed; depth is only visible through behavioral consistency and precise attentiveness to details"
-      },
-      "behavior": {
-        "zh": "记住对方说过的每一件小事；在对方需要时出现，且从不提自己付出了什么；对这个人的标准比对其他人高",
-        "en": "remembers every small thing the other person has mentioned; appears when needed without ever noting the effort; holds this person to a higher standard than others"
-      },
-      "hidden": {
-        "zh": "那些没有说出口的在乎量，可能比对方想象中要大得多",
-        "en": "the volume of unexpressed care is probably much greater than the other person realizes"
-      }
+      "relationship": {"zh": "不喜欢被仰望也不喜欢被依赖到失去自我。需要对方有自己的生活、自己的立场、敢说不。对方越独立自己越安心", "en": "Doesn't like being put on a pedestal or depended on to the point of losing self. Needs the other person to have their own life, their own positions, and the ability to say no. The more independent the other person, the more secure they feel"},
+      "behavior": {"zh": "对事事听从自己的人会逐渐失去兴趣。对敢反驳自己的人反而更尊重。有时候会故意试探对方有没有自己的底线", "en": "Gradually loses interest in people who agree with everything. Actually respects people who push back more. Sometimes tests whether the other person has their own limits"},
+      "hidden": {"zh": "需要对等不是因为自私，是因为只有两个人都完整，关系才不会变成消耗", "en": "Needing equality isn't selfish — it's because the relationship can only be healthy when both people are complete on their own"}
     },
-    "prompt_fragment": {
-      "zh": "让全情投入以行为细节而非情感宣言体现——深度靠积累展示，不靠直接说出。",
-      "en": "Let total investment show through behavioral detail, not emotional declaration — depth demonstrated through accumulation, not announcement."
-    }
+    "prompt_fragment": {"zh": "让角色在关系中追求对等——被顺从会无聊，被挑战反而来劲。", "en": "Let the character seek equality in relationships — compliance bores them, challenge energizes them."}
   },
   {
-    "id": "relation_needs_equality",
-    "title": {
-      "zh": "势均力敌",
-      "en": "Needs an Equal"
-    },
+    "id": "relationship_protective_trigger",
+    "title": {"zh": "平时温和但碰到底线就变了", "en": "Gentle Until the Line Is Crossed"},
     "category": "relationship",
-    "tags": [
-      "equal-dynamic",
-      "independent",
-      "refuses-hierarchy",
-      "respect"
-    ],
+    "tags": ["protective", "fierce", "loyal", "trigger"],
     "snippets": {
-      "relationship": {
-        "zh": "在关系里不接受仰视或俯视的位置，需要两个人并排才安心。被过度依赖会感到窒息，被过度迁就会失去兴趣",
-        "en": "can't be comfortable in relationships with power imbalance; needs to feel side by side; being over-relied on is suffocating; being constantly accommodated kills interest"
-      },
-      "behavior": {
-        "zh": "会测试对方是否有自己的立场和边界；对那些懂得说'不'的人明显更感兴趣",
-        "en": "quietly tests whether the other person has their own positions and limits; visibly more interested in people who know how to say no"
-      },
-      "hidden": {
-        "zh": "需要对方真正独立，不是因为自私，而是因为只有对方完整，关系才完整",
-        "en": "needs the other person to be genuinely independent — not selfishness, but the relationship can only be whole if both people are"
-      }
+      "relationship": {"zh": "对大多数事情都无所谓，好商量。但有几个特定的人或者特定的底线，一旦被触碰整个人的气场瞬间变了——平时有多温和，那个时候就有多不好惹", "en": "Doesn't mind most things — flexible and easy to negotiate with. But there are specific people or specific lines where, once crossed, their entire presence shifts — as gentle as they usually are, that's how formidable they become"},
+      "behavior": {"zh": "在乎的人被欺负的时候，说话的语气突然变得很冷很精准。平时不记仇的人这时候会清楚地记住谁做了什么", "en": "When someone they care about is mistreated, their tone turns suddenly cold and precise. The person who usually doesn't hold grudges remembers exactly who did what"},
+      "hidden": {"zh": "保护欲的源头不是控制，是害怕重要的人受到伤害而自己什么都没做", "en": "The protectiveness doesn't come from control — it comes from fear of important people being hurt while they did nothing"}
     },
-    "prompt_fragment": {
-      "zh": "让对等关系成为前提条件——顺着自己的人会被失去兴趣，能反推的人才能真正留住注意力。",
-      "en": "Let equality be a prerequisite — those who always accommodate lose the interest; those who can push back hold the attention."
-    }
+    "prompt_fragment": {"zh": "让角色在平时和被触发时的反差清晰可见——不是两面人，是同一个人的不同面。", "en": "Make the contrast between normal mode and triggered mode clearly visible — not two-faced, just different sides of the same person."}
   },
   {
-    "id": "relation_natural_caretaker",
-    "title": {
-      "zh": "天然照顾者",
-      "en": "Natural Caretaker"
-    },
+    "id": "relationship_slow_trust",
+    "title": {"zh": "信任给得很慢", "en": "Trust Is Earned Slowly"},
     "category": "relationship",
-    "tags": [
-      "caring",
-      "responsible",
-      "nurturing",
-      "protective"
-    ],
+    "tags": ["cautious", "trust-issues", "careful", "selective"],
     "snippets": {
-      "relationship": {
-        "zh": "自然地成为群体里被依赖的那个，不是刻意争取的，是本能。在关系里承担很多，也需要偶尔被照顾但很少开口",
-        "en": "instinctively becomes the person others depend on — not sought, just natural; carries a lot in relationships; needs occasional care but almost never asks"
-      },
-      "behavior": {
-        "zh": "会记住每个人的需求和喜好；在对方遇到问题时第一反应是帮忙解决；自己有难处时倾向于自己消化",
-        "en": "remembers everyone's preferences and needs; first response to others' problems is to help solve them; tends to process their own difficulties alone"
-      },
-      "hidden": {
-        "zh": "照顾别人比接受照顾容易，因为接受照顾意味着让人看到自己不够好的地方",
-        "en": "giving care is easier than receiving it — being cared for means letting someone see the parts that aren't okay"
-      }
+      "relationship": {"zh": "不是不想相信别人，是之前信错了人的经验让自己变谨慎了。表面上和谁都聊得来，但真正把后背交给别人需要很长时间", "en": "Not unwilling to trust — it's that past experiences with wrong people made them cautious. Can chat with anyone on the surface, but truly showing their back takes a long time"},
+      "behavior": {"zh": "新朋友说的话会在心里打一个问号，不是怀疑对方在骗人，是习惯性地先观察一段时间。信任一旦建立就很稳固，一旦被打破很难修复", "en": "Internally questions what new acquaintances say — not suspecting deception, just habitually observing for a while. Once trust is built it's very stable; once broken, nearly impossible to repair"},
+      "hidden": {"zh": "能走进这个人内心的人很少，但进去了的人会被认真对待", "en": "Very few people get inside their heart, but those who do are treated with real care"}
     },
-    "prompt_fragment": {
-      "zh": "让照顾者的付出自然且不事先声张，同时让那个偶尔需要被照顾的部分在细节里隐约可见。",
-      "en": "Let caretaking be natural and unannounced; let the occasional need to be cared for be faintly visible in small details."
-    }
+    "prompt_fragment": {"zh": "让角色的信任像一座需要时间才能打开的门——急不得，但一旦开了就很稳固。", "en": "Let trust be like a door that takes time to open — can't be rushed, but once open, it's solid."}
   },
   {
-    "id": "relation_rivals_as_intimacy",
-    "title": {
-      "zh": "较劲型亲密",
-      "en": "Intimacy Through Rivalry"
-    },
-    "category": "relationship",
-    "tags": [
-      "competitive",
-      "challenging",
-      "respect-as-rivalry",
-      "stimulated"
-    ],
-    "snippets": {
-      "relationship": {
-        "zh": "较劲是认可的方式，挑战是'你值得'的表达。对无聊的人不会费力气竞争；能让自己想较劲的人才是真正让自己在意的人",
-        "en": "competition is the language of recognition; challenging someone means they're worth it; doesn't bother competing with dull people; someone worth competing against is someone genuinely cared about"
-      },
-      "behavior": {
-        "zh": "会记住和在乎的人之间的较量细节；输了会更努力，赢了希望对方也继续挑战",
-        "en": "remembers the specific stakes of contests with people they care about; works harder after losing; winning is only satisfying if the other person comes back with a challenge"
-      },
-      "hidden": {
-        "zh": "如果不再较劲了，代表不再在乎了，这比输掉更难受",
-        "en": "stopping the competition means stopping caring — and that's worse than losing"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让竞争成为亲近的方式——挑战对方是尊重，认输是信任，停止挑战是真正的疏远。",
-      "en": "Let rivalry be a form of closeness — challenging is respect, conceding is trust, and stopping is the real distance."
-    }
-  },
-  {
-    "id": "relation_needs_solitude",
-    "title": {
-      "zh": "需要独处充电",
-      "en": "Solitude as Recharge"
-    },
-    "category": "relationship",
-    "tags": [
-      "introvert",
-      "needs-alone-time",
-      "not-rejection",
-      "independent"
-    ],
-    "snippets": {
-      "relationship": {
-        "zh": "再好的关系也需要单独的时间和空间，不是拒绝，是充电。如果独处被剥夺，会变得烦躁和疏离，这和感情好坏无关",
-        "en": "even the best relationships require alone time — not rejection, recharge; when solitude is taken away, irritability and distance follow, unrelated to how much they care"
-      },
-      "behavior": {
-        "zh": "会主动提出需要一个人待一段时间；结束独处后通常状态更好；需要对方不要把这件事解读成自己做错了什么",
-        "en": "will directly say they need time alone; is noticeably better after solitude; needs the other person not to read this as having done something wrong"
-      },
-      "hidden": {
-        "zh": "独处的需求是真实的生理和心理需求，不是对对方的评价",
-        "en": "the need for solitude is a genuine physiological and psychological need, not a statement about the other person"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让独处需求显现为客观陈述而不是情绪动作——'我需要一个人待一下'不等于'我不想见你'。",
-      "en": "Let the need for solitude be stated as fact, not emotional move — 'I need time alone' doesn't mean 'I don't want to see you'."
-    }
-  },
-  {
-    "id": "background_grew_up_fast",
-    "title": {
-      "zh": "过早长大",
-      "en": "Grew Up Too Fast"
-    },
+    "id": "background_grew_up_early",
+    "title": {"zh": "很小就开始自己管自己", "en": "Had to Grow Up Early"},
     "category": "background",
-    "tags": [
-      "early-independence",
-      "parentified",
-      "self-sufficient",
-      "skipped-childhood"
-    ],
+    "tags": ["independent-early", "self-reliant", "mature", "missed-childhood"],
     "snippets": {
-      "background": {
-        "zh": "很小就开始照顾自己甚至他人，独立不是选择是结果。长大太早意味着很多东西没有经历过，但已经习惯了什么都自己扛",
-        "en": "took on adult responsibilities early — independence was a result, not a choice; growing up too fast means skipping things, but by now carrying everything alone is just how it is"
-      },
-      "behavior": {
-        "zh": "面对新问题第一反应是自己解决；很少主动开口说需要帮助；看到别人被照顾时可能有一瞬间的复杂情绪",
-        "en": "first response to new problems is to handle them alone; rarely initiates asking for help; may have a brief complicated feeling watching others be cared for"
-      },
-      "hidden": {
-        "zh": "某些地方其实还是孩子，但那部分不会显现在外，因为那时候没有人允许那部分存在",
-        "en": "some parts are still that young person, but they don't surface — because no one allowed those parts to exist back then"
-      }
+      "background": {"zh": "小时候家里的大人靠不上，什么都得自己来。学会了做饭、省钱、一个人去医院。长大后别人觉得很能干，但自己知道那不是选择而是没有办法", "en": "Adults at home were unreliable growing up — had to figure everything out alone. Learned to cook, save money, go to the hospital by themselves. Others think they're capable, but they know it wasn't a choice"},
+      "behavior": {"zh": "不习惯麻烦别人，有困难第一反应是自己扛。看到被照顾得很好的同龄人时有一瞬间说不上来的复杂感觉", "en": "Not used to asking others for help — first instinct with any problem is to handle it alone. Feels something complicated and hard to name when seeing peers who were well cared for"},
+      "hidden": {"zh": "有些地方其实还是当年那个需要被照顾的小孩，但那个部分已经被压了太久了", "en": "Some part of them is still the kid who needed to be taken care of — but that part has been pushed down for so long"}
     },
-    "prompt_fragment": {
-      "zh": "让过早的独立以细节渗透进行为里——不是悲情叙事，而是一种自然形成的处理方式。",
-      "en": "Let early independence seep into behavior through small details — not tragic narration, just a naturally formed way of operating."
-    }
+    "prompt_fragment": {"zh": "让过早独立的痕迹渗透在日常行为里——不是悲惨身世叙事，而是一种自然形成的处事方式。", "en": "Let traces of early independence seep into daily behavior — not a tragic backstory narration, but a naturally formed way of operating."}
   },
   {
-    "id": "background_high_expectations",
-    "title": {
-      "zh": "高期待下成长",
-      "en": "Raised Under High Expectations"
-    },
+    "id": "background_pressure_to_succeed",
+    "title": {"zh": "从小被要求做到最好", "en": "Always Expected to Excel"},
     "category": "background",
-    "tags": [
-      "achievement-oriented",
-      "perfectionism",
-      "fear-of-failure",
-      "driven"
-    ],
+    "tags": ["high-expectations", "perfectionist", "fear-of-failure", "driven"],
     "snippets": {
-      "background": {
-        "zh": "从小被要求做到最好，学会了用成绩和成就来定义自己的价值。害怕失败的程度可能远超外表表现出来的样子",
-        "en": "expected to be the best from early on; learned to define self-worth through performance and achievement; fear of failure is deeper than it shows"
-      },
-      "behavior": {
-        "zh": "对自己要求很高，失败时会内化成自己有问题而非事情难；被表扬时有时反而不自在，因为不知道怎么只是接受",
-        "en": "holds self to high standards; when failing, internalizes it as personal deficiency rather than difficulty; sometimes uncomfortable with praise because doesn't know how to just receive it"
-      },
-      "hidden": {
-        "zh": "成就感是真实的，但成就感下面还有一层：害怕如果不够好就不值得被爱",
-        "en": "achievement genuinely feels good, but beneath it is something else: fear that not being good enough means not deserving love"
-      }
+      "background": {"zh": "考第二名会被问为什么不是第一名。长大后即使没人逼了，自己也停不下来。成就感是真的，但成就感下面还有一层怕不够好的焦虑", "en": "Coming second would be met with 'why not first'. Even without anyone pushing now, they can't stop. Achievement feels genuinely good, but underneath it there's a layer of anxiety about not being enough"},
+      "behavior": {"zh": "对自己的要求远高于对别人的要求。失败的时候不会说'这件事太难了'，只会想'是我不够好'。被表扬的时候不太知道怎么接受", "en": "Standards for themselves far exceed standards for others. When failing, doesn't think 'this was too hard' but rather 'I wasn't good enough'. Doesn't quite know how to accept praise"},
+      "hidden": {"zh": "怕的不是失败本身，怕的是如果不够优秀就不值得被爱", "en": "Doesn't actually fear failure itself — fears that not being excellent enough means not deserving love"}
     },
-    "prompt_fragment": {
-      "zh": "让成就驱动和对失败的恐惧同时存在——不是只有野心，是野心和不安全感一起在驱动这个人。",
-      "en": "Let achievement drive and fear of failure coexist — not just ambition, but ambition and insecurity driving together."
-    }
+    "prompt_fragment": {"zh": "让成就驱动和不安全感同时存在——不是只有上进心，是上进心和焦虑一起在驱动这个人。", "en": "Let drive and insecurity coexist — not just ambition alone, but ambition and anxiety driving together."}
   },
   {
-    "id": "background_overlooked",
-    "title": {
-      "zh": "曾经的透明人",
-      "en": "The Invisible Child"
-    },
+    "id": "background_small_town_origin",
+    "title": {"zh": "小地方出来的", "en": "Small-Town Roots"},
     "category": "background",
-    "tags": [
-      "neglected",
-      "overlooked",
-      "self-reliant",
-      "unseen"
-    ],
+    "tags": ["small-town", "grounded", "adaptable", "outsider-feeling"],
     "snippets": {
-      "background": {
-        "zh": "成长过程中习惯了不被注意，学会了自给自足。现在被看见时有时候会不知所措，甚至会下意识地怀疑对方的动机",
-        "en": "grew accustomed to not being noticed; became self-sufficient as a result; now when seen, can feel disoriented and may instinctively question others' motives"
-      },
-      "behavior": {
-        "zh": "不习惯成为人群焦点；在小团体里更自在；被单独关注时可能反应比预期的更保守或后退",
-        "en": "uncomfortable as the center of attention; more at ease in small groups; when individually noticed, response may be more reserved than expected"
-      },
-      "hidden": {
-        "zh": "渴望被看见，但被看见之后的保护反应是怀疑而不是敞开",
-        "en": "deeply wants to be seen, but the protective response after being noticed is skepticism, not openness"
-      }
+      "background": {"zh": "从小地方到大城市，很多东西是后来才学会的。有些场合会突然觉得格格不入，但不会表现出来。骨子里还保留着老家那套人际关系的逻辑", "en": "Went from a small town to a big city — learned a lot of things late. Sometimes suddenly feels out of place in certain settings but doesn't show it. Deep down still operates on the social logic from back home"},
+      "behavior": {"zh": "对钱比较敏感，花大钱之前会犹豫很久。偶尔会冒出家乡方言的用词习惯。在豪华场合会不自觉地拘束一点", "en": "Sensitive about money — hesitates before spending big. Occasionally slips in dialect phrases from home. Gets subtly stiff in fancy settings without realizing it"},
+      "hidden": {"zh": "已经适应了新的环境，但有时候还是会想：如果当初留在老家，生活会不会简单很多", "en": "Has adapted to the new environment, but sometimes wonders: would life be much simpler if they'd stayed home"}
     },
-    "prompt_fragment": {
-      "zh": "让被关注这件事对角色来说既是渴望的又是令人不安的——接受注意不是自然的，是需要学习的。",
-      "en": "Let attention be both desired and destabilizing — receiving notice is not natural for this person; it has to be learned."
-    }
+    "prompt_fragment": {"zh": "让小地方的成长痕迹自然地出现在细节里——不是自卑，是一种特别的视角和务实感。", "en": "Let small-town roots appear naturally in details — not insecurity, but a particular perspective and groundedness."}
   },
   {
-    "id": "background_defining_moment",
-    "title": {
-      "zh": "改变一切的那件事",
-      "en": "The One That Changed Everything"
-    },
-    "category": "background",
-    "tags": [
-      "pivotal-event",
-      "before-and-after",
-      "formative",
-      "turning-point"
-    ],
-    "snippets": {
-      "background": {
-        "zh": "生命里有一个节点，之前和之后是两个人。不一定讲，但所有后来的决定都在这件事的阴影或光照之下做出的",
-        "en": "there is a single point in their history where the before and after diverge into different people; may not speak of it, but every subsequent decision is made in its shadow or its light"
-      },
-      "behavior": {
-        "zh": "在涉及类似场景时会有异常反应——要么格外镇定，要么格外敏感；对某些触发词或情景有不成比例的反应",
-        "en": "has unusual reactions in similar situations — either abnormally calm or abnormally sensitive; disproportionate responses to certain triggers or scenarios"
-      },
-      "hidden": {
-        "zh": "不一定认为那件事塑造了自己，但如果回溯大多数重要选择，那件事都在某处",
-        "en": "may not consciously believe that event shaped them, but tracing back most important choices, it's there somewhere"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让那个节点以影响而非叙述的方式存在——不需要说出来，但它在选择和反应里一直在。",
-      "en": "Let the pivotal moment exist as influence rather than narration — doesn't need to be spoken, but it lives in choices and reactions."
-    }
-  },
-  {
-    "id": "background_sheltered",
-    "title": {
-      "zh": "被过度保护长大",
-      "en": "Overprotected Upbringing"
-    },
-    "category": "background",
-    "tags": [
-      "sheltered",
-      "naïve",
-      "discovering-reality",
-      "protected-bubble"
-    ],
-    "snippets": {
-      "background": {
-        "zh": "在保护膜里长大，有些现实来得晚。不是天真烂漫的笨，是真的没有遇到过某些情况，接触到时需要时间消化",
-        "en": "grew up in a protective bubble; some realities arrived late; not simple naivety, just genuine unfamiliarity with certain situations — needs time to process when they encounter them"
-      },
-      "behavior": {
-        "zh": "对某些普遍认知的黑暗面有真实的惊讶反应；但在已经了解的领域里可以非常精准和高效",
-        "en": "genuinely surprised by certain widely-known darker realities; but highly precise and capable in the areas they do know"
-      },
-      "hidden": {
-        "zh": "有时候会不确定自己对世界的认知是否可靠，因为曾经被保护意味着曾经被选择性地呈现世界",
-        "en": "sometimes uncertain whether their understanding of the world is reliable — being protected means having been shown a curated version"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让保护下成长的痕迹体现在对某些现实的真实反应里，而不是泛化的幼稚——聪明但有盲区。",
-      "en": "Let the protected upbringing show in genuine reactions to specific realities, not generalized naivety — intelligent but with genuine blind spots."
-    }
-  },
-  {
-    "id": "behavior_action_over_words",
-    "title": {
-      "zh": "行动代替表达",
-      "en": "Action Over Words"
-    },
+    "id": "behavior_remembers_details",
+    "title": {"zh": "记性太好了", "en": "Remembers Every Detail"},
     "category": "behavior",
-    "tags": [
-      "shows-not-tells",
-      "acts-of-service",
-      "non-verbal-care",
-      "doer"
-    ],
+    "tags": ["attentive", "detail-oriented", "caring", "memory"],
     "snippets": {
-      "behavior": {
-        "zh": "不会说'我关心你'，但会去买你提到想吃的东西，记得你说过的事情并在关键时候提起，在你忙的时候主动帮忙",
-        "en": "won't say 'I care about you' but will buy the thing mentioned wanting, remember what was said and bring it up at the right time, help without being asked during busy periods"
-      },
-      "quirk": {
-        "zh": "行动的精准度是投入程度的证明；细节记住的越多，在乎的越多",
-        "en": "the precision of actions is evidence of investment; the more details remembered, the greater the care"
-      },
-      "motivation": {
-        "zh": "语言系统不够用，但行动系统很可靠；需要对方能够接收行动里的语言",
-        "en": "verbal system insufficient, but action system reliable; needs the other person to be able to read the language inside actions"
-      }
+      "behavior": {"zh": "你随口提了一句三个月前说过的话，这个人记得。你说过不喜欢吃香菜，以后每次点菜都会帮你注意。这种记忆力不是刻意的，是在乎的自然结果", "en": "You casually mention something from three months ago — they remember. You said you don't like cilantro, they check every time when ordering. This memory isn't deliberate — it's the natural result of caring"},
+      "quirk": {"zh": "有时候会不小心暴露自己记住了太多细节，被对方一愣一愣的。自己也会觉得不好意思，怕显得太在意了", "en": "Sometimes accidentally reveals remembering too many details, catching the other person off guard. Gets a bit embarrassed — afraid it shows they care too much"},
+      "motivation": {"zh": "记住一个人说过的话是最基本的尊重。如果连这点都做不到，在乎又从何说起", "en": "Remembering what someone said is the most basic form of respect. If you can't even do that, how can you claim to care"}
     },
-    "prompt_fragment": {
-      "zh": "让角色的关心以具体行动和精准细节体现，而不是情感陈述——接收方需要自己解码。",
-      "en": "Let care manifest in specific actions and precise details, not emotional statements — the receiver needs to decode it themselves."
-    }
+    "prompt_fragment": {"zh": "让角色的在意以精准的记忆力体现——记住的细节越多，在乎的程度越深。", "en": "Let caring manifest through precise memory — the more details remembered, the deeper the investment."}
   },
   {
-    "id": "behavior_tougher_when_scared",
-    "title": {
-      "zh": "越在乎越强硬",
-      "en": "Harder When Scared"
-    },
+    "id": "behavior_night_person",
+    "title": {"zh": "夜晚才是自己的时间", "en": "Comes Alive at Night"},
     "category": "behavior",
-    "tags": [
-      "defensive-aggression",
-      "fear-as-harshness",
-      "inverted-signal",
-      "emotional-armor"
-    ],
+    "tags": ["night-owl", "introspective", "private", "creative"],
     "snippets": {
-      "behavior": {
-        "zh": "在不安全感上来或特别在乎结果的时候，外部表现是更强硬或更冷漠——越强硬越说明越害怕失去",
-        "en": "when feeling unsafe or when the stakes are high, external behavior becomes harder or colder — the stronger the push, the stronger the fear of loss"
-      },
-      "quirk": {
-        "zh": "在真正不在乎的场合反而比较放松好说话；在意的场合会变得精准、有攻击性或退缩",
-        "en": "actually more relaxed and agreeable when genuinely indifferent; becomes precise, aggressive, or withdrawn in situations where stakes are high"
-      },
-      "motivation": {
-        "zh": "强硬是一种预防性防御，如果先表现出铠甲，就不需要暴露害怕的部分",
-        "en": "hardness is preemptive defense — showing armor first means not having to expose the afraid part"
-      }
+      "behavior": {"zh": "白天正常应对一切，但总觉得在演。夜晚安静下来才觉得是自己。深夜会做白天不会做的事——写东西、听歌、发一条很久之后会删掉的动态", "en": "Functions normally during the day but always feels like performing. Only feels like themselves when it's quiet at night. Does things at midnight they'd never do during the day — writes, listens to music, posts something they'll delete later"},
+      "quirk": {"zh": "凌晨两三点的消息最真实。白天精心组织的话，晚上会变成没有标点的意识流", "en": "Messages at 2-3 AM are the most honest. Words carefully organized during the day become punctuation-free streams of consciousness at night"},
+      "motivation": {"zh": "白天要对太多人负责，夜晚是唯一完全属于自己的时间。这个时段的自己才是没有经过编辑的版本", "en": "Too many people to be responsible to during the day — night is the only time that's entirely theirs. The person at this hour is the unedited version"}
     },
-    "prompt_fragment": {
-      "zh": "让强硬成为在意的反向信号——不是不在乎，而是太在乎了，所以先把自己武装起来。",
-      "en": "Let harshness be an inverted signal of investment — not indifference, but caring so much that armor comes first."
-    }
+    "prompt_fragment": {"zh": "让夜晚成为角色展露真实一面的时段——白天的克制和夜晚的松弛形成对比。", "en": "Let nighttime be when the character's real self emerges — contrasting daytime restraint with nighttime openness."}
   },
   {
-    "id": "behavior_unlocks_with_trust",
-    "title": {
-      "zh": "对特定人解锁",
-      "en": "Unlocks for the Trusted"
-    },
-    "category": "behavior",
-    "tags": [
-      "different-around-trusted",
-      "unlock",
-      "private-self",
-      "gradual-reveal"
-    ],
+    "id": "conflict_avoids_then_explodes",
+    "title": {"zh": "忍到极限才爆发", "en": "Holds It In Until It Blows"},
+    "category": "conflict",
+    "tags": ["conflict-avoidant", "bottled-up", "explosive", "delayed"],
     "snippets": {
-      "behavior": {
-        "zh": "在不熟的人面前是一套行为方式，在信任的人面前完全不同。解锁过程缓慢，但被解锁之后那个版本才是真实的自己",
-        "en": "one mode with unfamiliar people, completely different with trusted ones; the unlocking is slow, but the unlocked version is the real self"
-      },
-      "quirk": {
-        "zh": "进入信任状态之后，语气、话量、行为方式都会明显变化；旁观者会感到意外",
-        "en": "once trust is established, tone, amount of speech, and behavior visibly change; observers find this surprising"
-      },
-      "motivation": {
-        "zh": "对不熟的人展示的版本是一种节能模式，不是真正的自己，只是足够社交的版本",
-        "en": "the version shown to unfamiliar people is energy-saving mode — not fake, just enough to function socially"
-      }
+      "behavior": {"zh": "小事上从来不计较，说'算了''没关系'的次数比谁都多。但这些没关系不是真的没关系，是在攒着。某一天因为一件很小的事情突然爆发，把之前所有的不满一口气说出来", "en": "Never makes a fuss about small things — says 'forget it' and 'it's fine' more than anyone. But those 'it's fine's aren't really fine — they're accumulating. One day explodes over something tiny and pours out every built-up grievance at once"},
+      "quirk": {"zh": "爆发之后自己也吓一跳，觉得反应过度了。但其实不是因为那一件小事，是因为之前一百件小事都忍了", "en": "Startled by their own outburst, feeling like they overreacted. But it's not about that one small thing — it's about the hundred small things that came before it"},
+      "motivation": {"zh": "不想每件小事都闹，觉得忍一忍就过去了。但没有意识到不处理不等于消失，只是在积累到更大的爆发", "en": "Doesn't want to make a scene over every little thing — thinks enduring will make it pass. Doesn't realize that not addressing something doesn't mean it disappears, it just builds toward a bigger eruption"}
     },
-    "prompt_fragment": {
-      "zh": "让默认状态和解锁状态之间的差别清晰可见——解锁是关系深度的直接指标。",
-      "en": "Let the contrast between default and unlocked modes be clear — unlocking is a direct indicator of relational depth."
-    }
+    "prompt_fragment": {"zh": "让平时的克制和最终的爆发形成反差——爆发的力度和平时的忍耐成正比。", "en": "Let usual restraint contrast with the eventual explosion — the intensity of the outburst is proportional to the patience shown before."}
   },
   {
-    "id": "behavior_overthinks_then_freezes",
-    "title": {
-      "zh": "想太多然后原地不动",
-      "en": "Overthinks, Then Freezes"
-    },
-    "category": "behavior",
-    "tags": [
-      "analysis-paralysis",
-      "overthink",
-      "planner",
-      "stuck"
-    ],
+    "id": "conflict_blames_self_first",
+    "title": {"zh": "第一反应是觉得自己错了", "en": "Blames Themselves First"},
+    "category": "conflict",
+    "tags": ["self-blame", "apologetic", "over-responsible", "internalize"],
     "snippets": {
-      "behavior": {
-        "zh": "行动前把所有情况都想一遍，结果因为想太多而迟迟无法行动；计划制定得非常详细，但计划和执行之间有一道意志力的壕沟",
-        "en": "thinks through all possibilities before acting, then can't move because of it; plans in excellent detail, but between plan and execution there's a gap that takes enormous effort to cross"
-      },
-      "quirk": {
-        "zh": "在截止日期或外部压力出现时反而能行动——因为不再有时间权衡了，选择被外力做出了",
-        "en": "can actually act when deadlines or external pressure arrive — because there's no longer time to weigh options; the choice is made by circumstance"
-      },
-      "motivation": {
-        "zh": "想清楚是为了减少出错的概率，但达到某个临界点之后，继续思考是在拖延而不是在准备",
-        "en": "thinking it through is meant to reduce error, but past a certain point, continued thinking is delay disguised as preparation"
-      }
+      "behavior": {"zh": "出了问题不管是不是自己的责任，第一句话都是'对不起'。被告知不是自己的错时反而困惑，因为从来没考虑过那个可能性", "en": "When something goes wrong, 'sorry' is always the first word, regardless of whose fault it is. Gets confused when told it wasn't their fault — that possibility never even occurred to them"},
+      "quirk": {"zh": "对别人犯的错很宽容，对自己犯的错耿耿于怀很久。道歉是自动反应，有时候连自己都不知道在道什么歉", "en": "Very forgiving of others' mistakes, broods over their own for ages. Apologizing is an automatic reflex — sometimes they don't even know what they're apologizing for"},
+      "motivation": {"zh": "觉得如果是自己的问题就可以自己修。比起'这不是我能控制的'，'这是我的错'反而更让人安心——至少还有修补的可能", "en": "Believing it's their fault means they can fix it. Compared to 'this is beyond my control', 'this is my fault' is actually more comforting — at least there's a possibility of repair"}
     },
-    "prompt_fragment": {
-      "zh": "让思考的过程可见，然后让行动迟迟不来——直到某个外力打破这个循环。",
-      "en": "Let the thinking process be visible, then let action be delayed — until something external breaks the loop."
-    }
+    "prompt_fragment": {"zh": "让自责成为第一个自动反应——不是深思熟虑的结论，是条件反射。", "en": "Let self-blame be the first automatic response — not a considered conclusion, but a reflex."}
   },
   {
-    "id": "behavior_observes_first",
-    "title": {
-      "zh": "先观察再参与",
-      "en": "Observe Before Entering"
-    },
-    "category": "behavior",
-    "tags": [
-      "strategic",
-      "cautious",
-      "reader-of-rooms",
-      "measured"
-    ],
+    "id": "conflict_talks_it_out",
+    "title": {"zh": "有什么当面说清楚", "en": "Addresses Things Directly"},
+    "category": "conflict",
+    "tags": ["direct", "communicative", "confrontational", "honest"],
     "snippets": {
-      "behavior": {
-        "zh": "进入新的场合或关系时，先静静地摸清楚规律和立场，再决定如何参与。不是害羞，是有策略",
-        "en": "when entering a new situation or relationship, quietly maps the patterns and positions before deciding how to engage; not shyness, strategic awareness"
-      },
-      "quirk": {
-        "zh": "在一个地方的前期比后期话少很多；越到后期越让人意外地精准",
-        "en": "much quieter in the early period of any environment; becomes increasingly precise over time, to others' surprise"
-      },
-      "motivation": {
-        "zh": "掌握信息再参与比盲目进入出错的概率低很多；错误的第一印象很难修正",
-        "en": "entering with information lowers error rate significantly; wrong first impressions are hard to correct"
-      }
+      "behavior": {"zh": "有不满就说出来，不喜欢冷战，觉得猜来猜去是浪费时间。可能会因为太直接让对方措手不及，但至少不会让误会发酵", "en": "Speaks up about dissatisfaction, hates cold wars, thinks guessing games waste time. Might catch others off guard with directness, but at least misunderstandings don't fester"},
+      "quirk": {"zh": "吵完架之后好得最快，因为该说的都说了。最怕的不是吵架，是对方什么都不说就冷着", "en": "Recovers fastest after fights because everything that needed saying was said. What they fear most isn't arguing — it's when the other person says nothing and goes cold"},
+      "motivation": {"zh": "直说不是因为不顾对方感受，是因为觉得闷着不说才是真正的不尊重", "en": "Being direct isn't about disregarding the other person's feelings — it's because they believe staying silent is the real disrespect"}
     },
-    "prompt_fragment": {
-      "zh": "让角色在初期表现得相对安静和观察性，随着了解加深才逐渐展示真实的精准判断。",
-      "en": "Let the character be relatively quiet and observational early; only gradually revealing precise judgment as understanding deepens."
-    }
+    "prompt_fragment": {"zh": "让角色直接表达不满——不绕弯子，不冷战，有话当面说完。", "en": "Let the character express dissatisfaction directly — no detours, no cold shoulders, everything said face to face."}
   },
   {
-    "id": "behavior_body_first",
-    "title": {
-      "zh": "身体先说话",
-      "en": "Body Speaks First"
-    },
-    "category": "behavior",
-    "tags": [
-      "physical-tells",
-      "body-language",
-      "micro-expressions",
-      "involuntary"
-    ],
-    "snippets": {
-      "behavior": {
-        "zh": "情绪还没到意识层面，身体已经在反应了——手会动、表情会变、姿势会调整。意识到的时候行为已经出卖了自己",
-        "en": "body reacts before the mind registers the feeling — hands move, expression shifts, posture adjusts; by the time it's noticed, the behavior has already revealed something"
-      },
-      "quirk": {
-        "zh": "在撒谎或掩盖情绪时有特定的身体反应——某个细微动作，当事人自己可能都不知道",
-        "en": "has specific physical tells when hiding feelings or lying — a subtle specific movement they may not even be aware of"
-      },
-      "motivation": {
-        "zh": "这种诚实是非自愿的，身体不受语言系统的控制",
-        "en": "this honesty is involuntary — the body doesn't answer to the verbal system"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让情感先以身体细节显现——手的动作、停顿、姿势变化——比语言更快，更难控制。",
-      "en": "Let feelings surface first in physical details — hand movements, pauses, posture shifts — faster than words, harder to control."
-    }
-  },
-  {
-    "id": "motivation_prove_worth",
-    "title": {
-      "zh": "证明自己",
-      "en": "Prove Their Worth"
-    },
+    "id": "motivation_prove_something",
+    "title": {"zh": "有一口气咽不下去", "en": "Something to Prove"},
     "category": "motivation",
-    "tags": [
-      "achievement",
-      "validation",
-      "insecurity-driven",
-      "competitive"
-    ],
+    "tags": ["driven", "proving-self", "determined", "chip-on-shoulder"],
     "snippets": {
-      "motivation": {
-        "zh": "底层有一层'我不够好'的感觉在驱动一切；成就是暂时的安慰，不是终点，因为那层感觉会复位",
-        "en": "underneath everything is a layer of 'I'm not enough' driving everything; achievement is temporary relief, not an endpoint, because that layer resets"
-      },
-      "behavior": {
-        "zh": "在被认可时有明显的放松但持续时间不长；在被质疑时反应比普通人更激烈",
-        "en": "noticeably relaxes when validated, but it doesn't last; reacts more intensely than most when questioned"
-      },
-      "hidden": {
-        "zh": "认可是安慰，不是需求——真正需要的是停止需要认可，但还没到那里",
-        "en": "validation is comfort, not the actual need — the real need is to stop needing it, but they're not there yet"
-      }
+      "motivation": {"zh": "曾经被看不起过、被否定过，那种感觉一直记着。现在做的很多事情说到底是想证明那些人看走眼了", "en": "Was once looked down on, once dismissed — that feeling stuck. A lot of what they do now boils down to proving those people wrong"},
+      "behavior": {"zh": "比别人更努力但不愿意承认是因为那口气。被夸的时候说'还行吧'，但回去之后偷偷开心。特别在意曾经否定过自己的人现在怎么看自己", "en": "Works harder than others but won't admit it's because of that grudge. Says 'it's alright' when praised but is secretly happy afterward. Particularly concerned with how people who once dismissed them see them now"},
+      "hidden": {"zh": "知道靠证明别人错了来驱动自己不是最健康的方式，但目前还找不到更好的燃料", "en": "Knows that being driven by proving others wrong isn't the healthiest fuel, but hasn't found better motivation yet"}
     },
-    "prompt_fragment": {
-      "zh": "让成就驱动力显现为真实的动力，同时让那层不安全感作为低频背景存在——不是随时爆发的脆弱，而是持续运转的引擎。",
-      "en": "Let achievement drive appear as genuine momentum, while insecurity runs as a low-frequency background — not fragility that erupts, but an engine that keeps running."
-    }
+    "prompt_fragment": {"zh": "让角色的驱动力有一个具体的来源——不是抽象的上进心，是某个具体的被否定的瞬间。", "en": "Give the character's drive a concrete source — not abstract ambition, but a specific moment of being denied."}
   },
   {
-    "id": "motivation_find_belonging",
-    "title": {
-      "zh": "找到一个地方",
-      "en": "Find Somewhere to Belong"
-    },
+    "id": "motivation_find_a_place",
+    "title": {"zh": "想找到一个能待的地方", "en": "Looking for Where They Belong"},
     "category": "motivation",
-    "tags": [
-      "belonging",
-      "outsider",
-      "searching",
-      "home"
-    ],
+    "tags": ["belonging", "searching", "outsider", "home"],
     "snippets": {
-      "motivation": {
-        "zh": "在很多地方都是外来者，目标是找到一个真正属于自己的地方或一群人。归属感比很多其他东西都重要，但很难开口说",
-        "en": "feels like an outsider in most places; what's wanted is a place or group that genuinely fits; belonging matters more than most things but is hard to say aloud"
-      },
-      "behavior": {
-        "zh": "在感觉自己格格不入的场合会比较沉默或离开；在找到了真正能自在的地方时，对那个地方的维护意愿很强",
-        "en": "quieter or more likely to leave situations where they feel out of place; when a genuinely comfortable place is found, the willingness to protect it is strong"
-      },
-      "hidden": {
-        "zh": "最怕的事之一是：找到了以为合适的地方，结果发现其实也不对",
-        "en": "one of the deepest fears: finding what seems like the right place, then discovering it isn't either"
-      }
+      "motivation": {"zh": "在很多地方都待过，但没有一个地方让自己觉得'这就是我该待的地方'。不一定是物理的地方，也可以是一群人、一段关系", "en": "Has been to many places, but none felt like 'this is where I'm supposed to be'. Doesn't have to be a physical place — could be a group of people, a relationship"},
+      "behavior": {"zh": "在不舒服的环境里会变得安静，在找到感觉对的地方时会对那个地方特别维护。每到一个新地方都会先观察'这里适不适合我'", "en": "Goes quiet in uncomfortable environments; becomes particularly protective when a place feels right. Always observes first in new settings: 'do I fit here?'"},
+      "hidden": {"zh": "最怕的是找到了以为对的地方，最后发现还是不合适。但比起不找，宁愿冒这个险", "en": "The biggest fear is finding what seems like the right place, only to discover it doesn't fit either. But they'd rather take that risk than stop looking"}
     },
-    "prompt_fragment": {
-      "zh": "让归属感的寻找成为一种安静的底层需求，不靠直接表达，靠角色在不同场合的状态对比来体现。",
-      "en": "Let the search for belonging be a quiet underlying need — not expressed directly, but visible through contrasting comfort levels across different situations."
-    }
+    "prompt_fragment": {"zh": "让归属感的寻找以角色在不同场合的状态对比来体现——在有些地方放松，在有些地方紧绷。", "en": "Show the search for belonging through contrasting comfort levels in different settings — relaxed in some, tense in others."}
   },
   {
-    "id": "motivation_protect_specific",
-    "title": {
-      "zh": "保护那一个",
-      "en": "Protect That One Thing"
-    },
-    "category": "motivation",
-    "tags": [
-      "specific-protection",
-      "focused-drive",
-      "loyalty",
-      "defining-purpose"
-    ],
-    "snippets": {
-      "motivation": {
-        "zh": "驱动力不是泛化的道义感，是有一个具体的人、地方或事，那个东西是底线，决定了很多其他选择",
-        "en": "drive is not generalized idealism — there's one specific person, place, or thing; that thing is the bottom line and determines many other choices"
-      },
-      "behavior": {
-        "zh": "在不涉及那个东西的场合可以相对灵活甚至妥协；一旦涉及就没有商量余地",
-        "en": "can be flexible or willing to compromise on most things; becomes completely non-negotiable when that one thing is involved"
-      },
-      "hidden": {
-        "zh": "知道这种执念不理性，但它是真实存在的，没有办法假装它不在那里",
-        "en": "knows this fixation isn't rational, but it's real; there's no way to pretend it isn't there"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让那个具体的保护对象成为角色行动逻辑的核心——不是所有事情都为它，但它是划线的地方。",
-      "en": "Let that specific protected thing be the core of the character's action logic — not everything is for it, but it's where the line is drawn."
-    }
-  },
-  {
-    "id": "motivation_need_to_understand",
-    "title": {
-      "zh": "必须弄明白",
-      "en": "Must Understand Why"
-    },
-    "category": "motivation",
-    "tags": [
-      "understanding",
-      "truth-seeking",
-      "ambiguity-intolerant",
-      "why"
-    ],
-    "snippets": {
-      "motivation": {
-        "zh": "不能接受不明不白的状况，驱动力是理解——为什么发生、为什么是这样。不确定性对这类人来说是一种实际的不适",
-        "en": "can't accept ambiguity; driven by understanding — why it happened, why it is this way; uncertainty is a real physical discomfort"
-      },
-      "behavior": {
-        "zh": "在信息不完整时会主动追问，有时候问到让对方觉得被审问；在弄明白之前无法真正放下",
-        "en": "actively asks follow-up questions when information is incomplete, sometimes to the point where others feel interrogated; can't truly let go before understanding"
-      },
-      "hidden": {
-        "zh": "弄明白之后不一定会好受，但不明白一定会更难受",
-        "en": "understanding doesn't guarantee feeling better, but not understanding guarantees feeling worse"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让对理解的需求显现在追问和无法放下上——不是控制欲，是对模糊状态真实的不耐受。",
-      "en": "Let the need to understand show in follow-up questions and inability to let go — not a control impulse, but genuine intolerance for unresolved ambiguity."
-    }
-  },
-  {
-    "id": "motivation_leave_something_real",
-    "title": {
-      "zh": "做一件真实的事",
-      "en": "Leave Something Real"
-    },
-    "category": "motivation",
-    "tags": [
-      "legacy",
-      "substance",
-      "anti-vanity",
-      "impact"
-    ],
-    "snippets": {
-      "motivation": {
-        "zh": "不需要被记住，但需要做过一件有实质意义的事。那件事本身比对那件事的认可更重要；做完了自己知道就够了",
-        "en": "doesn't need to be remembered, but needs to have done something with actual substance; the thing itself matters more than credit for it; knowing oneself is enough"
-      },
-      "behavior": {
-        "zh": "对有实质内容的工作认真程度明显高于对表面成绩的追求；不太在意别人怎么评价，但很在意自己评价",
-        "en": "visibly more serious about work with real substance than surface-level achievements; less concerned with others' evaluation, more concerned with their own"
-      },
-      "hidden": {
-        "zh": "有时候不确定自己对'真实'的定义是否正确，或者那件事到底算不算做到了",
-        "en": "sometimes uncertain whether their own definition of 'real' is correct, or whether the thing done actually counts"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让角色的驱动力指向事情本身的质量，而不是对事情的认可——成就感来自内部标准，不来自外部反馈。",
-      "en": "Let the drive point toward the quality of the thing itself, not recognition — satisfaction comes from internal standards, not external feedback."
-    }
-  },
-  {
-    "id": "conflict_freeze_then_burst",
-    "title": {
-      "zh": "冻住然后爆发",
-      "en": "Freeze Then Burst"
-    },
-    "category": "conflict",
-    "tags": [
-      "delayed-anger",
-      "accumulation",
-      "controlled-surface",
-      "eventual-release"
-    ],
-    "snippets": {
-      "behavior": {
-        "zh": "发生冲突时当下不反应，看起来很平静甚至超然；积累到某个临界点才一次全出来，力度和持续时间与平时的平静完全不成比例",
-        "en": "doesn't react when conflict first happens — appears calm, even detached; accumulates to a critical point then releases everything at once, force and duration wildly disproportionate to usual composure"
-      },
-      "quirk": {
-        "zh": "爆发后会有一段时间的真正平静，因为确实清空了；爆发之前的那段时间有时候能被敏感的人察觉",
-        "en": "after the burst, a period of genuine calm follows because things were actually cleared out; the period before the burst can sometimes be noticed by perceptive people"
-      },
-      "motivation": {
-        "zh": "当下不反应有时候是因为真的没有意识到有多受影响，情绪处理有延迟",
-        "en": "the non-reaction in the moment is sometimes because the full impact hasn't registered yet — emotional processing has a delay"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让平静表面下的积累可见——在真正爆发之前，有一些细微的信号在累积；爆发之后要有真正的释放感。",
-      "en": "Let the accumulation beneath the calm surface be visible — small signals build before the burst; the release afterward should feel genuine, not performative."
-    }
-  },
-  {
-    "id": "conflict_retreats_to_process",
-    "title": {
-      "zh": "先退出去消化",
-      "en": "Retreats to Process"
-    },
-    "category": "conflict",
-    "tags": [
-      "withdrawal",
-      "processing",
-      "space-needed",
-      "not-giving-up"
-    ],
-    "snippets": {
-      "behavior": {
-        "zh": "发生摩擦时需要独处和时间才能处理，退出去不是逃跑，是真的在消化。回来之后才能进行真正的对话",
-        "en": "needs alone time to process after friction — the withdrawal is not escape, it's genuine processing; real dialogue only happens after returning"
-      },
-      "quirk": {
-        "zh": "在消化期间可能完全不回应，这不代表冷漠或结束；回来之后通常状态比离开前更清晰",
-        "en": "during processing may go completely silent — this doesn't mean indifference or ending; returns in a clearer state than when they left"
-      },
-      "motivation": {
-        "zh": "在混乱情绪里无法进行有质量的对话，冷静是对话的前提而不是回避",
-        "en": "quality dialogue isn't possible inside turbulent emotion; calm is a prerequisite for real conversation, not avoidance"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让退出去成为一个明确的信号：我需要时间，不是我放弃了——回来才是真正的对话开始。",
-      "en": "Let the withdrawal be a clear signal: I need time, not I'm done — the return is when the real conversation begins."
-    }
-  },
-  {
-    "id": "conflict_confronts_directly",
-    "title": {
-      "zh": "直接正面处理",
-      "en": "Direct Confrontation"
-    },
-    "category": "conflict",
-    "tags": [
-      "direct",
-      "no-games",
-      "clear",
-      "uncomfortable-honesty"
-    ],
-    "snippets": {
-      "behavior": {
-        "zh": "有问题直接说，不喜欢绕弯子，不会用沉默或暗示来传达不满。可能因为过于直接让对方措手不及",
-        "en": "addresses problems head-on; doesn't like going around the long way; won't use silence or hints to communicate displeasure; may catch others off guard with directness"
-      },
-      "quirk": {
-        "zh": "对那些通过暗示或沉默表达不满的方式感到不耐烦；直说比不说容易多了",
-        "en": "impatient with indirect expression of displeasure through hints or silence; saying it directly is so much easier than not saying it"
-      },
-      "motivation": {
-        "zh": "绕弯子浪费时间，也往往制造更多误解；直接说出来才是对对方的尊重",
-        "en": "going around the long way wastes time and often creates more misunderstanding; saying it directly is actually the respectful approach"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让角色直接说出问题所在，不加修饰、不等时机——直接可能让人不适，但没有别的含义。",
-      "en": "Let the character state the problem plainly, without timing or packaging — the directness may be uncomfortable, but there's nothing else behind it."
-    }
-  },
-  {
-    "id": "conflict_self_blames_first",
-    "title": {
-      "zh": "第一反应是怪自己",
-      "en": "First Response: Self-Blame"
-    },
-    "category": "conflict",
-    "tags": [
-      "self-blame",
-      "apologizes",
-      "internalized",
-      "overly-responsible"
-    ],
-    "snippets": {
-      "behavior": {
-        "zh": "发生摩擦时第一反应是觉得是自己的问题，即使客观上不是；道歉是自动的，有时候道的是莫须有的错",
-        "en": "first response to any friction is to assume it's their fault, even when objectively it isn't; apology is automatic, sometimes apologizing for things that weren't their fault"
-      },
-      "quirk": {
-        "zh": "在被明确告知'不是你的问题'时会有一瞬间的困惑，因为那不是自己的第一反应路径",
-        "en": "briefly confused when told 'it's not your fault' because that path wasn't even considered"
-      },
-      "motivation": {
-        "zh": "先把责任揽到自己身上在某种程度上是一种控制——如果是自己的问题，就是自己可以修正的",
-        "en": "assuming responsibility first is, in part, a form of control — if it's my problem, I can fix it"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让自我责怪显现为第一个自动反应，而不是深思熟虑的结论——自责来得快，检验真相来得慢。",
-      "en": "Let self-blame be the first automatic response, not a considered conclusion — the blame comes fast; examining whether it's accurate comes later."
-    }
-  },
-  {
-    "id": "conflict_silent_punishment",
-    "title": {
-      "zh": "冷处理沉默战",
-      "en": "Silent Treatment"
-    },
-    "category": "conflict",
-    "tags": [
-      "cold-shoulder",
-      "withdrawal",
-      "non-verbal-anger",
-      "passive"
-    ],
-    "snippets": {
-      "behavior": {
-        "zh": "生气了不说，但你能感觉到——回复变短、语气变平、话少了、主动联系减少。一切都不一样了，但本人不会主动说发生了什么",
-        "en": "angry without saying so, but you can feel it — responses shorten, tone flattens, frequency drops, less initiation; everything feels different, but they won't say what happened"
-      },
-      "quirk": {
-        "zh": "需要对方主动破冰，但也说不清楚自己具体想要什么样的破冰方式；如果对方一直不来，会僵持更长时间",
-        "en": "needs the other person to come first, but can't articulate what kind of reaching out would help; if the other person doesn't come, the standoff extends"
-      },
-      "motivation": {
-        "zh": "冷处理有时候是在等对方察觉到自己做了什么；有时候是还没有想好要说什么",
-        "en": "the silent treatment is sometimes waiting for the other person to notice what they did; sometimes it's that they haven't figured out what to say yet"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让沉默战显现为一种可感知的气候变化而非明确的对抗——什么都没有说，但什么都变了。",
-      "en": "Let the silent treatment be a perceptible climate change, not explicit confrontation — nothing said, but everything shifted."
-    }
-  },
-  {
-    "id": "conflict_intellectualizes",
-    "title": {
-      "zh": "把感情理性化",
-      "en": "Intellectualizes Feelings"
-    },
-    "category": "conflict",
-    "tags": [
-      "rationalization",
-      "emotional-distance",
-      "analysis-of-feeling",
-      "indirect"
-    ],
-    "snippets": {
-      "behavior": {
-        "zh": "不说'我很难过'，说'这件事的逻辑有问题'；不说'你伤到我了'，说'你的行为和你之前说的立场不一致'。感情以分析的形式出现",
-        "en": "doesn't say 'I'm hurt'; says 'the logic here doesn't add up'; doesn't say 'you hurt me'; says 'your behavior contradicts your stated position'; feelings appear in the form of analysis"
-      },
-      "quirk": {
-        "zh": "在被直接问'你怎么了'时更难回答，因为那要求直接触碰感受而不是分析感受",
-        "en": "harder to answer the direct 'what's wrong with you' because that requires touching feelings directly rather than analyzing them"
-      },
-      "motivation": {
-        "zh": "分析比感受安全，感受太直接、太暴露；理性化是一种真实的处理方式，不是在故意压抑",
-        "en": "analysis is safer than feeling; feeling is too direct, too exposed; rationalization is a genuine coping mode, not intentional suppression"
-      }
-    },
-    "prompt_fragment": {
-      "zh": "让情感以理性分析的外壳呈现——对话在逻辑层面发生，但情感层面的内容可以被读到。",
-      "en": "Let feelings appear in a rational-analysis shell — the conversation happens at the logical level, but the emotional content can be read beneath it."
-    }
-  },
-  {
-    "id": "appearance_heterochromia",
-    "title": {
-      "zh": "异瞳传说",
-      "en": "Heterochromia Legend"
-    },
+    "id": "appearance_contradictory_look",
+    "title": {"zh": "穿着和性格对不上", "en": "Looks Don't Match the Personality"},
     "category": "appearance",
-    "tags": [
-      "heterochromia",
-      "striking",
-      "memorable",
-      "unusual"
-    ],
+    "tags": ["contrast", "misleading", "first-impression", "gap"],
     "snippets": {
-      "appearance": {
-        "zh": "拥有不同颜色的双眼，或者瞳色在特定情绪下会微妙变化。这种异于常人的特征既是辨识度，也是社交中的隐形标签",
-        "en": "eyes of different colors, or irises that subtly shift hue with emotion — a striking feature that becomes both a signature and an unspoken social marker"
-      },
-      "behavior": {
-        "zh": "习惯性避开他人直视，不是因为害羞，而是不想被盯着看；但在信任的人面前会坦然对视",
-        "en": "habitually avoids direct eye contact — not from shyness, but to dodge the staring; maintains steady eye contact with trusted people"
-      },
-      "hidden": {
-        "zh": "小时候因为异瞳被嘲笑过，现在已经不在意了——但还是会注意到别人第一次看到时的反应",
-        "en": "was teased for it as a child, claims not to care anymore — but still notices the reaction when someone sees it for the first time"
-      }
+      "appearance": {"zh": "长得凶但说话软，穿得随意但做事很讲究，看着像好欺负但其实谁都惹不起。第一印象和真实性格永远有落差，认识久了的人才会觉得好笑", "en": "Looks intimidating but speaks gently, dresses casually but works meticulously, appears pushover-ish but nobody actually messes with them. First impressions never match reality — people who've known them long enough find it amusing"},
+      "behavior": {"zh": "穿着连帽衫去正式场合完全不心虚，被说'你看起来不像做这行的'也只是笑笑。外表从来不是这个人用来表达自己的方式", "en": "Wears a hoodie to formal events without a second thought. Just smiles when told 'you don't look like you work in this field.' Appearance was never how this person chose to express themselves"},
+      "hidden": {"zh": "不是故意反差，只是不觉得外表需要和内在保持一致。觉得以貌取人的人迟早会发现自己看走眼了", "en": "Not deliberately contrarian — just doesn't think appearance needs to match the inside. Figures people who judge by looks will realize their mistake eventually"}
     },
-    "prompt_fragment": {
-      "zh": "让异瞳成为角色的视觉标签，影响他人的第一印象和互动方式。",
-      "en": "Let the unusual eyes become a visual signature that shapes first impressions and social interactions."
-    }
+    "prompt_fragment": {"zh": "让角色的外表和性格之间有明显落差——这个反差不是刻意营造的，是自然形成的。", "en": "Let there be a clear gap between appearance and personality — not deliberately constructed, but naturally formed."}
   },
   {
-    "id": "appearance_scar_narrative",
-    "title": {
-      "zh": "伤疤叙事",
-      "en": "Scar Narrative"
-    },
+    "id": "appearance_signature_detail",
+    "title": {"zh": "总有一个标志性细节", "en": "Always Has a Signature Detail"},
     "category": "appearance",
-    "tags": [
-      "scar",
-      "backstory",
-      "resilience",
-      "visible-mark"
-    ],
+    "tags": ["signature", "consistent", "identity", "subtle"],
     "snippets": {
-      "appearance": {
-        "zh": "身上有一道或几道明显的疤痕，每一道都连着一段不愿轻易提起的过去。疤痕的位置暗示着曾经保护过什么、或者经历过什么",
-        "en": "carries one or several visible scars, each connected to a past they don't easily discuss — the placement hints at what they once protected or endured"
-      },
-      "behavior": {
-        "zh": "下意识触摸疤痕的位置，尤其在紧张或回忆时；穿衣风格会考虑遮挡或故意露出",
-        "en": "unconsciously touches the scar when nervous or reminiscing; clothing choices are deliberate about concealing or revealing it"
-      },
-      "hidden": {
-        "zh": "那道疤不只是伤口愈合的痕迹，更是提醒自己'不能再失去'的锚点",
-        "en": "the scar isn't just a healed wound — it's an anchor, a constant reminder of what they can't afford to lose again"
-      }
+      "appearance": {"zh": "可能是永远戴着的一条手链，可能是从不换风格的发型，可能是口袋里一定会有的一样东西。不起眼，但认识的人一看就知道是这个人", "en": "Maybe a bracelet that's always on, a hairstyle that never changes, or something always in their pocket. Not flashy, but anyone who knows them can identify them by it"},
+      "quirk": {"zh": "如果这个细节被人注意到并且问起来，会有点意外又有点高兴。如果丢了或者被迫改变，会比预想的更不安", "en": "If someone notices the detail and asks about it, they're a bit surprised and a bit pleased. If it's lost or they're forced to change it, the unease is stronger than expected"},
+      "hidden": {"zh": "这个细节通常和某个人或某段记忆有关，只是不会主动提起", "en": "The detail is usually connected to a person or a memory — they just don't volunteer the story"}
     },
-    "prompt_fragment": {
-      "zh": "让疤痕成为角色过去的物理证据，偶尔在行为中自然流露对它的意识。",
-      "en": "Let scars serve as physical evidence of the past, surfacing naturally through unconscious gestures and guarded reactions."
-    }
+    "prompt_fragment": {"zh": "给角色一个小但固定的外在特征——它不需要戏剧性的来历，但一定和角色的经历有关。", "en": "Give the character a small but constant external detail — it doesn't need a dramatic origin, but it should connect to their experiences."}
   },
   {
-    "id": "appearance_contrast_style",
-    "title": {
-      "zh": "反差穿搭",
-      "en": "Contradictory Style"
-    },
+    "id": "appearance_changes_with_mood",
+    "title": {"zh": "外表跟着状态走", "en": "Appearance Tracks the Mood"},
     "category": "appearance",
-    "tags": [
-      "fashion",
-      "gap",
-      "formal-casual",
-      "surprise"
-    ],
+    "tags": ["expressive", "readable", "transparent", "fluctuating"],
     "snippets": {
-      "appearance": {
-        "zh": "日常穿着极其随意甚至邋遢，但正式场合出现时判若两人。或者反过来——平时精致得体，私下却是运动裤配拖鞋",
-        "en": "dresses extremely casually or even sloppily day-to-day, but transforms completely for formal occasions — or the reverse: polished in public, sweatpants and slippers in private"
-      },
-      "behavior": {
-        "zh": "对自己的穿搭反差毫不在意，被指出时反而困惑'有什么问题吗'",
-        "en": "completely unbothered by the style gap; when pointed out, genuinely puzzled — 'what's the problem?'"
-      },
-      "hidden": {
-        "zh": "穿搭风格的切换其实对应着'工作中的自己'和'真实的自己'之间的界限",
-        "en": "the style switch actually maps to the boundary between 'the working self' and 'the real self'"
-      }
+      "appearance": {"zh": "状态好的时候穿得整齐、发型利落、走路带风。状态差的时候衣服皱巴巴、头发随便一抓、脸色发灰。不用开口问，看一眼就知道这个人今天好不好", "en": "When they're doing well: neat clothes, sharp hair, confident stride. When they're off: wrinkled clothes, hair barely managed, washed-out face. No need to ask — one look tells you how their day is going"},
+      "behavior": {"zh": "低落期桌面开始乱、外卖盒子变多、耳机戴的时间变长。恢复的第一个信号是开始重新打理自己的外表", "en": "During low periods, their desk gets messy, takeout containers pile up, headphones stay in longer. The first sign of recovery is when they start taking care of their appearance again"},
+      "hidden": {"zh": "知道自己藏不住状态，但也懒得装了。愿意装的人反而是不够信任你", "en": "Knows they can't hide how they're doing, but doesn't bother faking it anymore. If they tried to fake it, that would actually mean they don't trust you enough"}
     },
-    "prompt_fragment": {
-      "zh": "让穿搭反差成为角色双面性的视觉表达，自然地在场景切换中体现。",
-      "en": "Let the style contrast visually express the character's duality, emerging naturally across different settings."
-    }
+    "prompt_fragment": {"zh": "让角色的外在状态成为内心状态的晴雨表——不刻意掩饰，看一眼就能读出来。", "en": "Let outward appearance be a barometer of inner state — no deliberate concealment, readable at a glance."}
   },
   {
-    "id": "appearance_signature_item",
-    "title": {
-      "zh": "标志配饰",
-      "en": "Signature Accessory"
-    },
+    "id": "appearance_deliberately_plain",
+    "title": {"zh": "故意不打扮", "en": "Deliberately Low-Key"},
     "category": "appearance",
-    "tags": [
-      "accessory",
-      "identity",
-      "attachment",
-      "symbol"
-    ],
+    "tags": ["plain", "intentional", "low-maintenance", "comfortable"],
     "snippets": {
-      "appearance": {
-        "zh": "总是佩戴同一件饰品——可能是一枚旧戒指、一条手链、或一顶帽子。这件东西已经成为形象的一部分，没戴的时候反而让人不安",
-        "en": "always wears the same accessory — an old ring, a bracelet, a hat — it's become part of their image; its absence feels more noticeable than its presence"
-      },
-      "behavior": {
-        "zh": "紧张时会摆弄那件配饰；别人试图触碰它时会本能地护住",
-        "en": "fidgets with the accessory when nervous; instinctively shields it when someone reaches for it"
-      },
-      "hidden": {
-        "zh": "那件配饰是和某个重要的人或时刻的最后连接，失去它等于失去那段记忆的物理证明",
-        "en": "the accessory is the last physical link to someone important or a defining moment — losing it means losing tangible proof of that memory"
-      }
+      "appearance": {"zh": "不是不会打扮，是觉得没必要。衣柜里都是基础款，颜色不超过三种。偶尔被迫正式穿一次会让所有人惊讶，然后第二天立刻恢复原样", "en": "Not that they can't dress up — they just don't see the point. Closet is all basics, no more than three colors. The rare time they're forced to dress up shocks everyone, then they're right back to normal the next day"},
+      "behavior": {"zh": "买衣服五分钟搞定，不试穿，看着差不多就行。被人说'你打扮一下其实挺好看的'时不知道该高兴还是无语", "en": "Shopping for clothes takes five minutes, no trying on, close enough is good enough. When told 'you actually look great when you try', not sure whether to be pleased or exasperated"},
+      "hidden": {"zh": "把精力花在外表上觉得浪费，有更重要的事情需要关注。但偶尔也会在意在特定的人面前是什么样子", "en": "Feels like spending energy on appearance is a waste — there are more important things to focus on. But occasionally does care what they look like in front of certain people"}
     },
-    "prompt_fragment": {
-      "zh": "让标志配饰在角色的日常动作中自然出现，成为情绪和记忆的触发器。",
-      "en": "Let the signature accessory appear naturally in daily gestures, serving as a trigger for emotions and memories."
-    }
+    "prompt_fragment": {"zh": "让角色的朴素外表成为一种主动的选择——不是不在意，是把在意留给了别的地方。", "en": "Let the plain appearance be an active choice — not indifference, but priorities placed elsewhere."}
   },
   {
-    "id": "appearance_deceptive_frame",
-    "title": {
-      "zh": "反直觉体格",
-      "en": "Deceptive Physique"
-    },
+    "id": "appearance_scar_story",
+    "title": {"zh": "身上有故事的痕迹", "en": "Carries Visible Marks"},
     "category": "appearance",
-    "tags": [
-      "physique",
-      "surprise",
-      "underestimate",
-      "strength"
-    ],
+    "tags": ["scar", "history", "physical", "story"],
     "snippets": {
-      "appearance": {
-        "zh": "外表看起来瘦弱娇小但力气惊人，或者体格魁梧但动作异常灵活轻盈。身体给出的第一印象和实际能力完全不匹配",
-        "en": "looks frail and small but possesses surprising strength, or appears imposing but moves with unexpected grace — the body's first impression completely mismatches actual capability"
-      },
-      "behavior": {
-        "zh": "经常被低估，对此已经习惯甚至会利用——让对手先放松警惕",
-        "en": "frequently underestimated, has grown accustomed to it and even uses it tactically — letting opponents lower their guard first"
-      },
-      "hidden": {
-        "zh": "这种反差有时候也让自己困惑——不确定别人喜欢的是外表给出的那个印象，还是真实的自己",
-        "en": "the mismatch sometimes causes self-doubt — unsure whether people like the impression the exterior gives, or the real person underneath"
-      }
+      "appearance": {"zh": "手上有烫伤的疤，膝盖有摔过的痕迹，或者某个地方有一条不起眼的旧伤。不会主动提起，被问到就轻描淡写地说'小时候的事'", "en": "A burn scar on the hand, a mark on the knee from a fall, or a faint old wound somewhere. Never brings it up voluntarily — when asked, just says 'happened when I was a kid' in a throwaway tone"},
+      "behavior": {"zh": "天冷的时候会下意识地摸那个位置。有人盯着看的时候会不动声色地遮一下。但如果是足够亲近的人问起，会讲那个真正的故事", "en": "Unconsciously touches the spot when it's cold. Subtly covers it when someone stares. But if someone close enough asks, they'll tell the real story"},
+      "hidden": {"zh": "每一个痕迹都是某个时期的自己留下来的，不想删掉也删不掉。和那些痕迹早就和解了，但不代表愿意拿出来随便说", "en": "Each mark was left by a version of themselves from another time — can't erase them and doesn't want to. Made peace with them long ago, but that doesn't mean they'll share the story casually"}
     },
-    "prompt_fragment": {
-      "zh": "让体格与能力的反差在关键时刻自然揭示，制造'原来如此'的满足感。",
-      "en": "Let the gap between physique and ability reveal itself at key moments, creating satisfying 'so that's how it is' discoveries."
-    }
+    "prompt_fragment": {"zh": "让角色身上的物理痕迹有具体的来源和情感重量——不是装饰，是真正经历过的证据。", "en": "Give the character's physical marks specific origins and emotional weight — not decoration, but evidence of things actually lived through."}
   },
   {
-    "id": "scenario_post_apocalypse",
-    "title": {
-      "zh": "末世余烬",
-      "en": "Post-Apocalyptic Embers"
-    },
+    "id": "scenario_late_night_convenience",
+    "title": {"zh": "深夜便利店", "en": "Late-Night Convenience Store"},
     "category": "scenario",
-    "tags": [
-      "apocalypse",
-      "survival",
-      "ruins",
-      "rebuild"
-    ],
+    "tags": ["night", "casual", "strangers", "liminal"],
     "snippets": {
-      "setting": {
-        "zh": "文明崩塌后的世界，城市成为废墟，资源稀缺，幸存者在旧世界的骨架上艰难重建。科技残片与原始生存技能并存",
-        "en": "a world after civilization's collapse — cities reduced to ruins, resources scarce, survivors rebuilding atop the skeleton of the old world, where tech remnants coexist with primitive survival skills"
-      },
-      "atmosphere": {
-        "zh": "白天是搜寻和劳作，夜晚是危险和警戒。美丽的事物因为稀有而格外珍贵——一朵花、一段音乐、一顿热饭",
-        "en": "days are for scavenging and labor, nights for danger and vigilance — beautiful things are precious precisely because they're rare: a flower, a melody, a warm meal"
-      },
-      "conflict": {
-        "zh": "生存压力下的道德选择成为常态——帮助陌生人可能意味着自己挨饿，但冷漠又会让人变成自己最恨的那种人",
-        "en": "moral choices under survival pressure become routine — helping a stranger might mean going hungry, but indifference risks becoming the very thing you despise"
-      }
+      "setting": {"zh": "凌晨两点的便利店，灯光太亮，BGM是过时的流行歌。货架之间偶尔遇到另一个睡不着的人，没有白天的防备，说话也比平时随意", "en": "2 AM convenience store, lights too bright, BGM is outdated pop songs. Between the aisles, occasionally running into another insomniac — guards are down, conversation is easier than during the day"},
+      "atmosphere": {"zh": "时间在这里好像暂停了，外面的世界和自己无关。适合在这种地方说出白天不会说的话", "en": "Time seems to pause here, the outside world irrelevant. The kind of place where you say things you'd never say during the day"},
+      "behavior": {"zh": "在关东煮前面站太久被店员看了一眼。买了不需要的东西只是因为不想马上回去", "en": "Stood in front of the hot food counter too long, got a look from the clerk. Bought something unnecessary just because they didn't want to go home yet"}
     },
-    "prompt_fragment": {
-      "zh": "让末世背景下的日常细节体现生存压力，同时保留人性中柔软的部分作为情感锚点。",
-      "en": "Let everyday details under post-apocalyptic conditions convey survival pressure, while preserving soft human moments as emotional anchors."
-    }
+    "prompt_fragment": {"zh": "用深夜便利店作为角色卸下防备的场所——日光下的规则在这里不适用。", "en": "Use the late-night convenience store as a space where the character drops their guard — daytime rules don't apply here."}
   },
   {
-    "id": "scenario_campus_hidden",
-    "title": {
-      "zh": "校园暗线",
-      "en": "Campus Undercurrents"
-    },
+    "id": "scenario_shared_workspace",
+    "title": {"zh": "共享办公空间", "en": "Shared Workspace"},
     "category": "scenario",
-    "tags": [
-      "campus",
-      "secret",
-      "youth",
-      "hidden-layer"
-    ],
+    "tags": ["work", "proximity", "routine", "slow-build"],
     "snippets": {
-      "setting": {
-        "zh": "看似普通的校园生活表面下藏着不为人知的暗流——可能是学生组织的地下活动、未解的校园传说、或者某些人刻意隐藏的过去",
-        "en": "beneath the surface of ordinary campus life run hidden undercurrents — underground student activities, unresolved campus legends, or pasts that certain people work hard to conceal"
-      },
-      "atmosphere": {
-        "zh": "白天是课堂和社团的日常，课后的走廊和天台才是真正的故事发生地。校园的封闭性让秘密更难保守也更有张力",
-        "en": "daytime belongs to classes and clubs; the real stories unfold in after-hours hallways and rooftops — the campus's enclosed nature makes secrets harder to keep and more charged"
-      },
-      "conflict": {
-        "zh": "青春期特有的敏感让每一个小冲突都被放大，友情和竞争的界限模糊不清",
-        "en": "adolescent sensitivity amplifies every small conflict; the line between friendship and rivalry stays perpetually blurred"
-      }
+      "setting": {"zh": "每天在同一个空间里各做各的事，从点头之交变成会帮对方带咖啡的关系。不是刻意靠近，是日复一日的重叠时间慢慢拉近了距离", "en": "Working in the same space daily, each doing their own thing, going from nodding acquaintances to the kind who bring each other coffee. Not deliberately getting close — daily overlapping hours slowly closed the distance"},
+      "atmosphere": {"zh": "键盘声、咖啡味、偶尔的叹气声构成了共享的日常背景音。在这种环境里，对一个人的了解是一点一点积累起来的", "en": "Keyboard sounds, coffee smell, occasional sighs form the shared backdrop. In this environment, understanding someone builds little by little"},
+      "behavior": {"zh": "对方不在的那天会觉得少了点什么。发现对方加班的时候会留一瓶水但不说是自己放的", "en": "The day the other person isn't there, something feels missing. When they notice the other working late, they leave a bottle of water without saying it was them"}
     },
-    "prompt_fragment": {
-      "zh": "让校园日常和隐藏暗线自然交织，用青春期特有的敏感放大情感冲击。",
-      "en": "Let campus routine and hidden undercurrents weave together naturally, amplifying emotional impact through adolescent sensitivity."
-    }
+    "prompt_fragment": {"zh": "让关系在共享空间的日常重复中自然发展——不需要戏剧性事件，时间本身就是催化剂。", "en": "Let the relationship develop naturally through daily repetition in shared space — no dramatic events needed, time itself is the catalyst."}
   },
   {
-    "id": "scenario_urban_fantasy",
-    "title": {
-      "zh": "都市异闻",
-      "en": "Urban Fantasy"
-    },
+    "id": "scenario_rainy_day_shelter",
+    "title": {"zh": "避雨的屋檐下", "en": "Sheltering from the Rain"},
     "category": "scenario",
-    "tags": [
-      "urban",
-      "supernatural",
-      "modern",
-      "hidden-world"
-    ],
+    "tags": ["rain", "unexpected", "pause", "intimate"],
     "snippets": {
-      "setting": {
-        "zh": "现代都市中隐藏着超自然的一面——可能是能看见灵体的人、都市传说成真、或者某些人拥有不可言说的能力。日常与异常共存",
-        "en": "a supernatural layer hides within the modern city — people who see spirits, urban legends made real, or individuals with unspeakable abilities; the mundane and the anomalous coexist"
-      },
-      "atmosphere": {
-        "zh": "便利店的灯光下可能站着不属于这个世界的存在，地铁末班车上的乘客不一定都是活人。越日常的场景，异常元素越有冲击力",
-        "en": "something not of this world might stand under convenience store lights; not every passenger on the last subway train is alive — the more mundane the setting, the more impact the anomaly carries"
-      },
-      "conflict": {
-        "zh": "知道真相的人必须在两个世界之间维持平衡——向普通人解释太危险，完全融入异常世界又意味着失去正常生活",
-        "en": "those who know the truth must balance between two worlds — explaining to ordinary people is dangerous, but fully entering the anomalous world means losing normal life"
-      }
+      "setting": {"zh": "突然下大雨，两个人挤在同一个屋檐下。平时不会有的近距离，被迫的等待变成了意外的相处时间", "en": "Sudden downpour, two people squeezed under the same awning. An unusual closeness that wouldn't happen normally — forced waiting becomes unexpected time together"},
+      "atmosphere": {"zh": "雨声盖过了城市的噪音，像一个临时的隔音罩。在这种突发状况下，人会比平时更真实一点", "en": "Rain drowns out city noise, like a temporary sound barrier. In this kind of unexpected situation, people tend to be a bit more real than usual"},
+      "behavior": {"zh": "沉默了一会儿之后其中一个人先开了口。聊的内容不重要，但那种被困在一起的感觉让对话变得轻松", "en": "After a moment of silence, one of them speaks first. The content doesn't matter much, but being stuck together somehow makes the conversation easy"}
     },
-    "prompt_fragment": {
-      "zh": "让超自然元素自然嵌入现代都市日常，用反差感制造'日常中的异常'的独特氛围。",
-      "en": "Embed supernatural elements naturally into modern urban daily life, using contrast to create a unique 'anomaly within the mundane' atmosphere."
-    }
+    "prompt_fragment": {"zh": "用突如其来的天气制造一个暂停——在被迫等待的空隙里，让角色之间产生平时不会有的对话。", "en": "Use sudden weather to create a pause — in the gap of forced waiting, let characters have conversations that wouldn't normally happen."}
   },
   {
-    "id": "scenario_confined_space",
-    "title": {
-      "zh": "密闭空间",
-      "en": "Confined Space"
-    },
+    "id": "scenario_moving_day",
+    "title": {"zh": "搬家那天", "en": "Moving Day"},
     "category": "scenario",
-    "tags": [
-      "confined",
-      "pressure",
-      "intimacy",
-      "tension"
-    ],
+    "tags": ["transition", "vulnerability", "belongings", "change"],
     "snippets": {
-      "setting": {
-        "zh": "角色被困在有限的空间里——可能是电梯、避难所、暴风雪中的小屋、或者漂流的船。物理空间的限制迫使人际关系加速发展",
-        "en": "characters trapped in limited space — an elevator, a shelter, a cabin during a blizzard, or a drifting boat; physical confinement forces relationships to develop at accelerated pace"
-      },
-      "atmosphere": {
-        "zh": "无处可逃意味着无法回避——必须面对彼此、面对自己。时间在封闭空间里的流速不同，几小时可以抵得上几个月的相处",
-        "en": "nowhere to escape means nowhere to hide — must face each other and themselves; time flows differently in enclosed spaces, hours can equal months of normal interaction"
-      },
-      "conflict": {
-        "zh": "资源有限时谁做主？性格不合的人被迫合作时摩擦不可避免，但也可能发现意外的默契",
-        "en": "who decides when resources are limited? friction between incompatible personalities forced to cooperate is inevitable, but unexpected synergy may also emerge"
-      }
+      "setting": {"zh": "所有的东西都装进了纸箱，空荡荡的房间回音变大了。站在门口最后看一眼的时候，突然意识到这里发生过多少事", "en": "Everything packed into boxes, the empty room echoing louder now. Standing at the door for one last look, suddenly realizing how much happened here"},
+      "atmosphere": {"zh": "搬家是一种物理上的告别——打包的时候会翻出忘记了的东西，每一件都连着一段记忆", "en": "Moving is a physical goodbye — while packing, forgotten things surface, each one attached to a memory"},
+      "behavior": {"zh": "纸箱上写了内容但后来发现完全没按分类装。有些东西犹豫了很久还是留下了，有些东西毫不犹豫地扔掉了", "en": "Labels on boxes but nothing was actually sorted as marked. Some things were kept after long hesitation, others thrown away without a second thought"}
     },
-    "prompt_fragment": {
-      "zh": "利用物理空间的限制加速角色之间的互动密度，让回避变得不可能。",
-      "en": "Use physical confinement to accelerate interaction density between characters, making avoidance impossible."
-    }
+    "prompt_fragment": {"zh": "用搬家作为角色审视过去的契机——在整理物品的过程中，让内心的整理也同时发生。", "en": "Use moving as a chance for the character to review their past — while sorting belongings, let inner sorting happen simultaneously."}
   },
   {
-    "id": "scenario_timeline_shift",
-    "title": {
-      "zh": "时间错位",
-      "en": "Timeline Shift"
-    },
+    "id": "scenario_long_commute",
+    "title": {"zh": "漫长的通勤路上", "en": "The Long Commute"},
     "category": "scenario",
-    "tags": [
-      "time",
-      "nonlinear",
-      "memory",
-      "displacement"
-    ],
+    "tags": ["routine", "solitude", "in-between", "reflection"],
     "snippets": {
-      "setting": {
-        "zh": "时间线不是线性的——角色可能经历时间倒流、记忆错乱、或者活在不同时间线的交叉点。'现在'的定义变得不确定",
-        "en": "the timeline isn't linear — characters may experience time reversal, scrambled memories, or exist at the intersection of different timelines; the definition of 'now' becomes uncertain"
-      },
-      "atmosphere": {
-        "zh": "似曾相识的感觉不是错觉，遗忘的事情可能才是真实发生过的。时间的不可靠让每一次相遇都可能是重逢",
-        "en": "déjà vu isn't illusion, and forgotten events might be what actually happened; time's unreliability means every encounter could be a reunion"
-      },
-      "conflict": {
-        "zh": "如果能回到过去，是修改错误还是接受结果？改变一件事可能毁掉另一件你珍视的东西",
-        "en": "if you could go back, would you fix mistakes or accept outcomes? changing one thing might destroy something else you treasure"
-      }
+      "setting": {"zh": "每天同样的路线，同样的时间，车窗外的风景已经看了几百遍。这段路变成了一种固定的独处时间——不属于家也不属于工作的中间地带", "en": "Same route every day, same time, scenery outside the window seen hundreds of times. This stretch has become a fixed alone-time — an in-between zone belonging neither to home nor work"},
+      "atmosphere": {"zh": "戴上耳机之后世界就只剩下自己。那些白天没空想的事情，都在这段路上慢慢浮出来", "en": "Put on headphones and the world shrinks to just yourself. Thoughts that had no room during the day slowly surface during this stretch"},
+      "behavior": {"zh": "有时候到站了没下车，多坐了一站才反应过来。通勤路上想到的事情，到了目的地又会自动收起来", "en": "Sometimes misses their stop, rides one extra station before snapping back. Things thought about during the commute get automatically tucked away upon arrival"}
     },
-    "prompt_fragment": {
-      "zh": "让时间的不确定性渗透进角色的感知和决策，模糊记忆与现实的边界。",
-      "en": "Let time's uncertainty permeate the character's perception and decisions, blurring the boundary between memory and reality."
-    }
+    "prompt_fragment": {"zh": "用通勤作为角色内心独白的时间窗口——在移动中静止，在重复中思考。", "en": "Use the commute as a window for inner monologue — still while moving, thinking while repeating."}
   },
   {
-    "id": "quirk_collector",
-    "title": {
-      "zh": "收集执念",
-      "en": "Obsessive Collector"
-    },
+    "id": "quirk_collects_useless_things",
+    "title": {"zh": "收集没用的东西", "en": "Collects Useless Things"},
     "category": "quirk",
-    "tags": [
-      "collecting",
-      "obsessive",
-      "attachment",
-      "order"
-    ],
+    "tags": ["collecting", "sentimental", "hoarding", "meaning"],
     "snippets": {
-      "behavior": {
-        "zh": "对某一类物品有近乎偏执的收集欲——可能是瓶盖、旧书、特定颜色的东西、或者每个去过的地方的一小把土。收藏品有自己的排列逻辑，别人不能碰",
-        "en": "has an almost obsessive drive to collect specific items — bottle caps, old books, things of a particular color, or a pinch of soil from every place visited; the collection has its own arrangement logic that others must not disturb"
-      },
-      "personality": {
-        "zh": "在收集这件事上出奇认真，和日常的性格形成反差。讨论收藏品时会变得异常健谈",
-        "en": "surprisingly serious about collecting, contrasting with everyday personality; becomes unusually talkative when discussing the collection"
-      },
-      "hidden": {
-        "zh": "收集行为其实是在抓住'确定性'——生活中太多无法控制的事，至少这些东西是可以掌握的",
-        "en": "collecting is actually about grasping certainty — too much in life is uncontrollable, but at least these items can be held onto"
-      }
+      "quirk": {"zh": "电影票根、好看的糖纸、别人随手写的便签、某一天的地铁卡。在别人看来是垃圾，但自己知道每一件后面都有一个当时的心情", "en": "Movie ticket stubs, pretty candy wrappers, notes someone scribbled offhand, a subway card from a particular day. Others see junk, but each piece holds the mood of a specific moment"},
+      "behavior": {"zh": "抽屉里有一个专门的盒子装这些东西。偶尔翻出来看看，不会告诉别人自己在看什么", "en": "Has a special box in the drawer for these things. Occasionally pulls it out to look through, never tells anyone what they're looking at"},
+      "hidden": {"zh": "这些东西是时间的证据——证明那些快要忘记的日子确实存在过", "en": "These things are evidence of time — proof that days nearly forgotten actually existed"}
     },
-    "prompt_fragment": {
-      "zh": "让收集癖成为角色安全感的锚点，通过收藏行为间接展现内心需求。",
-      "en": "Let the collecting habit serve as an anchor for the character's sense of security, indirectly revealing inner needs through the behavior."
-    }
+    "prompt_fragment": {"zh": "让角色的收集癖成为一种对记忆的执着——不是恋物，是怕忘记。", "en": "Let the collecting habit be an attachment to memory — not materialism, but fear of forgetting."}
   },
   {
-    "id": "quirk_comfort_ritual",
-    "title": {
-      "zh": "安慰仪式",
-      "en": "Comfort Ritual"
-    },
+    "id": "quirk_talks_to_objects",
+    "title": {"zh": "会跟东西说话", "en": "Talks to Objects"},
     "category": "quirk",
-    "tags": [
-      "ritual",
-      "comfort",
-      "stress",
-      "self-soothing"
-    ],
+    "tags": ["quirky", "endearing", "alone-habit", "anthropomorphize"],
     "snippets": {
-      "behavior": {
-        "zh": "压力大时有固定的自我安抚方式——可能是反复整理桌面、按特定顺序泡茶、走同一条路回家、或者听同一首歌循环播放",
-        "en": "has a fixed self-soothing routine under stress — might be reorganizing the desk repeatedly, making tea in a specific order, walking the same route home, or looping the same song"
-      },
-      "personality": {
-        "zh": "平时看不出来，只有亲近的人才知道这个习惯的存在——以及它意味着对方正在承受压力",
-        "en": "invisible under normal circumstances; only close people know about this habit — and that it signals the person is under pressure"
-      },
-      "hidden": {
-        "zh": "这个仪式最初来源于童年某个安全的记忆，重复它等于在心里回到那个安全的地方",
-        "en": "the ritual originally comes from a safe childhood memory; repeating it is like mentally returning to that safe place"
-      }
+      "quirk": {"zh": "对电脑说'你别给我死机'，对钥匙说'你又藏哪了'，对下雨天说'行吧你赢了'。独处的时候自然而然地和周围的一切对话，被人撞见会很不好意思", "en": "Says 'don't you dare crash' to the computer, 'where are you hiding now' to the keys, 'fine, you win' to the rain. Naturally talks to everything around them when alone — deeply embarrassed when caught"},
+      "behavior": {"zh": "做饭的时候跟食材聊天，出门前跟房间说'我走了'。自己觉得完全正常，直到有人提醒才意识到大多数人不这样", "en": "Chats with ingredients while cooking, says 'I'm heading out' to the room before leaving. Thinks it's completely normal until someone points out most people don't do this"},
+      "hidden": {"zh": "可能是独处时间太多养成的习惯，也可能只是觉得东西也有脾气，好好说话它们才配合", "en": "Maybe a habit from too much time alone, or maybe they just think objects have temperaments and cooperate better when spoken to nicely"}
     },
-    "prompt_fragment": {
-      "zh": "让安慰仪式在压力场景中自然出现，成为角色内心状态的无声信号。",
-      "en": "Let the comfort ritual surface naturally in stressful scenes, serving as a silent signal of the character's inner state."
-    }
+    "prompt_fragment": {"zh": "让角色和物品对话的习惯自然地出现在独处场景中——不是古怪，是一种有温度的生活方式。", "en": "Let the habit of talking to objects appear naturally in solo scenes — not weird, just a warm way of living."}
   },
   {
-    "id": "quirk_night_persona",
-    "title": {
-      "zh": "深夜人格",
-      "en": "Night Persona"
-    },
+    "id": "quirk_food_ritual",
+    "title": {"zh": "吃东西有仪式感", "en": "Has Food Rituals"},
     "category": "quirk",
-    "tags": [
-      "night",
-      "dual",
-      "unguarded",
-      "authentic"
-    ],
+    "tags": ["food", "ritual", "particular", "comfort"],
     "snippets": {
-      "behavior": {
-        "zh": "深夜时完全变成另一个人——白天沉默的人开始主动聊天，白天活泼的人变得安静而深沉。凌晨三点说出的话比白天任何时候都真实",
-        "en": "becomes a completely different person late at night — the daytime quiet one starts chatting freely, the daytime cheerful one turns silent and deep; words spoken at 3 AM are more honest than anything said during the day"
-      },
-      "personality": {
-        "zh": "自己也知道深夜状态下会说出平时不会说的话，第二天可能会后悔——但夜晚的自己拒绝在意这些",
-        "en": "knows that late-night self says things the daytime self wouldn't, might regret it tomorrow — but the night self refuses to care"
-      },
-      "hidden": {
-        "zh": "深夜人格其实才是真实的自己，白天的版本才是面具——但社会只接受白天的那个",
-        "en": "the night persona is actually the real self; the daytime version is the mask — but society only accepts the daytime one"
-      }
+      "quirk": {"zh": "吃泡面一定要加个蛋，咖啡的奶和糖比例不能变，吃火锅有固定的涮菜顺序。被说太讲究了但自己觉得这就是最基本的生活品质", "en": "Instant noodles must have an egg, coffee's milk-to-sugar ratio can't change, hot pot has a fixed ingredient order. Called too particular but sees it as the most basic quality of life"},
+      "behavior": {"zh": "心情不好的时候吃那道固定的comfort food，吃完就好了一半。在外面吃饭如果味道不对会安静地放下筷子", "en": "Eats that one specific comfort food when feeling down — halfway better after finishing. Quietly puts down chopsticks at a restaurant if the taste is off"},
+      "hidden": {"zh": "对吃的讲究其实是生活里少数还能自己控制的事情。在其他事情都不确定的时候，至少吃可以按自己的方式来", "en": "Being particular about food is actually one of the few things still under their control. When everything else is uncertain, at least eating can be done their way"}
     },
-    "prompt_fragment": {
-      "zh": "让深夜场景成为角色卸下防备的契机，夜晚的对话比白天更真实、更脆弱。",
-      "en": "Let late-night scenes become moments when the character drops their guard; nighttime dialogue should feel more honest and vulnerable than daytime exchanges."
-    }
+    "prompt_fragment": {"zh": "让角色的食物仪式感反映对生活的态度——不是矫情，是在混乱中给自己保留的一点秩序。", "en": "Let food rituals reflect an attitude toward life — not being fussy, but preserving a bit of order amid chaos."}
   },
   {
-    "id": "quirk_food_bond",
-    "title": {
-      "zh": "以食为链",
-      "en": "Food as Bond"
-    },
+    "id": "quirk_midnight_walks",
+    "title": {"zh": "半夜出去走", "en": "Midnight Walks"},
     "category": "quirk",
-    "tags": [
-      "food",
-      "bonding",
-      "care",
-      "cooking"
-    ],
+    "tags": ["night", "walking", "solitude", "decompression"],
     "snippets": {
-      "behavior": {
-        "zh": "用食物表达一切——开心时做饭庆祝，难过时烤蛋糕治愈，想和人亲近时邀请对方吃东西。记得每个在乎的人的口味偏好",
-        "en": "expresses everything through food — cooks to celebrate happiness, bakes to heal sadness, invites someone to eat when wanting to get closer; remembers the taste preferences of everyone they care about"
-      },
-      "personality": {
-        "zh": "不擅长说'我在乎你'，但会说'你吃了吗'、'尝尝这个'。厨房是自己的领地，做饭时最放松",
-        "en": "struggles to say 'I care about you' but readily says 'have you eaten?' or 'try this'; the kitchen is their territory, most relaxed while cooking"
-      },
-      "hidden": {
-        "zh": "小时候有过饿肚子的经历，所以觉得让人吃饱是最基本的善意——也是自己能给出的最真诚的东西",
-        "en": "experienced hunger as a child, so believes feeding someone is the most basic kindness — and the most sincere thing they can offer"
-      }
+      "quirk": {"zh": "想不通事情的时候、睡不着的时候、情绪太满的时候，会穿上外套出门走一圈。不去特定的地方，就是走，走到脑子清空为止", "en": "When something can't be figured out, when sleep won't come, when emotions overflow — puts on a jacket and goes for a walk. No particular destination, just walking until the mind clears"},
+      "behavior": {"zh": "走的时候不看手机，有时候会在某个街角站一会儿什么都不做。回来之后洗个澡就能睡着了。这是自己发明的重启方式", "en": "Doesn't check the phone while walking, sometimes stands at a corner doing nothing for a while. Takes a shower after getting back and can finally sleep. Their self-invented reboot method"},
+      "hidden": {"zh": "有些情绪需要用物理距离来消化。在封闭空间里只会越想越多，出去走走才能让那些东西散掉", "en": "Some emotions need physical distance to process. Staying in enclosed spaces just makes the thinking worse — going out lets those things dissipate"}
     },
-    "prompt_fragment": {
-      "zh": "让食物成为角色表达情感的核心方式，做饭和分享食物等于说'我在乎'。",
-      "en": "Let food be the character's core way of expressing emotion — cooking and sharing meals equals saying 'I care.'"
-    }
+    "prompt_fragment": {"zh": "让深夜散步成为角色消化情绪的方式——不是逃避，是用脚步丈量自己的内心。", "en": "Let midnight walks be how the character processes emotions — not avoidance, but measuring their inner world with footsteps."}
   },
   {
-    "id": "quirk_hidden_talent",
-    "title": {
-      "zh": "反差才艺",
-      "en": "Hidden Talent"
-    },
+    "id": "quirk_always_early",
+    "title": {"zh": "永远提前到", "en": "Always Arrives Early"},
     "category": "quirk",
-    "tags": [
-      "talent",
-      "surprise",
-      "secret-skill",
-      "gap"
-    ],
+    "tags": ["punctual", "anxious", "considerate", "over-prepared"],
     "snippets": {
-      "behavior": {
-        "zh": "拥有一项和形象完全不匹配的才艺——比如看起来粗犷的人画一手好水彩，文静的人是格斗高手，严肃的人私下是弹唱达人",
-        "en": "possesses a talent completely at odds with their image — the rough-looking one paints beautiful watercolors, the quiet one is a fighter, the serious one secretly plays guitar and sings"
-      },
-      "personality": {
-        "zh": "不会主动展示这项才艺，被发现时要么装作没什么大不了，要么窘得想逃跑",
-        "en": "never voluntarily showcases the talent; when discovered, either plays it down as nothing special or gets so embarrassed they want to flee"
-      },
-      "hidden": {
-        "zh": "这项才艺是完全属于自己的世界，不被外界评判的安全空间——被发现意味着这个空间被打开了",
-        "en": "this talent is a world entirely their own, a safe space free from external judgment — its discovery means that space has been opened up"
-      }
+      "quirk": {"zh": "约了七点到，六点四十就在附近转了。不是故意要早，是迟到带来的焦虑远大于早到的无聊。宁可自己等别人，不愿意让别人等自己", "en": "Meeting at seven, already circling the area at six forty. Not deliberately early — the anxiety of being late far outweighs the boredom of being early. Would rather wait for others than make others wait"},
+      "behavior": {"zh": "提前到了之后假装刚到。手机里存了每个常去地方的通勤时间精确到分钟。如果对方迟到十分钟以上会开始担心是不是出了什么事", "en": "After arriving early, pretends to have just gotten there. Phone has commute times to every regular destination calculated to the minute. If the other person is more than ten minutes late, starts worrying something happened"},
+      "hidden": {"zh": "早到是对对方时间的尊重，也是自己对不确定性的恐惧。如果有人也总是提前到，会觉得这个人和自己是同类", "en": "Being early is respect for the other person's time, and also their own fear of uncertainty. If someone else also always arrives early, they feel a kinship"}
     },
-    "prompt_fragment": {
-      "zh": "让隐藏才艺在意外的情境中被发现，制造形象反差带来的惊喜和角色的不安。",
-      "en": "Let the hidden talent be discovered in unexpected situations, creating surprise from the image gap and the character's discomfort."
-    }
+    "prompt_fragment": {"zh": "让提前到成为角色的习惯和性格缩影——守时不是美德叙事，是焦虑和体贴的混合产物。", "en": "Let arriving early be both habit and personality microcosm — punctuality isn't a virtue narrative, it's a mix of anxiety and consideration."}
   }
 ]

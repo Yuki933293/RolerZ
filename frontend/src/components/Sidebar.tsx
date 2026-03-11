@@ -40,6 +40,13 @@ const IconProfile = () => (
   </svg>
 );
 
+const IconAnnouncements = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+
 const IconHelp = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" />
@@ -49,10 +56,11 @@ const IconHelp = () => (
 );
 
 const PROVIDER_NAMES: Record<string, string> = {
-  claude: 'Claude',
-  openai: 'OpenAI',
-  deepseek: 'DeepSeek',
-  custom: 'Custom',
+  claude: 'Claude', openai: 'OpenAI', gemini: 'Gemini', deepseek: 'DeepSeek',
+  xai: 'xAI', moonshot: 'Moonshot', zhipu: 'Zhipu', groq: 'Groq',
+  openrouter: 'OpenRouter', siliconflow: 'SiliconFlow', '302ai': '302.AI',
+  aihubmix: 'AIHubMix', nvidia: 'NVIDIA', azure: 'Azure', ollama: 'Ollama',
+  lmstudio: 'LM Studio', custom: 'Custom',
 };
 
 export default function Sidebar() {
@@ -80,6 +88,7 @@ export default function Sidebar() {
     {
       label: t('sidebarOther') as string,
       items: [
+        { id: '/announcements', label: t('announcements') as string, icon: <IconAnnouncements /> },
         { id: '/help', label: t('help') as string, icon: <IconHelp /> },
       ],
     },
@@ -87,6 +96,7 @@ export default function Sidebar() {
 
   const provName = PROVIDER_NAMES[config.provider] || config.provider;
   const isConfigured = config.configured;
+  const currentLabel = config.label;
 
   return (
     <aside className="w-60 h-full bg-white border-r border-border flex flex-col">
@@ -121,19 +131,29 @@ export default function Sidebar() {
 
         <div className="border-t border-border my-3" />
 
-        {/* Model status */}
-        <div className={`mx-1 p-2.5 rounded-lg border ${isConfigured ? 'border-success/20 bg-success/5' : 'border-error/20 bg-error/5'}`}>
-          <div className="flex items-center gap-1.5">
-            <span className={`w-1.5 h-1.5 rounded-full ${isConfigured ? 'bg-success' : 'bg-error'}`} />
-            <span className="text-[0.72rem] font-semibold">{provName}</span>
-            <span className="text-[0.68rem] text-text-faint font-mono">
-              {config.modelName || ''}
-            </span>
+        {/* Current config status */}
+        <button
+          onClick={() => navigate('/model')}
+          className={`mx-1 p-2.5 rounded-lg border text-left w-[calc(100%-0.5rem)] transition-colors hover:bg-surface-3 ${isConfigured ? 'border-success/20 bg-success/5' : 'border-error/20 bg-error/5'}`}
+        >
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isConfigured ? 'bg-success' : 'bg-error'}`} />
+            <span className="text-[0.74rem] font-semibold text-text-primary truncate">{provName}</span>
           </div>
-          <div className={`text-[0.62rem] mt-1 ${isConfigured ? 'text-success' : 'text-error'}`}>
+          {config.modelName && (
+            <div className="text-[0.66rem] text-text-dim font-mono truncate pl-3 mb-0.5">
+              {config.modelName}
+            </div>
+          )}
+          {currentLabel && (
+            <div className="text-[0.64rem] text-accent/70 truncate pl-3 mb-0.5">
+              {currentLabel}
+            </div>
+          )}
+          <div className={`text-[0.62rem] pl-3 ${isConfigured ? 'text-success' : 'text-error'}`}>
             {isConfigured ? t('configured') as string : t('notConfigured') as string}
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Footer */}

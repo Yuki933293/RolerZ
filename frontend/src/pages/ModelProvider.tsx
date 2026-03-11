@@ -5,6 +5,30 @@ import { getProviders, fetchModels, type ProviderInfo } from '../api/client';
 import LoginPrompt from '../components/LoginPrompt';
 import { useT } from '../i18n';
 
+const PROVIDER_NAMES: Record<string, string> = {
+  claude: 'Claude', openai: 'OpenAI', gemini: 'Gemini', deepseek: 'DeepSeek',
+  xai: 'xAI', moonshot: 'Moonshot', zhipu: 'Zhipu', groq: 'Groq',
+  openrouter: 'OpenRouter', siliconflow: 'SiliconFlow', '302ai': '302.AI',
+  aihubmix: 'AIHubMix', nvidia: 'NVIDIA', azure: 'Azure', ollama: 'Ollama',
+  lmstudio: 'LM Studio', custom: 'Custom',
+};
+
+const PROVIDER_MODEL_HINTS: Record<string, string> = {
+  claude: 'claude-haiku-4-5-20251001',
+  openai: 'gpt-4o-mini',
+  gemini: 'gemini-2.0-flash',
+  deepseek: 'deepseek-chat',
+  xai: 'grok-3-mini-fast',
+  moonshot: 'moonshot-v1-8k',
+  zhipu: 'glm-4-flash',
+  groq: 'llama-3.3-70b-versatile',
+  openrouter: 'openai/gpt-4o-mini',
+  siliconflow: 'Qwen/Qwen2.5-7B-Instruct',
+  '302ai': 'gpt-4o-mini',
+  aihubmix: 'gpt-4o-mini',
+  nvidia: 'meta/llama-3.1-8b-instruct',
+};
+
 export default function ModelProvider() {
   const config = useConfig();
   const token = useAuth(s => s.token);
@@ -18,6 +42,7 @@ export default function ModelProvider() {
   const [formKey, setFormKey] = useState(config.apiKey);
   const [formUrl, setFormUrl] = useState(config.baseUrl);
   const [formId, setFormId] = useState(config.modelId);
+  const [formLabel, setFormLabel] = useState(config.label);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Key visibility
@@ -32,10 +57,23 @@ export default function ModelProvider() {
 
   // Fallback providers if backend is unreachable
   const FALLBACK_PROVIDERS: ProviderInfo[] = [
-    { id: 'claude', name: 'Claude', env_key: 'ANTHROPIC_API_KEY', has_env_key: false, default_model: '', default_url: 'https://api.anthropic.com' },
-    { id: 'openai', name: 'OpenAI', env_key: 'OPENAI_API_KEY', has_env_key: false, default_model: '', default_url: 'https://api.openai.com/v1' },
-    { id: 'deepseek', name: 'DeepSeek', env_key: 'DEEPSEEK_API_KEY', has_env_key: false, default_model: '', default_url: 'https://api.deepseek.com' },
-    { id: 'custom', name: isZh ? '自定义' : 'Custom', env_key: '', has_env_key: false, default_model: '', default_url: '' },
+    { id: 'claude',      name: 'Claude',        env_key: 'ANTHROPIC_API_KEY',    has_env_key: false, default_model: '', default_url: 'https://api.anthropic.com' },
+    { id: 'openai',      name: 'OpenAI',        env_key: 'OPENAI_API_KEY',       has_env_key: false, default_model: '', default_url: 'https://api.openai.com/v1' },
+    { id: 'gemini',      name: 'Google Gemini',  env_key: 'GEMINI_API_KEY',       has_env_key: false, default_model: '', default_url: 'https://generativelanguage.googleapis.com/v1beta/openai' },
+    { id: 'deepseek',    name: 'DeepSeek',      env_key: 'DEEPSEEK_API_KEY',     has_env_key: false, default_model: '', default_url: 'https://api.deepseek.com' },
+    { id: 'xai',         name: 'xAI',           env_key: 'XAI_API_KEY',          has_env_key: false, default_model: '', default_url: 'https://api.x.ai/v1' },
+    { id: 'moonshot',    name: 'Moonshot',       env_key: 'MOONSHOT_API_KEY',     has_env_key: false, default_model: '', default_url: 'https://api.moonshot.cn/v1' },
+    { id: 'zhipu',       name: 'Zhipu',         env_key: 'ZHIPU_API_KEY',        has_env_key: false, default_model: '', default_url: 'https://open.bigmodel.cn/api/paas/v4' },
+    { id: 'groq',        name: 'Groq',          env_key: 'GROQ_API_KEY',         has_env_key: false, default_model: '', default_url: 'https://api.groq.com/openai/v1' },
+    { id: 'openrouter',  name: 'OpenRouter',     env_key: 'OPENROUTER_API_KEY',   has_env_key: false, default_model: '', default_url: 'https://openrouter.ai/api/v1' },
+    { id: 'siliconflow', name: 'SiliconFlow',    env_key: 'SILICONFLOW_API_KEY',  has_env_key: false, default_model: '', default_url: 'https://api.siliconflow.cn/v1' },
+    { id: '302ai',       name: '302.AI',        env_key: 'API_302AI_KEY',        has_env_key: false, default_model: '', default_url: 'https://api.302.ai/v1' },
+    { id: 'aihubmix',    name: 'AIHubMix',      env_key: 'AIHUBMIX_API_KEY',     has_env_key: false, default_model: '', default_url: 'https://aihubmix.com/v1' },
+    { id: 'nvidia',      name: 'NVIDIA',        env_key: 'NVIDIA_API_KEY',       has_env_key: false, default_model: '', default_url: 'https://integrate.api.nvidia.com/v1' },
+    { id: 'azure',       name: 'Azure OpenAI',   env_key: 'AZURE_OPENAI_API_KEY', has_env_key: false, default_model: '', default_url: '' },
+    { id: 'ollama',      name: 'Ollama',        env_key: '',                      has_env_key: false, default_model: '', default_url: 'http://localhost:11434/v1' },
+    { id: 'lmstudio',    name: 'LM Studio',      env_key: '',                      has_env_key: false, default_model: '', default_url: 'http://localhost:1234/v1' },
+    { id: 'custom',      name: isZh ? '自定义' : 'Custom', env_key: '', has_env_key: false, default_model: '', default_url: '' },
   ];
 
   useEffect(() => {
@@ -49,6 +87,7 @@ export default function ModelProvider() {
     setFormKey(config.apiKey);
     setFormUrl(config.baseUrl);
     setFormId(config.modelId);
+    setFormLabel(config.label);
     setSearchQuery('');
   }, [config.provider]);
 
@@ -58,6 +97,10 @@ export default function ModelProvider() {
     config.setApiKey(formKey);
     config.setBaseUrl(formUrl);
     config.setModelId(formId);
+    config.setLabel(formLabel.trim());
+    if (formId.trim()) {
+      config.setModelName(formId.trim());
+    }
     config.saveConfig();
     setSaveMsg(isZh ? '配置已保存' : 'Config saved');
     setTimeout(() => setSaveMsg(''), 2000);
@@ -74,7 +117,10 @@ export default function ModelProvider() {
       config.setFetchedModels(models);
       if (!config.modelName && models.length > 0) {
         const def = activeProvider?.default_model || '';
-        config.setModelName(models.includes(def) ? def : models[0]);
+        const selectedModel = models.includes(def) ? def : models[0];
+        config.setModelName(selectedModel);
+        config.setModelId(selectedModel);
+        setFormId(selectedModel);
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : (isZh ? '获取失败' : 'Fetch failed'));
@@ -164,9 +210,102 @@ export default function ModelProvider() {
         </p>
       </div>
 
+      {/* My Configs section */}
+      {(() => {
+        const configuredProviders = Object.entries(config.providerConfigs)
+          .filter(([, cfg]) => cfg.configured)
+          .map(([id, cfg]) => ({ id, ...cfg }));
+
+        return (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-[0.92rem] font-semibold text-text-primary">{t('myConfigs') as string}</div>
+                <div className="text-[0.72rem] text-text-faint mt-0.5">{t('myConfigsDesc') as string}</div>
+              </div>
+            </div>
+
+            {configuredProviders.length === 0 ? (
+              <div className="text-center py-6 text-text-faint text-[0.82rem] bg-surface-2 border border-border rounded-xl">
+                {t('noConfigs') as string}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {configuredProviders.map(cfg => {
+                  const isCurrent = config.provider === cfg.id;
+                  const displayName = cfg.label || PROVIDER_NAMES[cfg.id] || cfg.id;
+                  const providerTag = cfg.label ? (PROVIDER_NAMES[cfg.id] || cfg.id) : null;
+                  const urlPreview = cfg.baseUrl
+                    ? cfg.baseUrl.replace(/^https?:\/\//, '').slice(0, 30) + (cfg.baseUrl.replace(/^https?:\/\//, '').length > 30 ? '...' : '')
+                    : '';
+
+                  return (
+                    <div
+                      key={cfg.id}
+                      className={`flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors cursor-pointer ${
+                        isCurrent
+                          ? 'bg-accent/5 border-accent/25'
+                          : 'bg-white border-border hover:bg-surface-2'
+                      }`}
+                      onClick={() => { if (!isCurrent) config.setProvider(cfg.id); }}
+                    >
+                      {/* Provider icon placeholder */}
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                        isCurrent ? 'bg-accent/10' : 'bg-surface-3'
+                      }`}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isCurrent ? 'var(--color-accent)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isCurrent ? '' : 'text-text-faint'}>
+                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                          <line x1="12" y1="22.08" x2="12" y2="12" />
+                        </svg>
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[0.88rem] font-semibold text-text-primary truncate">{displayName}</span>
+                          {providerTag && (
+                            <span className="text-[0.62rem] text-text-faint bg-surface-3 px-1.5 py-0.5 rounded shrink-0">{providerTag}</span>
+                          )}
+                          {isCurrent && (
+                            <span className="text-[0.62rem] text-accent bg-accent/10 px-1.5 py-0.5 rounded font-semibold shrink-0">
+                              {t('usingNow') as string}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[0.72rem] text-text-faint font-mono truncate mt-0.5">
+                          {cfg.modelName || cfg.modelId || ''}
+                          {urlPreview && <span className="ml-2 opacity-60">· {urlPreview}</span>}
+                        </div>
+                      </div>
+
+                      {/* Delete button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(t('confirmDeleteConfig') as string)) {
+                            config.deleteProviderConfig(cfg.id);
+                          }
+                        }}
+                        className="text-text-faint hover:text-error p-1.5 rounded-lg hover:bg-error/10 transition-colors shrink-0"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       <div className="flex gap-6">
         {/* Left: Provider list */}
-        <div className="w-48 flex-shrink-0">
+        <div className="w-48 flex-shrink-0 sticky top-4 self-start max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin">
           <div className="text-[0.78rem] font-semibold text-text-secondary mb-3">
             {t('providerSource') as string}
           </div>
@@ -208,6 +347,23 @@ export default function ModelProvider() {
             </div>
           )}
 
+          {/* Label */}
+          <div className="mb-4">
+            <div className="text-[0.82rem] font-semibold mb-1">{isZh ? '配置备注' : 'Config Label'}</div>
+            <input
+              type="text"
+              value={formLabel}
+              onChange={e => setFormLabel(e.target.value)}
+              placeholder={isZh ? '如「二次元专用」「写实风格」，可留空' : 'e.g. "Anime style", "Realistic" — optional'}
+              className="w-full px-3 py-2 text-[0.88rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none shadow-xs placeholder:text-text-muted"
+            />
+            <div className="mt-1 text-[0.72rem] text-text-faint">
+              {isZh
+                ? '给这个配置起个名字，方便记住它的用途'
+                : 'Give this config a name to remember what it\'s for'}
+            </div>
+          </div>
+
           {/* ID */}
           <div className="mb-4">
             <div className="text-[0.82rem] font-semibold mb-1">{t('modelId') as string}</div>
@@ -215,8 +371,14 @@ export default function ModelProvider() {
               type="text"
               value={formId}
               onChange={e => setFormId(e.target.value)}
+              placeholder={activeProvider ? (isZh ? `如 ${PROVIDER_MODEL_HINTS[config.provider] || 'gpt-4o'}` : `e.g. ${PROVIDER_MODEL_HINTS[config.provider] || 'gpt-4o'}`) : ''}
               className="w-full px-3 py-2 text-[0.88rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none shadow-xs"
             />
+            <div className="mt-1 text-[0.72rem] text-text-faint">
+              {isZh
+                ? '填写要使用的模型名称，也可以从下方模型列表中选择'
+                : 'Enter the model name to use, or select from the model list below'}
+            </div>
           </div>
 
           {/* API Key */}
@@ -325,7 +487,11 @@ export default function ModelProvider() {
                     </span>
                   ) : (
                     <button
-                      onClick={() => config.setModelName(mid)}
+                      onClick={() => {
+                        config.setModelName(mid);
+                        config.setModelId(mid);
+                        setFormId(mid);
+                      }}
                       className="bg-[#E5E5E5] hover:bg-[#D5D5D5] text-text-primary text-[0.78rem] font-medium px-3 py-1 rounded-lg border border-[#D0D0D0] transition-colors"
                     >
                       {isZh ? '选择' : 'Select'}
@@ -337,6 +503,20 @@ export default function ModelProvider() {
             {config.fetchedModels.length === 0 && (
               <div className="text-center py-8 text-text-faint text-[0.84rem]">
                 {isZh ? '暂无模型，请点击「获取模型列表」加载' : 'No models yet. Click "Fetch Models" to load.'}
+              </div>
+            )}
+            {['custom', 'ollama', 'lmstudio', 'azure', '302ai', 'aihubmix'].includes(config.provider) && (
+              <div className="mt-3 px-3.5 py-2.5 bg-accent/5 border border-accent/15 rounded-lg flex items-start gap-2.5">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <div className="text-[0.76rem] text-text-dim leading-relaxed">
+                  {isZh
+                    ? '如果获取模型列表失败，可直接在上方「模型名称」中手动输入模型名称（如 gpt-4o），然后点击「保存配置」即可使用。'
+                    : 'If fetching the model list fails, you can manually enter the model name (e.g. gpt-4o) in the "Model Name" field above, then click "Save Config" to use it.'}
+                </div>
               </div>
             )}
           </div>

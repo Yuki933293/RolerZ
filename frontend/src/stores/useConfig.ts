@@ -7,6 +7,7 @@ interface ProviderConfig {
   baseUrl: string;
   modelName: string;
   modelId: string;
+  label: string;
   configured: boolean;
   fetchedModels: string[];
 }
@@ -18,6 +19,7 @@ interface ConfigStore {
   baseUrl: string;
   modelName: string;
   modelId: string;
+  label: string;
   configured: boolean;
   fetchedModels: string[];
   language: string;
@@ -31,6 +33,7 @@ interface ConfigStore {
   setBaseUrl: (u: string) => void;
   setModelName: (m: string) => void;
   setModelId: (id: string) => void;
+  setLabel: (l: string) => void;
   setConfigured: (c: boolean) => void;
   setFetchedModels: (m: string[]) => void;
   setLanguage: (l: string) => void;
@@ -38,16 +41,46 @@ interface ConfigStore {
   setTheme: (t: 'light' | 'dark') => void;
   toggleTheme: () => void;
   saveConfig: () => void;
+  deleteProviderConfig: (providerId: string) => void;
   loadFromServer: () => Promise<void>;
   saveToServer: () => Promise<void>;
   resetToDefaults: () => void;
 }
 
 const PROVIDER_DEFAULT_URLS: Record<string, string> = {
-  claude: 'https://api.anthropic.com',
-  openai: 'https://api.openai.com/v1',
-  deepseek: 'https://api.deepseek.com',
-  custom: '',
+  claude:      'https://api.anthropic.com',
+  openai:      'https://api.openai.com/v1',
+  gemini:      'https://generativelanguage.googleapis.com/v1beta/openai',
+  deepseek:    'https://api.deepseek.com',
+  xai:         'https://api.x.ai/v1',
+  moonshot:    'https://api.moonshot.cn/v1',
+  zhipu:       'https://open.bigmodel.cn/api/paas/v4',
+  groq:        'https://api.groq.com/openai/v1',
+  openrouter:  'https://openrouter.ai/api/v1',
+  siliconflow: 'https://api.siliconflow.cn/v1',
+  '302ai':     'https://api.302.ai/v1',
+  aihubmix:    'https://aihubmix.com/v1',
+  nvidia:      'https://integrate.api.nvidia.com/v1',
+  azure:       '',
+  ollama:      'http://localhost:11434/v1',
+  lmstudio:    'http://localhost:1234/v1',
+  custom:      '',
+};
+
+const PROVIDER_DEFAULT_MODELS: Record<string, string> = {
+  claude:      'claude-haiku-4-5-20251001',
+  openai:      'gpt-4o-mini',
+  gemini:      'gemini-2.0-flash',
+  deepseek:    'deepseek-chat',
+  xai:         'grok-3-mini-fast',
+  moonshot:    'moonshot-v1-8k',
+  zhipu:       'glm-4-flash',
+  groq:        'llama-3.3-70b-versatile',
+  openrouter:  'openai/gpt-4o-mini',
+  siliconflow: 'Qwen/Qwen2.5-7B-Instruct',
+  '302ai':     'gpt-4o-mini',
+  aihubmix:    'gpt-4o-mini',
+  nvidia:      'meta/llama-3.1-8b-instruct',
 };
 
 const DEFAULTS = {
@@ -56,7 +89,8 @@ const DEFAULTS = {
   apiKeys: [] as string[],
   baseUrl: PROVIDER_DEFAULT_URLS['claude'],
   modelName: '',
-  modelId: 'claude',
+  modelId: PROVIDER_DEFAULT_MODELS['claude'] || '',
+  label: '',
   configured: false,
   fetchedModels: [] as string[],
   language: 'zh',
@@ -72,6 +106,7 @@ function currentProviderConfig(state: ConfigStore): ProviderConfig {
     baseUrl: state.baseUrl,
     modelName: state.modelName,
     modelId: state.modelId,
+    label: state.label,
     configured: state.configured,
     fetchedModels: state.fetchedModels,
   };
@@ -109,18 +144,21 @@ export const useConfig = create<ConfigStore>((set, get) => ({
         baseUrl: saved.baseUrl,
         modelName: saved.modelName,
         modelId: saved.modelId,
+        label: saved.label || '',
         configured: saved.configured,
         fetchedModels: saved.fetchedModels,
         providerConfigs: updated,
       });
     } else {
+      const defaultModel = PROVIDER_DEFAULT_MODELS[p] || '';
       set({
         provider: p,
         apiKey: '',
         apiKeys: [],
         baseUrl: PROVIDER_DEFAULT_URLS[p] || '',
-        modelName: '',
-        modelId: p,
+        modelName: defaultModel,
+        modelId: defaultModel,
+        label: '',
         configured: false,
         fetchedModels: [],
         providerConfigs: updated,
@@ -133,6 +171,7 @@ export const useConfig = create<ConfigStore>((set, get) => ({
   setBaseUrl: (u) => set({ baseUrl: u }),
   setModelName: (m) => set({ modelName: m }),
   setModelId: (id) => set({ modelId: id }),
+  setLabel: (l) => set({ label: l }),
   setConfigured: (c) => set({ configured: c }),
   setFetchedModels: (m) => set({ fetchedModels: m }),
   setLanguage: (l) => {
@@ -178,6 +217,29 @@ export const useConfig = create<ConfigStore>((set, get) => ({
     saveUserConfig(serializeForServer(updated)).catch(() => {});
   },
 
+  deleteProviderConfig: (providerId) => {
+    const state = get();
+    const { [providerId]: _, ...rest } = state.providerConfigs;
+    set({ providerConfigs: rest });
+    // If deleting the current provider, reset it
+    if (state.provider === providerId) {
+      const defaultModel = PROVIDER_DEFAULT_MODELS[providerId] || '';
+      set({
+        apiKey: '',
+        apiKeys: [],
+        baseUrl: PROVIDER_DEFAULT_URLS[providerId] || '',
+        modelName: defaultModel,
+        modelId: defaultModel,
+        label: '',
+        configured: false,
+        fetchedModels: [],
+      });
+    }
+    // Save to server
+    const updated = get();
+    saveUserConfig(serializeForServer(updated)).catch(() => {});
+  },
+
   loadFromServer: async () => {
     try {
       const data = await getUserConfig();
@@ -198,7 +260,8 @@ export const useConfig = create<ConfigStore>((set, get) => ({
         apiKeys: saved?.apiKeys || [],
         baseUrl: saved?.baseUrl || PROVIDER_DEFAULT_URLS[provider] || '',
         modelName: saved?.modelName || '',
-        modelId: saved?.modelId || provider,
+        modelId: saved?.modelId || PROVIDER_DEFAULT_MODELS[provider] || '',
+        label: saved?.label || '',
         configured: saved?.configured || false,
         fetchedModels: saved?.fetchedModels || [],
       });

@@ -34,7 +34,7 @@ export default function Generate() {
         count: config.count,
         language: config.language,
         provider: config.provider,
-        model: config.modelName || undefined,
+        model: config.modelName || config.modelId || undefined,
         api_key: config.apiKey || undefined,
         base_url: config.baseUrl || undefined,
         selected_inspirations: selectedCards.length > 0 ? selectedCards : undefined,
