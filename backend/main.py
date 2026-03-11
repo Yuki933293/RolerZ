@@ -82,6 +82,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     username: str
+    is_admin: bool = False
 
 class GenerateRequest(BaseModel):
     concept: str
@@ -124,6 +125,16 @@ class FetchModelsRequest(BaseModel):
     provider: str
     api_key: str = ""
     base_url: str = ""
+
+class AnnouncementRequest(BaseModel):
+    id: str = ""
+    date: str = ""
+    type: str = "feature"
+    title_zh: str = ""
+    title_en: str = ""
+    body_zh: str = ""
+    body_en: str = ""
+    sort_order: int = 0
 
 
 # ── JWT helpers ─────────────────────────────────────────────────────────
@@ -172,7 +183,7 @@ def login(req: AuthRequest):
     if uid is None:
         raise HTTPException(status_code=401, detail="用户名或密码错误")
     token = create_access_token(uid, req.username)
-    return TokenResponse(access_token=token, username=req.username)
+    return TokenResponse(access_token=token, username=req.username, is_admin=db.is_admin(uid))
 
 
 @app.post("/api/auth/register", response_model=TokenResponse)
@@ -183,7 +194,7 @@ def register(req: AuthRequest):
     if uid is None:
         raise HTTPException(status_code=409, detail="用户名已存在")
     token = create_access_token(uid, req.username)
-    return TokenResponse(access_token=token, username=req.username)
+    return TokenResponse(access_token=token, username=req.username, is_admin=db.is_admin(uid))
 
 
 # ── Provider routes ─────────────────────────────────────────────────────
@@ -399,6 +410,56 @@ def save_card_groups(req: SaveGroupsRequest, authorization: str | None = Header(
     if not user:
         raise HTTPException(status_code=401, detail="需要登录")
     db.save_card_groups(user["user_id"], req.groups)
+    return {"ok": True}
+
+
+# ── Announcements ──────────────────────────────────────────────────
+def _require_admin(authorization: str | None) -> dict:
+    """Extract user and verify admin. Raises 401/403."""
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    if not db.is_admin(user["user_id"]):
+        raise HTTPException(status_code=403, detail="需要管理员权限")
+    return user
+
+
+@app.get("/api/announcements")
+def list_announcements():
+    return db.get_announcements()
+
+
+@app.post("/api/announcements")
+def create_announcement(req: AnnouncementRequest, authorization: str | None = Header(None)):
+    _require_admin(authorization)
+    ann_id = req.id or f"ann-{secrets.token_hex(6)}"
+    db.create_announcement(
+        ann_id, req.date, req.type,
+        req.title_zh, req.title_en,
+        req.body_zh, req.body_en, req.sort_order,
+    )
+    return {"ok": True, "id": ann_id}
+
+
+@app.put("/api/announcements/{ann_id}")
+def update_announcement(ann_id: str, req: AnnouncementRequest, authorization: str | None = Header(None)):
+    _require_admin(authorization)
+    ok = db.update_announcement(
+        ann_id, req.date, req.type,
+        req.title_zh, req.title_en,
+        req.body_zh, req.body_en, req.sort_order,
+    )
+    if not ok:
+        raise HTTPException(status_code=404, detail="公告不存在")
+    return {"ok": True}
+
+
+@app.delete("/api/announcements/{ann_id}")
+def delete_announcement(ann_id: str, authorization: str | None = Header(None)):
+    _require_admin(authorization)
+    ok = db.delete_announcement(ann_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="公告不存在")
     return {"ok": True}
 
 

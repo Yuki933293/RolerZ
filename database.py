@@ -59,6 +59,18 @@ def init_db() -> None:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+        CREATE TABLE IF NOT EXISTS announcements (
+            id TEXT PRIMARY KEY,
+            date TEXT NOT NULL,
+            type TEXT NOT NULL DEFAULT 'feature',
+            title_zh TEXT NOT NULL DEFAULT '',
+            title_en TEXT NOT NULL DEFAULT '',
+            body_zh TEXT NOT NULL DEFAULT '',
+            body_en TEXT NOT NULL DEFAULT '',
+            sort_order INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
         CREATE TABLE IF NOT EXISTS user_card_groups (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -321,7 +333,7 @@ def get_user_stats(user_id: int) -> dict:
 
 
 def _migrate_users_table() -> None:
-    """Add avatar_url and bio columns if they don't exist (for existing DBs)."""
+    """Add avatar_url, bio, is_admin columns if they don't exist (for existing DBs)."""
     conn = _get_conn()
     try:
         cols = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
@@ -329,9 +341,71 @@ def _migrate_users_table() -> None:
             conn.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT NOT NULL DEFAULT ''")
         if "bio" not in cols:
             conn.execute("ALTER TABLE users ADD COLUMN bio TEXT NOT NULL DEFAULT ''")
+        if "is_admin" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
+            # First user is auto-admin
+            conn.execute("UPDATE users SET is_admin = 1 WHERE id = 1")
         conn.commit()
     finally:
         conn.close()
+
+
+def is_admin(user_id: int) -> bool:
+    """Check if the user is an admin."""
+    conn = _get_conn()
+    row = conn.execute("SELECT is_admin FROM users WHERE id = ?", (user_id,)).fetchone()
+    conn.close()
+    return bool(row and row["is_admin"])
+
+
+# ── Announcements ──
+
+def get_announcements() -> list[dict]:
+    """Returns all announcements sorted by date desc, then sort_order."""
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT id, date, type, title_zh, title_en, body_zh, body_en, sort_order, created_at "
+        "FROM announcements ORDER BY date DESC, sort_order ASC"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def create_announcement(ann_id: str, date: str, ann_type: str,
+                        title_zh: str, title_en: str,
+                        body_zh: str, body_en: str, sort_order: int = 0) -> None:
+    conn = _get_conn()
+    conn.execute(
+        "INSERT INTO announcements (id, date, type, title_zh, title_en, body_zh, body_en, sort_order) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (ann_id, date, ann_type, title_zh, title_en, body_zh, body_en, sort_order),
+    )
+    conn.commit()
+    conn.close()
+
+
+def update_announcement(ann_id: str, date: str, ann_type: str,
+                        title_zh: str, title_en: str,
+                        body_zh: str, body_en: str, sort_order: int = 0) -> bool:
+    conn = _get_conn()
+    cur = conn.execute(
+        "UPDATE announcements SET date=?, type=?, title_zh=?, title_en=?, "
+        "body_zh=?, body_en=?, sort_order=?, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+        (date, ann_type, title_zh, title_en, body_zh, body_en, sort_order, ann_id),
+    )
+    conn.commit()
+    ok = cur.rowcount > 0
+    conn.close()
+    return ok
+
+
+def delete_announcement(ann_id: str) -> bool:
+    conn = _get_conn()
+    cur = conn.execute("DELETE FROM announcements WHERE id = ?", (ann_id,))
+    conn.commit()
+    ok = cur.rowcount > 0
+    conn.close()
+    return ok
 
 
 def get_user_profile(user_id: int) -> dict | None:

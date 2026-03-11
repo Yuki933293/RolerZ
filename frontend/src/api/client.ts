@@ -26,6 +26,7 @@ export interface TokenResponse {
   access_token: string;
   token_type: string;
   username: string;
+  is_admin: boolean;
 }
 
 export function login(username: string, password: string) {
@@ -260,4 +261,39 @@ export function clearAllHistory() {
 
 export function deleteAccount() {
   return request('/api/profile/account', { method: 'DELETE' });
+}
+
+// ── Announcements ──
+export interface Announcement {
+  id: string;
+  date: string;
+  type: string;
+  title_zh: string;
+  title_en: string;
+  body_zh: string;
+  body_en: string;
+  sort_order: number;
+  created_at?: string;
+}
+
+export function getAnnouncements() {
+  return request<Announcement[]>('/api/announcements');
+}
+
+export function createAnnouncement(data: Omit<Announcement, 'created_at'>) {
+  return request('/api/announcements', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateAnnouncement(annId: string, data: Omit<Announcement, 'created_at'>) {
+  return request(`/api/announcements/${annId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteAnnouncement(annId: string) {
+  return request(`/api/announcements/${annId}`, { method: 'DELETE' });
 }

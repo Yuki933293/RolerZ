@@ -59,7 +59,7 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
     try {
       const fn = authMode === 'login' ? apiLogin : apiRegister;
       const res = await fn(authUser.trim(), authPass);
-      login(res.access_token, res.username);
+      login(res.access_token, res.username, res.is_admin);
       setShowAuthModal(false);
       setAuthUser('');
       setAuthPass('');

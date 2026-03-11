@@ -29,7 +29,7 @@ export default function LoginPrompt({
     try {
       const fn = mode === 'login' ? apiLogin : apiRegister;
       const res = await fn(username.trim(), password);
-      login(res.access_token, res.username);
+      login(res.access_token, res.username, res.is_admin);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : t('operationFailed') as string);
     } finally {

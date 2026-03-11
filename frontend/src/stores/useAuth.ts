@@ -4,17 +4,20 @@ import { useConfig } from './useConfig';
 interface AuthStore {
   token: string | null;
   username: string | null;
-  login: (token: string, username: string) => void;
+  isAdmin: boolean;
+  login: (token: string, username: string, isAdmin?: boolean) => void;
   logout: () => void;
 }
 
 export const useAuth = create<AuthStore>((set) => ({
   token: localStorage.getItem('token'),
   username: localStorage.getItem('username'),
-  login: (token, username) => {
+  isAdmin: localStorage.getItem('isAdmin') === 'true',
+  login: (token, username, isAdmin = false) => {
     localStorage.setItem('token', token);
     localStorage.setItem('username', username);
-    set({ token, username });
+    localStorage.setItem('isAdmin', String(isAdmin));
+    set({ token, username, isAdmin });
     // Load user config from server
     useConfig.getState().loadFromServer();
   },
@@ -26,7 +29,8 @@ export const useAuth = create<AuthStore>((set) => ({
     }
     localStorage.removeItem('token');
     localStorage.removeItem('username');
-    set({ token: null, username: null });
+    localStorage.removeItem('isAdmin');
+    set({ token: null, username: null, isAdmin: false });
     config.resetToDefaults();
   },
 }));

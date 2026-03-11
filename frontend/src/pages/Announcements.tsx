@@ -1,76 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useConfig } from '../stores/useConfig';
+import { useAuth } from '../stores/useAuth';
 import { useT } from '../i18n';
+import {
+  getAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  type Announcement as ApiAnnouncement,
+} from '../api/client';
 
-/* ── Announcement feed data ── */
+/* ── Type style mapping ── */
 type AnnouncementType = 'feature' | 'improvement' | 'fix';
-
-interface Announcement {
-  id: string;
-  date: string;
-  type: AnnouncementType;
-  titleZh: string;
-  titleEn: string;
-  bodyZh: string;
-  bodyEn: string;
-}
-
-const ANNOUNCEMENTS: Announcement[] = [
-  {
-    id: 'ann-2026-03-c',
-    date: '2026-03-11',
-    type: 'feature',
-    titleZh: '候选卡片新增收藏功能',
-    titleEn: 'Candidate Card Favorites',
-    bodyZh: '在生成的候选角色卡片上，点击星标按钮即可将其收藏，收藏后卡片将高亮显示金色边框，方便对比与筛选。',
-    bodyEn: 'Click the star button on any generated candidate card to mark it as a favorite. Favorited cards are highlighted with a gold border for easy comparison.',
-  },
-  {
-    id: 'ann-2026-03-b',
-    date: '2026-03-11',
-    type: 'improvement',
-    titleZh: '引导向导可选维度支持跳过',
-    titleEn: 'Guided Wizard — Skip Optional Fields',
-    bodyZh: '引导式构建中，"目标"和"内心冲突"两个维度现在支持跳过。当前问题为可选项时，输入框旁会出现"跳过"按钮。',
-    bodyEn: 'In Guided Build, the "Goals" and "Conflicts" dimensions can now be skipped. A "Skip" button appears next to the input when the current question is optional.',
-  },
-  {
-    id: 'ann-2026-03-a',
-    date: '2026-03-11',
-    type: 'feature',
-    titleZh: '帮助页新增故障排查 FAQ',
-    titleEn: 'Help Page — Troubleshooting FAQ',
-    bodyZh: '帮助页面新增 4 条常见故障排查：401 API Key 错误、请求超时、429 频率限制、生成内容残缺，每条均附有具体解决步骤。',
-    bodyEn: 'Added 4 troubleshooting FAQ items to the Help page: 401 API key errors, request timeouts, 429 rate limits, and incomplete generation output — each with step-by-step solutions.',
-  },
-  {
-    id: 'ann-2026-02-b',
-    date: '2026-02-28',
-    type: 'feature',
-    titleZh: '灵感卡分类扩展至 11 类',
-    titleEn: 'Inspiration Cards Expanded to 11 Categories',
-    bodyZh: '灵感卡由原来的 8 类扩展为 11 类，新增「外貌」「场景」「癖好」三个维度，涵盖更多角色塑造角度。卡片总数也随之增加至 50 张。',
-    bodyEn: 'Inspiration cards have been expanded from 8 to 11 categories, adding Appearance, Scenario, and Quirk dimensions. The total card count has grown to 50.',
-  },
-  {
-    id: 'ann-2026-02-a',
-    date: '2026-02-20',
-    type: 'feature',
-    titleZh: '深色模式上线',
-    titleEn: 'Dark Mode Released',
-    bodyZh: '支持浅色/深色主题切换，设置入口在右上角用户菜单中，偏好会自动保存。',
-    bodyEn: 'Light and dark theme switching is now available. Toggle in the top-right user menu — your preference is saved automatically.',
-  },
-  {
-    id: 'ann-2026-01-a',
-    date: '2026-01-15',
-    type: 'improvement',
-    titleZh: '模型供应商配置全面优化',
-    titleEn: 'Model Provider Config Improvements',
-    bodyZh: '支持多 API Key 轮换、查看和管理已配置的供应商列表、一键切换供应商，配置项同步至服务器，登录后自动恢复。',
-    bodyEn: 'Multiple API key rotation, a "My Configs" panel to view and manage all configured providers, one-click provider switching, and server-synced config restoration after login.',
-  },
-];
 
 const TYPE_STYLE: Record<AnnouncementType, { label: string; labelEn: string; cls: string }> = {
   feature:     { label: '新功能', labelEn: 'Feature',     cls: 'bg-blue-50 text-blue-600 border-blue-200' },
@@ -89,9 +30,7 @@ const TIER_CONFIG = [
 
 /* Per-tier feature descriptions */
 const TIER_FEATURES: Record<string, { zh: string; en: string }[]> = {
-  normal: [
-
-  ],
+  normal: [],
   rare: [
     { zh: '银紫渐变', en: 'Silver lavender gradient' },
   ],
@@ -385,13 +324,225 @@ function TierCardModal({ config, isZh, lang, onClose }: {
   );
 }
 
+/* ── Announcement form modal (admin only) ── */
+function AnnouncementFormModal({ ann, lang, onSave, onClose }: {
+  ann: ApiAnnouncement | null;
+  lang: string;
+  onSave: (data: ApiAnnouncement) => Promise<void>;
+  onClose: () => void;
+}) {
+  const t = useT(lang);
+  const isEdit = !!ann;
+  const [form, setForm] = useState<ApiAnnouncement>(() =>
+    ann ?? {
+      id: `ann-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      type: 'feature',
+      title_zh: '',
+      title_en: '',
+      body_zh: '',
+      body_en: '',
+      sort_order: 0,
+    }
+  );
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const handleSubmit = async () => {
+    if (!form.title_zh.trim() && !form.title_en.trim()) return;
+    setSaving(true);
+    try {
+      await onSave(form);
+      onClose();
+    } catch {
+      /* handled by parent */
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const set = (key: keyof ApiAnnouncement, val: string | number) =>
+    setForm(prev => ({ ...prev, [key]: val }));
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="px-6 pt-5 pb-3 border-b border-border flex items-center justify-between">
+          <h3 className="text-lg font-bold text-text-primary">
+            {isEdit ? t('annEditAnnouncement') as string : t('annNewAnnouncement') as string}
+          </h3>
+          <button onClick={onClose} className="text-text-faint hover:text-text-primary text-xl leading-none p-1">
+            ×
+          </button>
+        </div>
+
+        <div className="px-6 py-4 space-y-3 max-h-[70vh] overflow-y-auto">
+          {/* Date + Type row */}
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="text-[0.75rem] text-text-dim mb-1 block">{t('annDate') as string}</label>
+              <input
+                type="date"
+                value={form.date}
+                onChange={e => set('date', e.target.value)}
+                className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-[0.75rem] text-text-dim mb-1 block">{t('annType') as string}</label>
+              <select
+                value={form.type}
+                onChange={e => set('type', e.target.value)}
+                className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none bg-white"
+              >
+                <option value="feature">{t('annFeature') as string}</option>
+                <option value="improvement">{t('annImprovement') as string}</option>
+                <option value="fix">{t('annFix') as string}</option>
+              </select>
+            </div>
+            <div className="w-20">
+              <label className="text-[0.75rem] text-text-dim mb-1 block">{t('annSortOrder') as string}</label>
+              <input
+                type="number"
+                value={form.sort_order}
+                onChange={e => set('sort_order', parseInt(e.target.value) || 0)}
+                className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Title zh */}
+          <div>
+            <label className="text-[0.75rem] text-text-dim mb-1 block">{t('annTitleZh') as string}</label>
+            <input
+              type="text"
+              value={form.title_zh}
+              onChange={e => set('title_zh', e.target.value)}
+              className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+            />
+          </div>
+
+          {/* Title en */}
+          <div>
+            <label className="text-[0.75rem] text-text-dim mb-1 block">{t('annTitleEn') as string}</label>
+            <input
+              type="text"
+              value={form.title_en}
+              onChange={e => set('title_en', e.target.value)}
+              className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+            />
+          </div>
+
+          {/* Body zh */}
+          <div>
+            <label className="text-[0.75rem] text-text-dim mb-1 block">{t('annBodyZh') as string}</label>
+            <textarea
+              value={form.body_zh}
+              onChange={e => set('body_zh', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none resize-none"
+            />
+          </div>
+
+          {/* Body en */}
+          <div>
+            <label className="text-[0.75rem] text-text-dim mb-1 block">{t('annBodyEn') as string}</label>
+            <textarea
+              value={form.body_en}
+              onChange={e => set('body_en', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none resize-none"
+            />
+          </div>
+
+          {/* ID (read-only for edit) */}
+          {!isEdit && (
+            <div>
+              <label className="text-[0.75rem] text-text-dim mb-1 block">ID</label>
+              <input
+                type="text"
+                value={form.id}
+                onChange={e => set('id', e.target.value)}
+                className="w-full px-3 py-2 text-[0.84rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none font-mono"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-border flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-[0.84rem] border border-border rounded-lg text-text-dim hover:bg-surface-2 transition-colors"
+          >
+            {t('cancel') as string}
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving || (!form.title_zh.trim() && !form.title_en.trim())}
+            className="px-5 py-2 text-[0.84rem] bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white font-semibold rounded-lg transition-all shadow-md"
+          >
+            {saving
+              ? (t('saving') as string)
+              : isEdit
+                ? (t('annUpdate') as string)
+                : (t('annPublish') as string)}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Page ── */
 export default function Announcements() {
   const lang = useConfig(s => s.language);
   const isZh = lang === 'zh' || lang === 'zh-Hant';
   const t = useT(lang);
+  const { isAdmin, token } = useAuth();
+
   const [activeTier, setActiveTier] = useState<string | null>(null);
   const activeConfig = activeTier ? TIER_CONFIG.find(c => c.tier === activeTier) : null;
+
+  // Announcement state
+  const [announcements, setAnnouncements] = useState<ApiAnnouncement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingAnn, setEditingAnn] = useState<ApiAnnouncement | null | 'new'>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    getAnnouncements()
+      .then(setAnnouncements)
+      .catch(() => setAnnouncements([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async (data: ApiAnnouncement) => {
+    const existing = announcements.find(a => a.id === data.id);
+    if (existing) {
+      await updateAnnouncement(data.id, data);
+    } else {
+      await createAnnouncement(data);
+    }
+    const fresh = await getAnnouncements();
+    setAnnouncements(fresh);
+  };
+
+  const handleDelete = async (annId: string) => {
+    if (!confirm(t('annDeleteConfirm') as string)) return;
+    await deleteAnnouncement(annId);
+    setAnnouncements(prev => prev.filter(a => a.id !== annId));
+  };
 
   return (
     <div>
@@ -410,40 +561,86 @@ export default function Announcements() {
 
       {/* Announcement feed */}
       <div className="mb-10">
-        <h2 className="text-[0.92rem] font-semibold text-text-primary mb-5">
-          {isZh ? '最新动态' : "What's New"}
-        </h2>
-        <div>
-          {ANNOUNCEMENTS.map((ann, i) => {
-            const style = TYPE_STYLE[ann.type];
-            return (
-              <div key={ann.id} className="flex gap-4">
-                {/* Timeline spine */}
-                <div className="flex flex-col items-center pt-1 shrink-0">
-                  <div className="w-2.5 h-2.5 rounded-full bg-accent ring-4 ring-accent/10 shrink-0" />
-                  {i < ANNOUNCEMENTS.length - 1 && (
-                    <div className="w-px flex-1 bg-border mt-1.5 mb-0" />
-                  )}
-                </div>
-                {/* Content */}
-                <div className="pb-7 flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className={`text-[0.65rem] font-semibold px-2 py-0.5 rounded-full border ${style.cls}`}>
-                      {isZh ? style.label : style.labelEn}
-                    </span>
-                    <span className="text-[0.72rem] text-text-faint">{ann.date}</span>
-                  </div>
-                  <div className="text-[0.92rem] font-semibold text-text-primary mb-1">
-                    {isZh ? ann.titleZh : ann.titleEn}
-                  </div>
-                  <p className="text-[0.82rem] text-text-dim leading-relaxed">
-                    {isZh ? ann.bodyZh : ann.bodyEn}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-[0.92rem] font-semibold text-text-primary">
+            {t('annWhatsNew') as string}
+          </h2>
+          {isAdmin && token && (
+            <button
+              onClick={() => setEditingAnn('new')}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[0.78rem] font-semibold text-white bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 rounded-lg transition-all shadow-sm"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              {t('annNewAnnouncement') as string}
+            </button>
+          )}
         </div>
+
+        {loading ? (
+          <div className="text-center py-8 text-text-faint text-[0.84rem]">{t('loading') as string}</div>
+        ) : announcements.length === 0 ? (
+          <div className="text-center py-8 text-text-faint text-[0.84rem]">{t('annNoAnnouncements') as string}</div>
+        ) : (
+          <div>
+            {announcements.map((ann, i) => {
+              const style = TYPE_STYLE[ann.type as AnnouncementType] || TYPE_STYLE.feature;
+              return (
+                <div key={ann.id} className="flex gap-4">
+                  {/* Timeline spine */}
+                  <div className="flex flex-col items-center pt-1 shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-accent ring-4 ring-accent/10 shrink-0" />
+                    {i < announcements.length - 1 && (
+                      <div className="w-px flex-1 bg-border mt-1.5 mb-0" />
+                    )}
+                  </div>
+                  {/* Content */}
+                  <div className="pb-7 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <span className={`text-[0.65rem] font-semibold px-2 py-0.5 rounded-full border ${style.cls}`}>
+                        {isZh ? style.label : style.labelEn}
+                      </span>
+                      <span className="text-[0.72rem] text-text-faint">{ann.date}</span>
+                      {/* Admin actions */}
+                      {isAdmin && token && (
+                        <span className="flex items-center gap-1 ml-auto">
+                          <button
+                            onClick={() => setEditingAnn(ann)}
+                            className="text-text-faint hover:text-accent transition-colors p-0.5"
+                            title={t('edit') as string}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(ann.id)}
+                            className="text-text-faint hover:text-error transition-colors p-0.5"
+                            title={t('delete') as string}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                          </button>
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[0.92rem] font-semibold text-text-primary mb-1">
+                      {isZh ? ann.title_zh : ann.title_en}
+                    </div>
+                    <p className="text-[0.82rem] text-text-dim leading-relaxed">
+                      {isZh ? ann.body_zh : ann.body_en}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Card Tier System */}
@@ -489,6 +686,16 @@ export default function Announcements() {
           isZh={isZh}
           lang={lang}
           onClose={() => setActiveTier(null)}
+        />
+      )}
+
+      {/* Announcement form modal */}
+      {editingAnn !== null && (
+        <AnnouncementFormModal
+          ann={editingAnn === 'new' ? null : editingAnn}
+          lang={lang}
+          onSave={handleSave}
+          onClose={() => setEditingAnn(null)}
         />
       )}
     </div>
