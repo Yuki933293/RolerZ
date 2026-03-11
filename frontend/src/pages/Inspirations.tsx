@@ -6,6 +6,7 @@ import {
 import { useAuth } from '../stores/useAuth';
 import { useConfig } from '../stores/useConfig';
 import CardEditModal from '../components/CardEditModal';
+import InspirationFlipModal from '../components/InspirationFlipModal';
 import { useT } from '../i18n';
 
 const DEFAULT_CATEGORIES: Record<string, { zh: string; en: string }> = {
@@ -103,20 +104,6 @@ const TAG_LABELS: Record<string, string> = {
   punctual: '守时', 'over-prepared': '过度准备',
 };
 
-const SNIPPET_LABELS: Record<string, { zh: string; en: string }> = {
-  personality: { zh: '性格', en: 'Personality' },
-  speech: { zh: '语言风格', en: 'Speech' },
-  behavior: { zh: '行为', en: 'Behavior' },
-  hidden: { zh: '内在', en: 'Inner' },
-  emotion: { zh: '情感', en: 'Emotion' },
-  relationship: { zh: '关系', en: 'Relationship' },
-  motivation: { zh: '动机', en: 'Motivation' },
-  background: { zh: '背景', en: 'Background' },
-  quirk: { zh: '小习惯', en: 'Quirk' },
-  appearance: { zh: '外貌', en: 'Appearance' },
-  setting: { zh: '场景', en: 'Setting' },
-  atmosphere: { zh: '氛围', en: 'Atmosphere' },
-};
 
 /* ── HoloCard: single card with mouse tracking ── */
 function HoloCard({ card, lang, isZh, glowColor, accent, iconPath, cardBg, isModified, onClick }: {
@@ -369,14 +356,20 @@ export default function Inspirations() {
         </div>
       )}
 
-      {/* ── Expanded card overlay ── */}
+      {/* ── Flip card modal ── */}
       {expandedCard && (
-        <ExpandedCardView
+        <InspirationFlipModal
           card={expandedCard}
           override={overrides[expandedCard.id] || null}
           lang={lang}
           isZh={isZh}
           isLoggedIn={isLoggedIn}
+          accent={CATEGORY_ACCENT[expandedCard.category] || '#999'}
+          iconPath={CATEGORY_ICONS[expandedCard.category] || ''}
+          cardBg={CATEGORY_CARD_BG[expandedCard.category] || DEFAULT_CARD_BG}
+          glowColor={CATEGORY_GLOW[expandedCard.category] || 'rgba(100,100,255,0.15)'}
+          categoryLabel={DEFAULT_CATEGORIES[expandedCard.category]?.[lang] || expandedCard.category}
+          tagLabel={(tg) => isZh ? (TAG_LABELS[tg] || tg) : tg}
           onEdit={() => { setEditingCard(expandedCard); setExpandedCard(null); }}
           onClose={() => setExpandedCard(null)}
         />
@@ -398,108 +391,3 @@ export default function Inspirations() {
   );
 }
 
-/* ── Expanded Card View ── */
-function ExpandedCardView({ card, override, lang, isZh, isLoggedIn, onEdit, onClose }: {
-  card: InspirationCard;
-  override: Record<string, unknown> | null;
-  lang: 'zh' | 'en';
-  isZh: boolean;
-  isLoggedIn: boolean;
-  onEdit: () => void;
-  onClose: () => void;
-}) {
-  const t = useT(lang);
-  const accent = CATEGORY_ACCENT[card.category] || '#999';
-  const iconPath = CATEGORY_ICONS[card.category] || '';
-  const title = isZh ? card.title_zh : card.title_en;
-  const catLabel = DEFAULT_CATEGORIES[card.category]?.[lang] || card.category;
-  const langKey = `prompt_${lang}` as 'prompt_zh' | 'prompt_en';
-  const existingOverride = override || {};
-  const promptText = (existingOverride[langKey] as string) || card[langKey] || '';
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 card-expand-overlay"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
-      onClick={onClose}
-    >
-      <div
-        className="card-expand-panel w-full max-w-lg max-h-[85vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Dark gradient header */}
-        <div className="relative px-6 pt-6 pb-5" style={{ background: 'linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%)' }}>
-          {/* Close */}
-          <button onClick={onClose} className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-
-          {/* Icon + category */}
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d={iconPath} />
-              </svg>
-            </div>
-            <span className="text-[0.62rem] font-bold uppercase tracking-[0.12em]" style={{ color: accent }}>{catLabel}</span>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-[1.2rem] font-bold text-white leading-snug" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{title}</h2>
-
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {card.tags.map(tg => (
-              <span key={tg} className="text-[0.62rem] px-2 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.65)' }}>
-                {isZh ? (TAG_LABELS[tg] || tg) : tg}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto bg-white px-6 py-5 space-y-4">
-          {promptText && (
-            <div>
-              <div className="text-[0.68rem] font-bold uppercase tracking-wider mb-1.5" style={{ color: accent }}>{t('promptSnippet') as string}</div>
-              <div className="text-[0.84rem] text-text-secondary leading-relaxed p-3 rounded-lg border-l-[3px]" style={{ borderColor: accent, background: `${accent}08` }}>
-                {promptText}
-              </div>
-            </div>
-          )}
-          {Object.entries(card.snippets).map(([key, val]) => {
-            const overSnips = (existingOverride['snippets'] as Record<string, Record<string, string>>) || {};
-            const text = overSnips[key]?.[lang] || val[lang] || val.zh || '';
-            if (!text) return null;
-            const label = SNIPPET_LABELS[key]?.[lang] || key;
-            return (
-              <div key={key}>
-                <div className="text-[0.68rem] font-bold uppercase tracking-wider mb-1" style={{ color: accent }}>{label}</div>
-                <div className="text-[0.84rem] text-text-dim leading-relaxed">{text}</div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Footer */}
-        <div className="bg-white border-t border-border px-6 py-3 flex items-center gap-2">
-          {isLoggedIn && (
-            <button
-              onClick={onEdit}
-              className="text-[0.82rem] font-semibold px-4 py-2 rounded-lg text-white transition-all hover:brightness-110"
-              style={{ background: `linear-gradient(135deg, #1a1a2e, #0f3460)` }}
-            >
-              {t('edit') as string}
-            </button>
-          )}
-          <div className="flex-1" />
-          <button onClick={onClose} className="text-[0.78rem] text-text-dim border border-border px-3 py-2 rounded-lg hover:bg-surface-3 transition-colors">
-            {t('close') as string}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

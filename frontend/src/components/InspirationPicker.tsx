@@ -6,6 +6,7 @@ import {
 } from '../api/client';
 import { useAuth } from '../stores/useAuth';
 import CardEditModal from './CardEditModal';
+import InspirationFlipModal from './InspirationFlipModal';
 import { useT } from '../i18n';
 
 const DEFAULT_CATEGORIES: Record<string, { zh: string; en: string }> = {
@@ -29,6 +30,29 @@ const CATEGORY_COLORS: Record<string, string> = {
   appearance: '#8B5CF6', scenario: '#14B8A6', quirk: '#F59E0B',
 };
 
+
+const CATEGORY_GLOW: Record<string, string> = {
+  personality: 'rgba(78,140,255,0.25)', expression: 'rgba(244,114,182,0.25)',
+  emotion: 'rgba(251,191,36,0.2)', relationship: 'rgba(52,211,153,0.25)',
+  background: 'rgba(167,139,250,0.25)', behavior: 'rgba(96,165,250,0.25)',
+  motivation: 'rgba(251,113,133,0.25)', conflict: 'rgba(251,146,60,0.2)',
+  appearance: 'rgba(139,92,246,0.25)', scenario: 'rgba(20,184,166,0.25)',
+  quirk: 'rgba(245,158,11,0.2)',
+};
+
+const CATEGORY_CARD_BG: Record<string, [string, string]> = {
+  personality:  ['#eef4ff', '#dce6f9'],
+  expression:   ['#fdf2f8', '#f5dce9'],
+  emotion:      ['#fefce8', '#f9edcc'],
+  relationship: ['#ecfdf5', '#d5f0e5'],
+  background:   ['#f5f3ff', '#e8e0f7'],
+  behavior:     ['#eff6ff', '#dce8fa'],
+  motivation:   ['#fef2f2', '#f9dede'],
+  conflict:     ['#fff7ed', '#f7e8d4'],
+  appearance:   ['#f3f0ff', '#e4dcf9'],
+  scenario:     ['#f0fdfa', '#d6f1ec'],
+  quirk:        ['#fefce8', '#f5edcf'],
+};
 
 const CATEGORY_ICONS: Record<string, string> = {
   personality:  'M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2',
@@ -206,6 +230,7 @@ export default function InspirationPicker({ language, selected, onSelectionChang
   const [expanded, setExpanded] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [editingCard, setEditingCard] = useState<InspirationCard | null>(null);
+  const [flipCard, setFlipCard] = useState<InspirationCard | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editGroupName, setEditGroupName] = useState('');
   const [showGroupManager, setShowGroupManager] = useState(false);
@@ -564,7 +589,7 @@ export default function InspirationPicker({ language, selected, onSelectionChang
                       cardBg={cardBg}
                       glowColor={glow}
                       onClick={() => toggle(card.id)}
-                      onDoubleClick={(e) => { e.preventDefault(); setEditingCard(card); }}
+                      onDoubleClick={(e) => { e.preventDefault(); setFlipCard(card); }}
                     />
                   );
                 })}
@@ -573,6 +598,25 @@ export default function InspirationPicker({ language, selected, onSelectionChang
           </div>
         );
       })()}
+
+      {/* Flip card modal */}
+      {flipCard && (
+        <InspirationFlipModal
+          card={flipCard}
+          override={overrides[flipCard.id] || null}
+          lang={lang}
+          isZh={isZh}
+          isLoggedIn={isLoggedIn}
+          accent={CATEGORY_COLORS[flipCard.category] || '#4E8CFF'}
+          iconPath={CATEGORY_ICONS[flipCard.category] || ''}
+          cardBg={CATEGORY_CARD_BG[flipCard.category] || ['#eef4ff', '#dce6f9']}
+          glowColor={CATEGORY_GLOW[flipCard.category] || 'rgba(78,140,255,0.25)'}
+          categoryLabel={DEFAULT_CATEGORIES[flipCard.category]?.[lang] || flipCard.category}
+          tagLabel={(tg) => isZh ? (TAG_LABELS[tg] || tg) : tg}
+          onEdit={() => { setEditingCard(flipCard); setFlipCard(null); }}
+          onClose={() => setFlipCard(null)}
+        />
+      )}
 
       {/* Card edit modal */}
       {editingCard && (

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useConfig } from '../stores/useConfig';
 import { useT } from '../i18n';
 
@@ -90,32 +90,30 @@ const TIER_CONFIG = [
 /* Per-tier feature descriptions */
 const TIER_FEATURES: Record<string, { zh: string; en: string }[]> = {
   normal: [
-    { zh: '静态卡片', en: 'Static card' },
-    { zh: '灰色背景', en: 'Grey background' },
+
   ],
   rare: [
-    { zh: '静态卡片', en: 'Static card' },
     { zh: '银紫渐变', en: 'Silver lavender gradient' },
   ],
   epic: [
-    { zh: '3D 倾斜效果', en: '3D tilt effect' },
+    { zh: '3D 倾斜', en: '3D tilt effect' },
     { zh: '冰蓝渐变', en: 'Ice blue gradient' },
   ],
   legendary: [
-    { zh: '3D 倾斜效果', en: '3D tilt effect' },
-    { zh: '全息虹彩层', en: 'Holographic layer' },
-    { zh: '香槟金渐变', en: 'Champagne gold gradient' },
+    { zh: '3D 倾斜', en: '3D tilt effect' },
+    { zh: '全息虹彩', en: 'Holographic layer' },
+    { zh: '香槟渐层', en: 'Champagne gold gradient' },
   ],
   mythic: [
-    { zh: '3D 倾斜效果', en: '3D tilt effect' },
+    { zh: '3D 倾斜', en: '3D tilt effect' },
     { zh: '暗金背景', en: 'Dark gold background' },
-    { zh: '金光扫过动画', en: 'Gold sweep shimmer' },
-    { zh: '金尘粒子飘浮', en: 'Gold luminous particles' },
+    { zh: '金色流光', en: 'Gold sweep shimmer' },
+    { zh: '粒子飘浮', en: 'Gold luminous particles' },
   ],
 };
 
 /* ── Interactive tier card with mouse tracking ── */
-function TierCard({ tier, threshold, label, bg, isZh, lang, features }: {
+function TierCard({ tier, threshold, label, bg, isZh, lang, features, onOpen }: {
   tier: string;
   threshold: number;
   label: string;
@@ -123,6 +121,7 @@ function TierCard({ tier, threshold, label, bg, isZh, lang, features }: {
   isZh: boolean;
   lang: string;
   features: { zh: string; en: string }[];
+  onOpen: () => void;
 }) {
   const t = useT(lang);
   const ref = useRef<HTMLDivElement>(null);
@@ -169,6 +168,7 @@ function TierCard({ tier, threshold, label, bg, isZh, lang, features }: {
       <div
         ref={ref}
         className={`holo-card card-tier-${tier} shrink-0`}
+        onClick={onOpen}
         style={{
           width: 160,
           aspectRatio: '3 / 4',
@@ -194,35 +194,192 @@ function TierCard({ tier, threshold, label, bg, isZh, lang, features }: {
             <div className="text-[0.9rem] font-bold text-text-primary mb-1">
               {t(label as 'tierNormal') as string}
             </div>
-            <div className="text-[0.62rem] text-text-faint">
-              {threshold === 0
-                ? (isZh ? '默认' : 'Default')
-                : `${threshold.toLocaleString()}+ ${isZh ? '次使用' : 'uses'}`
-              }
+            {threshold > 0 && (
+              <div className="text-[0.62rem] text-text-faint">
+                {`${threshold.toLocaleString()}+ ${isZh ? '次使用' : 'uses'}`}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Feature description (skip for normal tier) */}
+      {tier !== 'normal' && (
+        <div className="flex-1 pt-2">
+          <div className="text-[0.92rem] font-bold text-text-primary mb-1">
+            {t(label as 'tierNormal') as string}
+          </div>
+          <div className="text-[0.72rem] text-text-faint mb-3">
+            {`${threshold.toLocaleString()}+ ${isZh ? '次使用解锁' : 'uses to unlock'}`}
+          </div>
+          <div className="space-y-1.5">
+            {features.map((f, i) => (
+              <div key={i} className="flex items-center gap-2 text-[0.78rem] text-text-dim">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent/40 shrink-0" />
+                {isZh ? f.zh : f.en}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Card flip modal ── */
+function TierCardModal({ config, isZh, lang, onClose }: {
+  config: typeof TIER_CONFIG[0];
+  isZh: boolean;
+  lang: string;
+  onClose: () => void;
+}) {
+  const { tier, threshold, label, bg } = config;
+  const features = TIER_FEATURES[tier];
+  const t = useT(lang);
+  const [flipped, setFlipped] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const hasMouseTracking = tier === 'epic' || tier === 'legendary' || tier === 'mythic';
+  const isMythic = tier === 'mythic';
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!hasMouseTracking || flipped) return;
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    el.style.setProperty('--rx', String((y - 0.5) * 2));
+    el.style.setProperty('--ry', String((x - 0.5) * 2));
+    el.style.setProperty('--mx', `${x * 100}%`);
+    el.style.setProperty('--my', `${y * 100}%`);
+  }, [hasMouseTracking, flipped]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (!hasMouseTracking) return;
+    const el = cardRef.current;
+    if (!el) return;
+    el.style.setProperty('--rx', '0');
+    el.style.setProperty('--ry', '0');
+    el.style.setProperty('--mx', '50%');
+    el.style.setProperty('--my', '50%');
+  }, [hasMouseTracking]);
+
+  const handleFlip = useCallback(() => {
+    setFlipped(f => !f);
+    const el = cardRef.current;
+    if (el) {
+      el.style.setProperty('--rx', '0');
+      el.style.setProperty('--ry', '0');
+      el.style.setProperty('--mx', '50%');
+      el.style.setProperty('--my', '50%');
+    }
+  }, []);
+
+  const glowColor = tier === 'mythic'
+    ? 'rgba(212,175,55,0.25)'
+    : tier === 'legendary'
+      ? 'rgba(255,128,0,0.25)'
+      : tier === 'epic'
+        ? 'rgba(0,112,221,0.25)'
+        : tier === 'rare'
+          ? 'rgba(140,120,180,0.25)'
+          : 'rgba(0,112,221,0.25)';
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center card-expand-overlay"
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="card-flip-container card-modal-pop"
+        style={{ width: 280, aspectRatio: '3 / 4' }}
+        onClick={(e) => { e.stopPropagation(); handleFlip(); }}
+      >
+        <div className={`card-flip-inner ${flipped ? 'flipped' : ''}`}>
+          {/* Front */}
+          <div className="card-flip-face">
+            <div
+              ref={cardRef}
+              className={`holo-card card-tier-${tier}`}
+              style={{
+                width: '100%',
+                height: '100%',
+                '--card-bg1': bg[0],
+                '--card-bg2': bg[1],
+                '--glow-color': glowColor,
+              } as React.CSSProperties}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
+              <div className="holo-card-inner">
+                <div className="card-base" />
+                <div className="holo-layer" />
+                <div className="holo-lines" />
+                <div className="holo-spot" />
+                {isMythic && <div className="gold-sweep" />}
+                {isMythic && (
+                  <div className="mythic-particles">
+                    <span /><span /><span /><span /><span /><span />
+                  </div>
+                )}
+                <div className="card-content h-full flex flex-col items-center justify-center p-4 text-center">
+                  <div className="text-xl font-bold text-text-primary mb-1">
+                    {t(label as 'tierNormal') as string}
+                  </div>
+                  {threshold > 0 && (
+                    <div className="text-xs text-text-faint">
+                      {`${threshold.toLocaleString()}+ ${isZh ? '次使用' : 'uses'}`}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Back */}
+          <div className="card-flip-face card-flip-back">
+            <div
+              className="h-full flex flex-col items-center justify-center p-6 text-center"
+              style={{
+                background: `linear-gradient(160deg, ${bg[0]}, ${bg[1]})`,
+                borderRadius: '16px',
+                border: isMythic ? '1px solid rgba(212,175,55,0.3)' : '1px solid rgba(0,0,0,0.08)',
+              }}
+            >
+              <div className={`text-xl font-bold mb-1 ${isMythic ? 'text-amber-200' : 'text-text-primary'}`}>
+                {t(label as 'tierNormal') as string}
+              </div>
+              {threshold > 0 && (
+                <div className={`text-xs mb-5 ${isMythic ? 'text-amber-200/60' : 'text-text-faint'}`}>
+                  {`${threshold.toLocaleString()}+ ${isZh ? '次使用解锁' : 'uses to unlock'}`}
+                </div>
+              )}
+              <div className={`w-12 h-px mb-5 ${isMythic ? 'bg-amber-400/30' : 'bg-black/10'}`} />
+              <div className="space-y-2.5">
+                {features.map((f, i) => (
+                  <div key={i} className={`flex items-center gap-2.5 text-sm ${isMythic ? 'text-amber-100/80' : 'text-text-dim'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMythic ? 'bg-amber-400/50' : 'bg-accent/40'}`} />
+                    {isZh ? f.zh : f.en}
+                  </div>
+                ))}
+              </div>
+              <div className={`mt-6 text-[0.62rem] ${isMythic ? 'text-amber-200/30' : 'text-text-faint/50'}`}>
+                {isZh ? '点击翻回正面' : 'Click to flip back'}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Feature description */}
-      <div className="flex-1 pt-2">
-        <div className="text-[0.92rem] font-bold text-text-primary mb-1">
-          {t(label as 'tierNormal') as string}
-        </div>
-        <div className="text-[0.72rem] text-text-faint mb-3">
-          {threshold === 0
-            ? (isZh ? '默认等级' : 'Default tier')
-            : `${threshold.toLocaleString()}+ ${isZh ? '次使用解锁' : 'uses to unlock'}`
-          }
-        </div>
-        <div className="space-y-1.5">
-          {features.map((f, i) => (
-            <div key={i} className="flex items-center gap-2 text-[0.78rem] text-text-dim">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent/40 shrink-0" />
-              {isZh ? f.zh : f.en}
-            </div>
-          ))}
-        </div>
+      <div className="mt-4 text-white/40 text-xs">
+        {isZh ? '点击卡片翻转 · 点击空白处关闭' : 'Click card to flip · Click outside to close'}
       </div>
     </div>
   );
@@ -233,6 +390,8 @@ export default function Announcements() {
   const lang = useConfig(s => s.language);
   const isZh = lang === 'zh' || lang === 'zh-Hant';
   const t = useT(lang);
+  const [activeTier, setActiveTier] = useState<string | null>(null);
+  const activeConfig = activeTier ? TIER_CONFIG.find(c => c.tier === activeTier) : null;
 
   return (
     <div>
@@ -308,6 +467,7 @@ export default function Announcements() {
                 isZh={isZh}
                 lang={lang}
                 features={TIER_FEATURES[tier]}
+                onOpen={() => setActiveTier(tier)}
               />
               {tier !== 'mythic' && (
                 <div className="flex items-center gap-2 ml-[76px] mt-4 mb-2">
@@ -321,6 +481,16 @@ export default function Announcements() {
           ))}
         </div>
       </div>
+
+      {/* Card preview modal */}
+      {activeConfig && (
+        <TierCardModal
+          config={activeConfig}
+          isZh={isZh}
+          lang={lang}
+          onClose={() => setActiveTier(null)}
+        />
+      )}
     </div>
   );
 }
