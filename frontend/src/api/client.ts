@@ -136,6 +136,11 @@ export interface GenerateParams {
   api_key?: string;
   base_url?: string;
   selected_inspirations?: string[];
+  temperature?: number | null;
+  top_p?: number | null;
+  max_tokens?: number | null;
+  frequency_penalty?: number | null;
+  presence_penalty?: number | null;
 }
 
 export interface Candidate {
@@ -335,6 +340,9 @@ export function chatPreview(data: {
   model?: string;
   api_key?: string;
   base_url?: string;
+  temperature?: number | null;
+  top_p?: number | null;
+  max_tokens?: number | null;
 }) {
   return request<{ reply: string }>('/api/chat/preview', {
     method: 'POST',

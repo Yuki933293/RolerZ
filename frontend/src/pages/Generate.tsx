@@ -38,6 +38,11 @@ export default function Generate() {
         api_key: config.apiKey || undefined,
         base_url: config.baseUrl || undefined,
         selected_inspirations: selectedCards.length > 0 ? selectedCards : undefined,
+        temperature: config.advanced.temperature,
+        top_p: config.advanced.topP,
+        max_tokens: config.advanced.maxTokens,
+        frequency_penalty: config.advanced.frequencyPenalty,
+        presence_penalty: config.advanced.presencePenalty,
       });
       setResults(res.candidates);
     } catch (e: unknown) {

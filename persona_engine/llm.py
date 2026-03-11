@@ -12,12 +12,20 @@ from .utils import is_cjk
 
 class LLMClient(ABC):
     @abstractmethod
-    def generate(self, prompt: str, system: str | None = None, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, system: str | None = None, temperature: float = 0.7,
+        top_p: float | None = None, frequency_penalty: float | None = None,
+        presence_penalty: float | None = None,
+    ) -> str:
         raise NotImplementedError
 
 
 class NullLLMClient(LLMClient):
-    def generate(self, prompt: str, system: str | None = None, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, system: str | None = None, temperature: float = 0.7,
+        top_p: float | None = None, frequency_penalty: float | None = None,
+        presence_penalty: float | None = None,
+    ) -> str:
         raise RuntimeError("LLM client not configured")
 
 
@@ -37,22 +45,35 @@ class OpenAICompatibleClient(LLMClient):
             raise ImportError(
                 "openai package is required for this provider. Install with: pip install openai"
             ) from exc
-        self._client = openai.OpenAI(api_key=api_key, base_url=base_url, timeout=60)
+        self._client = openai.OpenAI(api_key=api_key, base_url=base_url, timeout=120)
         self.model = model
         self.max_tokens = max_tokens
 
-    def generate(self, prompt: str, system: str | None = None, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, system: str | None = None, temperature: float = 0.7,
+        top_p: float | None = None, frequency_penalty: float | None = None,
+        presence_penalty: float | None = None,
+    ) -> str:
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
+
+        kwargs: dict = {
+            "model": self.model,
+            "messages": messages,
+            "max_tokens": self.max_tokens,
+            "temperature": temperature,
+        }
+        if top_p is not None:
+            kwargs["top_p"] = top_p
+        if frequency_penalty is not None:
+            kwargs["frequency_penalty"] = frequency_penalty
+        if presence_penalty is not None:
+            kwargs["presence_penalty"] = presence_penalty
+
         try:
-            response = self._client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                max_tokens=self.max_tokens,
-                temperature=temperature,
-            )
+            response = self._client.chat.completions.create(**kwargs)
         except ImportError as exc:
             if "socksio" in str(exc):
                 raise ImportError(
@@ -61,8 +82,26 @@ class OpenAICompatibleClient(LLMClient):
                     "Detected SOCKS proxy. Run: pip install 'httpx[socks]'"
                 ) from exc
             raise
+        except Exception as exc:
+            # If model doesn't support chat/completions (e.g. gpt-5.4-pro), fallback to Responses API
+            err_msg = str(exc)
+            if "not a chat model" in err_msg or "not supported in the v1/chat/completions" in err_msg:
+                return self._generate_via_responses(prompt, system)
+            raise
+
         content = response.choices[0].message.content
         return content if content is not None else ""
+
+    def _generate_via_responses(self, prompt: str, system: str | None = None) -> str:
+        """Fallback to OpenAI Responses API for models that don't support chat/completions."""
+        kwargs: dict = {
+            "model": self.model,
+            "input": prompt,
+        }
+        if system:
+            kwargs["instructions"] = system
+        response = self._client.responses.create(**kwargs)
+        return response.output_text or ""
 
 
 # Default model for each provider
@@ -163,13 +202,19 @@ class ClaudeClient(LLMClient):
         self.model = model
         self.max_tokens = max_tokens
 
-    def generate(self, prompt: str, system: str | None = None, temperature: float = 0.7) -> str:
+    def generate(
+        self, prompt: str, system: str | None = None, temperature: float = 0.7,
+        top_p: float | None = None, frequency_penalty: float | None = None,
+        presence_penalty: float | None = None,
+    ) -> str:
         kwargs: dict = {
             "model": self.model,
             "max_tokens": self.max_tokens,
             "temperature": temperature,
             "messages": [{"role": "user", "content": prompt}],
         }
+        if top_p is not None:
+            kwargs["top_p"] = top_p
         if system:
             kwargs["system"] = system
         try:

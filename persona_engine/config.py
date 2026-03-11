@@ -18,4 +18,8 @@ class EngineConfig:
     llm_api_key: str | None = None
     llm_base_url: str | None = None     # for "custom" or overriding known provider URLs
     llm_temperature: float = 0.8
+    llm_top_p: float | None = None
+    llm_frequency_penalty: float | None = None
+    llm_presence_penalty: float | None = None
+    llm_max_tokens: int = 12800
     llm_retries: int = 1  # extra retry attempts after first failure

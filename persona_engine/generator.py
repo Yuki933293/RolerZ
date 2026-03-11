@@ -72,6 +72,9 @@ class LLMGenerator:
         language = self.config.language
         ctx = self._build_context(seed, cards)
         temperature = self.config.llm_temperature
+        top_p = self.config.llm_top_p
+        frequency_penalty = self.config.llm_frequency_penalty
+        presence_penalty = self.config.llm_presence_penalty
         max_attempts = 1 + max(0, self.config.llm_retries)
         system_prompt = get_system_prompt(language)
 
@@ -84,7 +87,11 @@ class LLMGenerator:
                     prompt = build_persona_prompt(seed, template, cards, language=language)
                 else:
                     prompt = build_repair_prompt(raw or "", language=language)
-                raw = self.llm.generate(prompt, system=system_prompt, temperature=temperature)
+                raw = self.llm.generate(
+                    prompt, system=system_prompt, temperature=temperature,
+                    top_p=top_p, frequency_penalty=frequency_penalty,
+                    presence_penalty=presence_penalty,
+                )
                 spec = parse_llm_response(raw, language=language)
                 if spec is not None:
                     spec.tags = self.inspirations.collect_tags(cards)

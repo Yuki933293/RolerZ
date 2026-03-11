@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { getUserConfig, saveUserConfig } from '../api/client';
 
+interface AdvancedConfig {
+  temperature: number | null;
+  topP: number | null;
+  maxTokens: number | null;
+  frequencyPenalty: number | null;
+  presencePenalty: number | null;
+}
+
 interface ProviderConfig {
   apiKey: string;
   apiKeys: string[];
@@ -10,6 +18,7 @@ interface ProviderConfig {
   label: string;
   configured: boolean;
   fetchedModels: string[];
+  advanced: AdvancedConfig;
 }
 
 interface ConfigStore {
@@ -25,6 +34,7 @@ interface ConfigStore {
   language: string;
   count: number;
   theme: 'light' | 'dark';
+  advanced: AdvancedConfig;
   providerConfigs: Record<string, ProviderConfig>;
 
   setProvider: (p: string) => void;
@@ -36,6 +46,7 @@ interface ConfigStore {
   setLabel: (l: string) => void;
   setConfigured: (c: boolean) => void;
   setFetchedModels: (m: string[]) => void;
+  setAdvanced: (a: Partial<AdvancedConfig>) => void;
   setLanguage: (l: string) => void;
   setCount: (c: number) => void;
   setTheme: (t: 'light' | 'dark') => void;
@@ -83,6 +94,14 @@ const PROVIDER_DEFAULT_MODELS: Record<string, string> = {
   nvidia:      'meta/llama-3.1-8b-instruct',
 };
 
+const DEFAULT_ADVANCED: AdvancedConfig = {
+  temperature: null,
+  topP: null,
+  maxTokens: null,
+  frequencyPenalty: null,
+  presencePenalty: null,
+};
+
 const DEFAULTS = {
   provider: 'claude',
   apiKey: '',
@@ -96,6 +115,7 @@ const DEFAULTS = {
   language: 'zh',
   count: 3,
   theme: (localStorage.getItem('theme') as 'light' | 'dark') || 'light',
+  advanced: { ...DEFAULT_ADVANCED } as AdvancedConfig,
   providerConfigs: {} as Record<string, ProviderConfig>,
 };
 
@@ -109,6 +129,7 @@ function currentProviderConfig(state: ConfigStore): ProviderConfig {
     label: state.label,
     configured: state.configured,
     fetchedModels: state.fetchedModels,
+    advanced: { ...state.advanced },
   };
 }
 
@@ -147,6 +168,7 @@ export const useConfig = create<ConfigStore>((set, get) => ({
         label: saved.label || '',
         configured: saved.configured,
         fetchedModels: saved.fetchedModels,
+        advanced: saved.advanced || { ...DEFAULT_ADVANCED },
         providerConfigs: updated,
       });
     } else {
@@ -161,6 +183,7 @@ export const useConfig = create<ConfigStore>((set, get) => ({
         label: '',
         configured: false,
         fetchedModels: [],
+        advanced: { ...DEFAULT_ADVANCED },
         providerConfigs: updated,
       });
     }
@@ -174,6 +197,7 @@ export const useConfig = create<ConfigStore>((set, get) => ({
   setLabel: (l) => set({ label: l }),
   setConfigured: (c) => set({ configured: c }),
   setFetchedModels: (m) => set({ fetchedModels: m }),
+  setAdvanced: (a) => set(s => ({ advanced: { ...s.advanced, ...a } })),
   setLanguage: (l) => {
     set({ language: l });
     // Auto-save to server if logged in
@@ -233,6 +257,7 @@ export const useConfig = create<ConfigStore>((set, get) => ({
         label: '',
         configured: false,
         fetchedModels: [],
+        advanced: { ...DEFAULT_ADVANCED },
       });
     }
     // Save to server
@@ -264,6 +289,7 @@ export const useConfig = create<ConfigStore>((set, get) => ({
         label: saved?.label || '',
         configured: saved?.configured || false,
         fetchedModels: saved?.fetchedModels || [],
+        advanced: saved?.advanced || { ...DEFAULT_ADVANCED },
       });
     } catch {
       // Not logged in or server error — keep defaults

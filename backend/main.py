@@ -97,6 +97,12 @@ class GenerateRequest(BaseModel):
     api_key: str | None = None
     base_url: str | None = None
     selected_inspirations: list[str] = []
+    # Advanced LLM params
+    temperature: float | None = None
+    top_p: float | None = None
+    frequency_penalty: float | None = None
+    presence_penalty: float | None = None
+    max_tokens: int | None = None
 
 class WizardStartRequest(BaseModel):
     concept: str
@@ -150,6 +156,9 @@ class ChatPreviewRequest(BaseModel):
     model: str | None = None
     api_key: str | None = None
     base_url: str | None = None
+    temperature: float | None = None
+    top_p: float | None = None
+    max_tokens: int | None = None
 
 
 # ── JWT helpers ─────────────────────────────────────────────────────────
@@ -690,6 +699,17 @@ def _apply_overrides(engine: PersonaEngine, overrides: dict[str, dict]) -> None:
 
 @app.post("/api/generate")
 def generate(req: GenerateRequest, authorization: str | None = Header(None)):
+    extra: dict = {}
+    if req.temperature is not None:
+        extra["llm_temperature"] = req.temperature
+    if req.top_p is not None:
+        extra["llm_top_p"] = req.top_p
+    if req.frequency_penalty is not None:
+        extra["llm_frequency_penalty"] = req.frequency_penalty
+    if req.presence_penalty is not None:
+        extra["llm_presence_penalty"] = req.presence_penalty
+    if req.max_tokens is not None:
+        extra["llm_max_tokens"] = req.max_tokens
     config = EngineConfig(
         candidate_count=req.count,
         language=req.language,
@@ -697,6 +717,7 @@ def generate(req: GenerateRequest, authorization: str | None = Header(None)):
         llm_model=req.model or None,
         llm_api_key=req.api_key or None,
         llm_base_url=req.base_url or None,
+        **extra,
     )
     engine = PersonaEngine.create(config)
     user = get_current_user(authorization)
@@ -725,37 +746,61 @@ def chat_preview(req: ChatPreviewRequest, authorization: str | None = Header(Non
     if not user:
         raise HTTPException(status_code=401, detail="需要登录")
 
+    chat_max_tokens = req.max_tokens or 2048
+    chat_temperature = req.temperature if req.temperature is not None else 0.8
+
     client = create_llm_client(
         provider=req.provider,
         model=req.model or None,
         api_key=req.api_key or None,
         base_url=req.base_url or None,
-        max_tokens=2048,
+        max_tokens=chat_max_tokens,
     )
 
     messages = [{"role": m["role"], "content": m["content"]} for m in req.messages]
 
     try:
         if req.provider == "claude":
-            # Anthropic messages API supports multi-turn natively
-            response = client._client.messages.create(
-                model=client.model,
-                max_tokens=2048,
-                temperature=0.8,
-                system=req.system_prompt,
-                messages=messages,
-            )
+            kwargs: dict = {
+                "model": client.model,
+                "max_tokens": chat_max_tokens,
+                "temperature": chat_temperature,
+                "system": req.system_prompt,
+                "messages": messages,
+            }
+            if req.top_p is not None:
+                kwargs["top_p"] = req.top_p
+            response = client._client.messages.create(**kwargs)
             reply = response.content[0].text if response.content else ""
         else:
             # OpenAI-compatible: prepend system message
             full_messages = [{"role": "system", "content": req.system_prompt}] + messages
-            response = client._client.chat.completions.create(
-                model=client.model,
-                messages=full_messages,
-                max_tokens=2048,
-                temperature=0.8,
-            )
-            reply = response.choices[0].message.content or ""
+            oai_kwargs: dict = {
+                "model": client.model,
+                "messages": full_messages,
+                "max_tokens": chat_max_tokens,
+                "temperature": chat_temperature,
+            }
+            if req.top_p is not None:
+                oai_kwargs["top_p"] = req.top_p
+            try:
+                response = client._client.chat.completions.create(**oai_kwargs)
+                reply = response.choices[0].message.content or ""
+            except Exception as chat_exc:
+                # Fallback to Responses API for models that don't support chat completions
+                err_msg = str(chat_exc)
+                if "not a chat model" in err_msg or "not supported in the v1/chat/completions" in err_msg:
+                    resp_kwargs: dict = {
+                        "model": client.model,
+                        "instructions": req.system_prompt,
+                        "input": messages,
+                    }
+                    resp = client._client.responses.create(**resp_kwargs)
+                    reply = resp.output_text or ""
+                else:
+                    raise
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 

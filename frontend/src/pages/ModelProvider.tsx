@@ -45,6 +45,9 @@ export default function ModelProvider() {
   const [formLabel, setFormLabel] = useState(config.label);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Advanced settings
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   // Key visibility
   const [showKey, setShowKey] = useState(false);
 
@@ -379,6 +382,19 @@ export default function ModelProvider() {
                 ? '填写要使用的模型名称，也可以从下方模型列表中选择'
                 : 'Enter the model name to use, or select from the model list below'}
             </div>
+            {/* Responses API hint for known models */}
+            {/(-pro|o1-pro|o3-pro)/.test(formId) && config.provider === 'openai' && (
+              <div className="mt-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-[0.74rem] text-blue-700 flex items-start gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
+                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <span>
+                  {isZh
+                    ? '此模型仅支持 OpenAI Responses API（不支持 Chat Completions）。RolerZ 已自动兼容，可以直接使用。部分高级参数（如 Temperature）可能不适用于推理模型。'
+                    : 'This model only supports the OpenAI Responses API (not Chat Completions). RolerZ handles this automatically. Some advanced parameters (e.g. Temperature) may not apply to reasoning models.'}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* API Key */}
@@ -436,6 +452,179 @@ export default function ModelProvider() {
               placeholder={config.provider === 'custom' ? 'http://localhost:11434/v1' : activeProvider?.default_url || ''}
               className="w-full px-3 py-2 text-[0.88rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none shadow-xs placeholder:text-text-muted"
             />
+          </div>
+
+          {/* Advanced Settings */}
+          <div className="mb-6">
+            <button
+              onClick={() => setShowAdvanced(v => !v)}
+              className="flex items-center gap-2 text-[0.82rem] font-semibold text-text-dim hover:text-text-primary transition-colors"
+            >
+              <svg
+                width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round"
+                className={`transition-transform ${showAdvanced ? 'rotate-90' : ''}`}
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+              {isZh ? '高级参数设置' : 'Advanced Parameters'}
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-3 p-4 bg-surface-2 border border-border rounded-xl space-y-4">
+                <div className="text-[0.72rem] text-text-faint mb-2">
+                  {isZh
+                    ? '留空表示使用默认值。不确定时建议保持默认。'
+                    : 'Leave empty for defaults. Keep defaults if unsure.'}
+                </div>
+
+                {/* Temperature */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[0.78rem] font-medium text-text-secondary">Temperature</label>
+                    <span className="text-[0.72rem] text-text-faint font-mono">
+                      {config.advanced.temperature !== null ? config.advanced.temperature : (isZh ? '默认' : 'default')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0" max="2" step="0.05"
+                      value={config.advanced.temperature ?? 0.8}
+                      onChange={e => config.setAdvanced({ temperature: parseFloat(e.target.value) })}
+                      className="flex-1 h-1.5 accent-accent"
+                    />
+                    <button
+                      onClick={() => config.setAdvanced({ temperature: null })}
+                      className="text-[0.68rem] text-text-faint hover:text-accent px-1.5 py-0.5 rounded border border-border hover:border-accent/30 transition-colors"
+                    >
+                      {isZh ? '重置' : 'Reset'}
+                    </button>
+                  </div>
+                  <div className="text-[0.68rem] text-text-faint mt-1">
+                    {isZh
+                      ? '控制随机性：低值（0.1-0.3）→精确回复，高值（0.7-1.0）→创意多样'
+                      : 'Controls randomness: low (0.1-0.3) → precise, high (0.7-1.0) → creative'}
+                  </div>
+                </div>
+
+                {/* Top P */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[0.78rem] font-medium text-text-secondary">Top P</label>
+                    <span className="text-[0.72rem] text-text-faint font-mono">
+                      {config.advanced.topP !== null ? config.advanced.topP : (isZh ? '默认' : 'default')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0" max="1" step="0.05"
+                      value={config.advanced.topP ?? 1}
+                      onChange={e => config.setAdvanced({ topP: parseFloat(e.target.value) })}
+                      className="flex-1 h-1.5 accent-accent"
+                    />
+                    <button
+                      onClick={() => config.setAdvanced({ topP: null })}
+                      className="text-[0.68rem] text-text-faint hover:text-accent px-1.5 py-0.5 rounded border border-border hover:border-accent/30 transition-colors"
+                    >
+                      {isZh ? '重置' : 'Reset'}
+                    </button>
+                  </div>
+                  <div className="text-[0.68rem] text-text-faint mt-1">
+                    {isZh
+                      ? '核采样：仅从累积概率前 Top P 的词中选择。与 Temperature 通常只调一个。'
+                      : 'Nucleus sampling: only pick from tokens whose cumulative probability ≤ Top P. Usually adjust only one of Temperature or Top P.'}
+                  </div>
+                </div>
+
+                {/* Max Tokens */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[0.78rem] font-medium text-text-secondary">Max Tokens</label>
+                    <span className="text-[0.72rem] text-text-faint font-mono">
+                      {config.advanced.maxTokens !== null ? config.advanced.maxTokens : (isZh ? '默认' : 'default')}
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    min="256" max="128000" step="256"
+                    value={config.advanced.maxTokens ?? ''}
+                    onChange={e => {
+                      const v = e.target.value;
+                      config.setAdvanced({ maxTokens: v ? parseInt(v, 10) : null });
+                    }}
+                    placeholder={isZh ? '默认 12800' : 'Default 12800'}
+                    className="w-full px-3 py-1.5 text-[0.82rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                  />
+                  <div className="text-[0.68rem] text-text-faint mt-1">
+                    {isZh
+                      ? '最大输出长度。角色卡生成建议 6400-12800，对话预览建议 1024-4096。'
+                      : 'Max output length. Recommended 6400-12800 for persona generation, 1024-4096 for chat preview.'}
+                  </div>
+                </div>
+
+                {/* Frequency Penalty */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[0.78rem] font-medium text-text-secondary">Frequency Penalty</label>
+                    <span className="text-[0.72rem] text-text-faint font-mono">
+                      {config.advanced.frequencyPenalty !== null ? config.advanced.frequencyPenalty : (isZh ? '默认' : 'default')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0" max="2" step="0.05"
+                      value={config.advanced.frequencyPenalty ?? 0}
+                      onChange={e => config.setAdvanced({ frequencyPenalty: parseFloat(e.target.value) })}
+                      className="flex-1 h-1.5 accent-accent"
+                    />
+                    <button
+                      onClick={() => config.setAdvanced({ frequencyPenalty: null })}
+                      className="text-[0.68rem] text-text-faint hover:text-accent px-1.5 py-0.5 rounded border border-border hover:border-accent/30 transition-colors"
+                    >
+                      {isZh ? '重置' : 'Reset'}
+                    </button>
+                  </div>
+                  <div className="text-[0.68rem] text-text-faint mt-1">
+                    {isZh
+                      ? '降低高频词的重复概率，值越大重复越少。仅 OpenAI 兼容 API 支持。'
+                      : 'Reduces repetition of frequent words. Higher = less repetition. OpenAI-compatible APIs only.'}
+                  </div>
+                </div>
+
+                {/* Presence Penalty */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[0.78rem] font-medium text-text-secondary">Presence Penalty</label>
+                    <span className="text-[0.72rem] text-text-faint font-mono">
+                      {config.advanced.presencePenalty !== null ? config.advanced.presencePenalty : (isZh ? '默认' : 'default')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0" max="2" step="0.05"
+                      value={config.advanced.presencePenalty ?? 0}
+                      onChange={e => config.setAdvanced({ presencePenalty: parseFloat(e.target.value) })}
+                      className="flex-1 h-1.5 accent-accent"
+                    />
+                    <button
+                      onClick={() => config.setAdvanced({ presencePenalty: null })}
+                      className="text-[0.68rem] text-text-faint hover:text-accent px-1.5 py-0.5 rounded border border-border hover:border-accent/30 transition-colors"
+                    >
+                      {isZh ? '重置' : 'Reset'}
+                    </button>
+                  </div>
+                  <div className="text-[0.68rem] text-text-faint mt-1">
+                    {isZh
+                      ? '鼓励模型涉及新话题。值越大越倾向于探索新内容。仅 OpenAI 兼容 API 支持。'
+                      : 'Encourages new topics. Higher = more novel content. OpenAI-compatible APIs only.'}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Fetch + Model list */}
