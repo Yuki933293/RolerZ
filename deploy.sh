@@ -32,9 +32,9 @@ echo "[1/8] 安装系统依赖..."
 apt update -qq
 apt install -y -qq python3 python3-pip python3-venv nginx certbot python3-certbot-nginx curl
 
-# 安装 Node.js 18 (via NodeSource)
-if ! command -v node &>/dev/null; then
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+# 安装 Node.js 22 (Vite 7 要求 Node >=20.19 || >=22.12)
+if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]; then
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
     apt install -y -qq nodejs
 fi
 
