@@ -1,33 +1,179 @@
-# Persona Wizard Core (B2)
+# RolerZ — 角色锻造台
 
-平台无关的“虚拟人格构建向导”核心引擎：提供中英双语、强制字段（背景/性格/语气）、多候选输出与双版本（长/短）结构化 + 自然语言输出。后续可通过适配层对接 AstrBot 或其他插件平台。
+基于 LLM 的角色人格卡创作平台，通过 AI 生成中/英双语角色人格卡片。
 
-## 设计目标
-- 解决“没有思路”的用户痛点：灵感库 + 模板库 + 引导式缺失字段提问。
-- 默认 3 个候选输出，自动去重与多样性控制。
-- 同时输出自然语言角色卡与结构化 JSON（长/短两个版本）。
+React + FastAPI 全栈架构，支持 Claude / OpenAI / DeepSeek / 自定义 Provider。
 
 ## 目录结构
-- `persona_engine/`: 核心引擎代码
-- `data/`: 灵感卡与模板库
-- `schemas/`: 输出结构 JSON Schema
-- `scripts/demo.py`: 本地演示脚本
 
-## 快速运行
-```bash
-python3 scripts/demo.py
+```
+backend/main.py          — FastAPI 入口（认证、API 路由）
+persona_engine/          — 核心引擎（生成、评分、灵感库、模板）
+database.py              — SQLite 用户认证与数据持久化
+data/                    — 灵感卡(49张) + 模板库(8个)
+frontend/                — React + TypeScript + Vite + Tailwind CSS
+deploy.sh                — 服务器一键部署脚本
+update.sh                — 服务器更新脚本
+start.sh                 — 本地开发启动脚本
 ```
 
-## 关键概念
-- `PersonaSeed`: 用户输入/偏好/约束
-- `PersonaSpec`: 双语结构化角色信息
-- `PersonaCandidate`: 单个候选（长/短 + 自然语言）
-- `PersonaOutput`: 全部候选 + 待补充问题 + 元信息
+## 本地开发
 
-## 后续扩展
-- 接入真实 LLM：实现 `LLMClient` 并在 `RuleBasedGenerator` 中替换为 LLM 生成。
-- 插件适配：添加 `adapters/astrbot.py` 映射 PersonaSpec 到平台 Persona 数据结构。
-- 灵感库扩展：增加更多 archetype / relationship / conflict / growth 卡片。
+### 环境要求
+- Python 3.10+
+- Node.js 22+（Vite 7 要求 ≥20.19 或 ≥22.12）
 
-## 输出结构
-参考 `schemas/persona_spec.schema.json`。
+### 启动
+
+```bash
+# 一键启动前后端
+./start.sh
+
+# 或分别启动
+# 后端
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+# 前端
+cd frontend && npm install && npm run dev
+```
+
+启动后访问 `http://localhost:5173`，首个注册用户自动成为管理员。
+
+## 服务器部署（Ubuntu 22.04）
+
+### 首次部署
+
+```bash
+# 1. SSH 到服务器
+ssh root@你的服务器IP
+
+# 2. 克隆代码
+git clone https://github.com/Yuki933293/RolerZ.git
+cd RolerZ
+
+# 3. 执行一键部署（域名已备案解析时）
+chmod +x deploy.sh
+sudo ./deploy.sh your-domain.com
+```
+
+部署脚本会自动完成：
+- 安装 Python3、Node.js 22、nginx
+- 创建应用用户 `rolerz`，代码放在 `/opt/rolerz`
+- Python 虚拟环境 + 依赖安装
+- 前端 `npm install && npm run build`
+- 生成 `.env`（随机 JWT_SECRET）
+- 配置 systemd 服务（自动重启）
+- 配置 nginx 反向代理（前端静态文件 + API 转发）
+- 申请 Let's Encrypt HTTPS 证书
+- SQLite 每日定时备份（保留 30 天）
+
+### 域名未备案时（仅 IP 访问）
+
+```bash
+# 1. 克隆代码并复制到应用目录
+git clone https://github.com/Yuki933293/RolerZ.git
+cd RolerZ
+sudo mkdir -p /opt/rolerz
+sudo cp -r . /opt/rolerz/
+cd /opt/rolerz
+
+# 2. 安装 Node.js 22
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
+sudo apt install -y nodejs
+
+# 3. 安装 Python 依赖
+sudo apt install -y python3 python3-pip python3-venv nginx
+python3 -m venv venv
+source venv/bin/activate
+pip install fastapi uvicorn python-jose[cryptography] pydantic anthropic openai httpx
+
+# 4. 构建前端
+cd frontend && npm install && npm run build && cd ..
+
+# 5. 配置环境变量
+cat > .env << 'EOF'
+JWT_SECRET=替换为随机密钥
+CORS_ORIGINS=http://你的服务器IP
+DEV_MODE=
+EOF
+# 生成随机密钥: python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+
+# 6. 配置 nginx（/etc/nginx/sites-available/rolerz）
+sudo tee /etc/nginx/sites-available/rolerz > /dev/null << 'NGINX'
+server {
+    listen 80;
+    server_name _;
+
+    root /opt/rolerz/frontend/dist;
+    index index.html;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 120s;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /assets/ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+NGINX
+
+sudo ln -sf /etc/nginx/sites-available/rolerz /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+
+# 7. 启动后端（推荐配 systemd，此处用前台演示）
+source venv/bin/activate
+uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+访问 `http://你的服务器IP`，首个注册用户自动成为管理员。
+
+### 后续更新
+
+每次本地改好代码 push 到 GitHub 后，在服务器上执行：
+
+```bash
+cd /opt/rolerz && sudo ./update.sh
+```
+
+脚本会自动：拉代码 → 更新依赖 → 重新构建前端 → 重启后端服务。
+
+## 常用运维命令
+
+```bash
+# 查看后端状态
+sudo systemctl status rolerz
+
+# 查看实时日志
+sudo journalctl -u rolerz -f
+
+# 手动重启
+sudo systemctl restart rolerz
+
+# 域名备案通过后申请 HTTPS
+sudo certbot --nginx -d your-domain.com
+```
+
+## LLM Provider 配置
+
+| Provider | 需要 | 环境变量 |
+|----------|------|----------|
+| Claude | `anthropic` 包 | `ANTHROPIC_API_KEY` |
+| OpenAI | `openai` 包 | `OPENAI_API_KEY` |
+| DeepSeek | `openai` 包 | `DEEPSEEK_API_KEY` |
+| 自定义 | OpenAI 兼容接口 | 自定义 base_url |
+
+在网站「模型供应商」页面中配置即可，无需修改代码。
+
+## License
+
+MIT
