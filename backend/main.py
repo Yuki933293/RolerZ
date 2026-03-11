@@ -26,7 +26,11 @@ from persona_engine.llm import PROVIDER_DEFAULTS, create_llm_client, _PROVIDER_B
 from persona_engine.wizard import REQUIRED_FIELDS, WizardEngine
 
 # ── JWT config ──────────────────────────────────────────────────────────
-SECRET_KEY = os.environ.get("JWT_SECRET", "persona-forge-dev-secret-change-in-production")
+_default_secret = "persona-forge-dev-secret-change-in-production"
+SECRET_KEY = os.environ.get("JWT_SECRET", _default_secret)
+if SECRET_KEY == _default_secret and not os.environ.get("DEV_MODE"):
+    import warnings
+    warnings.warn("JWT_SECRET not set! Using insecure default. Set JWT_SECRET env var in production.", stacklevel=1)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
@@ -167,9 +171,10 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="Persona Forge", version="0.3.0", lifespan=lifespan)
+_allowed_origins = os.environ.get("CORS_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

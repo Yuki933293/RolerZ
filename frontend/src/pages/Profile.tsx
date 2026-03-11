@@ -24,7 +24,7 @@ export default function Profile() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   // Profile info
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [, setProfile] = useState<UserProfile | null>(null);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [bio, setBio] = useState('');
   const [profileMsg, setProfileMsg] = useState('');

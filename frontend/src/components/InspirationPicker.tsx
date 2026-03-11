@@ -355,20 +355,6 @@ export default function InspirationPicker({ language, selected, onSelectionChang
     saveCardGroups([]).catch(() => {});
   };
 
-  const handleMoveCard = (cardId: string, fromGroupId: string, toGroupId: string) => {
-    if (!customGroups) return;
-    const updated = customGroups.map(g => {
-      if (g.group_id === fromGroupId) {
-        return { ...g, card_ids: g.card_ids.filter(id => id !== cardId) };
-      }
-      if (g.group_id === toGroupId) {
-        return { ...g, card_ids: [...g.card_ids, cardId] };
-      }
-      return g;
-    });
-    handleSaveGroups(updated);
-  };
-
   // ── Card override handlers ──
   const handleSaveCard = async (cardId: string, data: Record<string, unknown>) => {
     try {

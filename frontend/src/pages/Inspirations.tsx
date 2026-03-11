@@ -211,8 +211,9 @@ function HoloCard({ card, lang, isZh, glowColor, accent, iconPath, cardBg, isMod
 
 /* ── Main Page ── */
 export default function Inspirations() {
-  const lang = useConfig(s => s.language) as 'zh' | 'en';
-  const isZh = lang === 'zh' || lang === 'zh-Hant';
+  const rawLang = useConfig(s => s.language);
+  const isZh = rawLang === 'zh' || rawLang === 'zh-Hant';
+  const lang: 'zh' | 'en' = isZh ? 'zh' : 'en';
   const t = useT(lang);
   const { token } = useAuth();
   const isLoggedIn = !!token;
