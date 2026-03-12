@@ -99,8 +99,8 @@ export default function CandidateCard({ candidate, index, language }: Props) {
   };
 
   return (
-    <div className={`bg-white border rounded-[14px] p-5 mb-4 shadow-xs transition-colors ${favorited ? 'border-amber-400 ring-1 ring-amber-400/20' : 'border-border'}`}>
-      {/* Header */}
+    <div className={`bg-white dark:bg-surface-1 border rounded-[14px] p-5 mb-4 shadow-xs transition-colors ${favorited ? 'border-amber-400 ring-1 ring-amber-400/20' : 'border-border'}`}>
+      {/* Header: candidate info + score */}
       <div className="flex items-start justify-between mb-3.5">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-[0.85rem] font-bold">
@@ -111,81 +111,16 @@ export default function CandidateCard({ candidate, index, language }: Props) {
             <div className="text-[0.75rem] text-text-dim font-mono">{candidate.id}</div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Share button */}
-          <button
-            onClick={handleShare}
-            title={shared ? t('shared') as string : t('shareToCommunity') as string}
-            className={`p-1.5 rounded-md transition-colors ${shared ? 'text-success' : 'text-text-faint hover:text-green-500'}`}
+        {/* Score */}
+        <div className="text-right">
+          <div
+            className="inline-flex items-baseline gap-1 px-3 py-1.5 rounded-full border"
+            style={{ background: `${scoreColor}0A`, borderColor: `${scoreColor}22` }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-              <polyline points="16 6 12 2 8 6" />
-              <line x1="12" y1="2" x2="12" y2="15" />
-            </svg>
-          </button>
-          {/* Chat preview button */}
-          <button
-            onClick={() => setChatOpen(true)}
-            title={t('exportChatPreview') as string}
-            className="p-1.5 rounded-md text-text-faint hover:text-blue-500 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
-          {/* Favorite button */}
-          <button
-            onClick={() => setFavorited(f => !f)}
-            title={favorited ? t('unfavorite') as string : t('favorite') as string}
-            className={`p-1.5 rounded-md transition-colors ${favorited ? 'text-amber-400 hover:text-amber-500' : 'text-text-faint hover:text-amber-400'}`}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill={favorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-          </button>
-          {/* Copy buttons */}
-          <div className="flex gap-1">
-            <button
-              onClick={copyAll}
-              className={`text-[0.7rem] px-2.5 py-1 rounded-md border transition-colors ${
-                copied === 'all'
-                  ? 'bg-success/10 border-success/30 text-success'
-                  : 'bg-surface-2 border-border text-text-dim hover:bg-surface-3'
-              }`}
-            >
-              {copied === 'all' ? t('copied') as string : t('copy') as string}
-            </button>
-            <button
-              onClick={copyJson}
-              className={`text-[0.7rem] px-2.5 py-1 rounded-md border transition-colors ${
-                copied === 'json'
-                  ? 'bg-success/10 border-success/30 text-success'
-                  : 'bg-surface-2 border-border text-text-dim hover:bg-surface-3'
-              }`}
-            >
-              {copied === 'json' ? t('copied') as string : 'JSON'}
-            </button>
-            <button
-              onClick={handleExportPNG}
-              disabled={exporting}
-              className="text-[0.7rem] px-2.5 py-1 rounded-md border transition-colors bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200 text-blue-600 hover:from-blue-100 hover:to-cyan-100 disabled:opacity-40"
-              title={t('exportTavernPNG') as string}
-            >
-              {exporting ? '...' : 'PNG'}
-            </button>
+            <span className="text-lg font-bold" style={{ color: scoreColor }}>{scorePct}</span>
+            <span className="text-[0.65rem]" style={{ color: scoreColor }}>/ 100</span>
           </div>
-          {/* Score */}
-          <div className="text-right ml-2">
-            <div
-              className="inline-flex items-baseline gap-1 px-3 py-1.5 rounded-full border"
-              style={{ background: `${scoreColor}0A`, borderColor: `${scoreColor}22` }}
-            >
-              <span className="text-lg font-bold" style={{ color: scoreColor }}>{scorePct}</span>
-              <span className="text-[0.65rem]" style={{ color: scoreColor }}>/ 100</span>
-            </div>
-            <div className="text-[0.65rem] font-medium mt-1" style={{ color: scoreColor }}>{scoreLabel}</div>
-          </div>
+          <div className="text-[0.65rem] font-medium mt-1" style={{ color: scoreColor }}>{scoreLabel}</div>
         </div>
       </div>
 
@@ -260,6 +195,102 @@ export default function CandidateCard({ candidate, index, language }: Props) {
           )}
         </div>
       )}
+
+      {/* Action bar */}
+      <div className="mt-4 pt-3.5 border-t border-border flex flex-wrap items-center gap-2">
+        {/* Favorite */}
+        <button
+          onClick={() => setFavorited(f => !f)}
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.8rem] font-medium transition-all ${
+            favorited
+              ? 'bg-amber-50 text-amber-600 border border-amber-200 shadow-sm dark:bg-amber-900/20 dark:border-amber-700'
+              : 'bg-surface-2 text-text-dim border border-border hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200'
+          }`}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill={favorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          {favorited ? t('unfavorite') as string : t('favorite') as string}
+        </button>
+
+        {/* Chat preview */}
+        <button
+          onClick={() => setChatOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.8rem] font-medium bg-surface-2 text-text-dim border border-border hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          {t('exportChatPreview') as string}
+        </button>
+
+        {/* Share */}
+        <button
+          onClick={handleShare}
+          disabled={shared}
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.8rem] font-medium transition-all ${
+            shared
+              ? 'bg-green-50 text-green-600 border border-green-200 dark:bg-green-900/20 dark:border-green-700'
+              : 'bg-surface-2 text-text-dim border border-border hover:bg-green-50 hover:text-green-600 hover:border-green-200'
+          }`}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+          {shared ? t('shared') as string : t('shareToCommunity') as string}
+        </button>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Copy text */}
+        <button
+          onClick={copyAll}
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.8rem] font-medium transition-all ${
+            copied === 'all'
+              ? 'bg-green-50 text-green-600 border border-green-200'
+              : 'bg-surface-2 text-text-dim border border-border hover:bg-surface-3'
+          }`}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          {copied === 'all' ? t('copied') as string : t('copy') as string}
+        </button>
+
+        {/* Copy JSON */}
+        <button
+          onClick={copyJson}
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.8rem] font-medium transition-all ${
+            copied === 'json'
+              ? 'bg-green-50 text-green-600 border border-green-200'
+              : 'bg-surface-2 text-text-dim border border-border hover:bg-surface-3'
+          }`}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+          JSON
+        </button>
+
+        {/* Export PNG */}
+        <button
+          onClick={handleExportPNG}
+          disabled={exporting}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.8rem] font-medium bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-600 border border-blue-200 hover:from-blue-100 hover:to-cyan-100 transition-all disabled:opacity-40"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          {exporting ? '...' : 'PNG'}
+        </button>
+      </div>
 
       {chatOpen && (
         <ChatPreview candidate={candidate} language={language} onClose={() => setChatOpen(false)} />
