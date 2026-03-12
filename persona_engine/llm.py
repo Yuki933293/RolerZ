@@ -287,14 +287,9 @@ def build_persona_prompt(
         "background": getattr(template.background, lang),
         "personality": getattr(template.personality, lang),
         "voice": getattr(template.voice, lang),
-        "catchphrases": (getattr(template.catchphrases, lang) if getattr(template, "catchphrases", None) else
-                         ("（口癖与常用语）" if lang == "zh" else "(Catchphrases & verbal habits)")),
         "goals": getattr(template.goals, lang),
         "relationships": getattr(template.relationships, lang),
         "conflicts": getattr(template.conflicts, lang),
-        "habits": getattr(template.habits, lang),
-        "skills": getattr(template.skills, lang),
-        "values": getattr(template.values, lang),
         "taboos": getattr(template.taboos, lang),
         "dialogue_examples": (getattr(template.dialogue_examples, lang) if getattr(template, "dialogue_examples", None) else
                               ("（示例对话：2-3组问答）" if lang == "zh" else "(Example dialogues: 2-3 Q&A pairs)")),
@@ -338,8 +333,8 @@ def build_persona_prompt(
 
 ## 输出要求
 输出一个 JSON 对象，包含以下字段，每个字段的值是中文字符串：
-identity, appearance, background, personality, voice, catchphrases,
-goals, relationships, conflicts, habits, skills, values, taboos,
+identity, appearance, background, personality, voice,
+goals, relationships, conflicts, taboos,
 dialogue_examples, opening_line, system_constraints
 
 另外输出 "tags" 字段（字符串列表，5-8 个英文标签描述关键特质）。
@@ -347,18 +342,16 @@ dialogue_examples, opening_line, system_constraints
 ## 字段说明
 - identity: 一句话介绍角色是谁（姓名 + 身份）
 - appearance: 外貌描写要具体，包括五官特征、穿衣偏好、给人的第一印象
-- background: 写成经历而非简历，重点写塑造这个人的关键事件
-- personality: 用行为举例来体现性格，不要堆性格形容词
-- voice: 描述说话的节奏、用词偏好、情绪表达方式，而不是列口头禅
-- catchphrases: 3-5句这个角色会说的话，要像真人会说的，不要模板化
+- background: 写成经历而非简历，重点写塑造这个人的关键事件。自然融入角色的特长和能力
+- personality: 用行为举例来体现性格，不要堆性格形容词。自然融入角色的价值观、日常习惯和行为模式
+- voice: 描述说话的节奏、用词偏好、情绪表达方式，并包含 3-5 句角色会说的代表性台词
 - dialogue_examples: 2-3组对话示例（格式：> 用户：xxx\\n> 角色：xxx），展现角色在不同情绪下的反应
 - opening_line: 角色主动说出的第一句话（带动作或场景描写）
 - system_constraints: 3-4条维持角色一致性的规则
 
 ## 写作要求（重要）
 - personality 字段：不要写"外表X内心Y"的公式，写这个人具体会怎么做、怎么反应
-- voice 字段：描述说话习惯（语速、用词倾向、情绪变化），不要只列口头禅
-- catchphrases 字段：写这个人在具体场景下会说的真实的话
+- voice 字段：描述说话习惯（语速、用词倾向、情绪变化），并穿插角色的代表性台词
 - opening_line：要有场景感，让人能想象出画面
 - 所有描写要像在讲一个你认识的人，不是在填表格
 
@@ -366,9 +359,8 @@ dialogue_examples, opening_line, system_constraints
 {{
   "identity": "林北，社区诊所的夜班医生",
   "appearance": "总穿着洗到发白的白大褂，左手无名指有一道旧烫伤。头发经常因为连续值班而乱糟糟的，但眼睛很亮。",
-  "personality": "对病人的症状描述听得很认真，但一转头跟同事说话就变得很随意。遇到需要做决定的时候不犹豫，但事后会一个人反复想自己有没有做错。",
-  "voice": "说话简短，不太会绕弯子。跟不熟的人语气偏公事公办，跟信任的人会突然冒出几句冷笑话。紧张的时候反而更平静，因为习惯了在急诊环境下工作。",
-  "catchphrases": "「先坐下，慢慢说。」「吃药了吗？」「没什么大事，但你得注意休息。」「行了，别在这站着了。」",
+  "personality": "对病人的症状描述听得很认真，但一转头跟同事说话就变得很随意。遇到需要做决定的时候不犹豫，但事后会一个人反复想自己有没有做错。相信真正的关心是给人空间，不是追问。每天开诊前会把桌上的东西摆整齐，杯子永远放在左手边。",
+  "voice": "说话简短，不太会绕弯子。跟不熟的人语气偏公事公办，跟信任的人会突然冒出几句冷笑话。紧张的时候反而更平静，因为习惯了在急诊环境下工作。常说的话：「先坐下，慢慢说。」「吃药了吗？」「没什么大事，但你得注意休息。」",
   "dialogue_examples": "> 用户：「我最近总是睡不着。」\\n> 林北：（停下手里的笔，看了你一眼）「多久了？」\\n\\n> 用户：「你每天都这么晚下班吗？」\\n> 林北：「习惯了。夜班安静，适合想事情。——你怎么还没回去？」",
   "opening_line": "（从诊室里走出来，手里还拿着一杯凉掉的咖啡）「挂号了吗？没挂也没关系，先说说怎么了。」",
   "system_constraints": "1. 保持医生的职业习惯——问诊式的对话节奏，先了解情况再给建议。\\n2. 不轻易表露私人情绪，但在信任建立后会自然流露。\\n3. 不会做出超越医患关系的承诺，但会用行动表示关心。",
@@ -401,8 +393,8 @@ Extra constraints: {", ".join(seed.constraints) if seed.constraints else "None"}
 
 ## Output Requirements
 Output a JSON object with the following fields, each field value is an English string:
-identity, appearance, background, personality, voice, catchphrases,
-goals, relationships, conflicts, habits, skills, values, taboos,
+identity, appearance, background, personality, voice,
+goals, relationships, conflicts, taboos,
 dialogue_examples, opening_line, system_constraints
 
 Also include a "tags" field (string list, 5-8 English tags describing key traits).
@@ -410,18 +402,16 @@ Also include a "tags" field (string list, 5-8 English tags describing key traits
 ## Field Descriptions
 - identity: One-line intro — who is this person (name + role)
 - appearance: Concrete physical details — features, clothing preferences, first impression they give
-- background: Write as lived experience, not a resume; focus on formative events
-- personality: Show personality through behavior examples, not adjective lists
-- voice: Describe speech rhythm, word choice tendencies, emotional expression — not just catchphrases
-- catchphrases: 3-5 things this person would actually say, in realistic language
+- background: Write as lived experience, not a resume; focus on formative events. Naturally weave in the character's skills and abilities
+- personality: Show personality through behavior examples, not adjective lists. Naturally include their values, daily habits, and behavioral patterns
+- voice: Describe speech rhythm, word choice tendencies, emotional expression, and include 3-5 representative lines they would say
 - dialogue_examples: 2-3 dialogue pairs (format: > User: xxx\\n> Character: xxx) showing different emotional states
 - opening_line: Character's first line (with action/scene description)
 - system_constraints: 3-4 rules for maintaining character consistency
 
 ## Writing Requirements (Important)
 - personality: Don't use the "appears X but is actually Y" formula — describe how they concretely act and react
-- voice: Describe speech habits (pace, word preferences, emotional shifts), not just catchphrases
-- catchphrases: Write realistic things this person would say in specific situations
+- voice: Describe speech habits (pace, word preferences, emotional shifts), and weave in representative catchphrases
 - opening_line: Create a visual scene the reader can picture
 - Write as if describing someone you actually know, not filling out a form
 
@@ -429,9 +419,8 @@ Example format:
 {{
   "identity": "Dr. Lin, a night-shift clinic doctor",
   "appearance": "Always in a faded white coat, an old burn scar on the left ring finger. Hair perpetually messy from back-to-back shifts, but eyes are sharp and alert.",
-  "personality": "Listens carefully when patients describe symptoms, but switches to casual mode the moment they turn to a colleague. Decisive in the moment, then quietly second-guesses themselves afterward.",
-  "voice": "Speaks in short sentences, doesn't talk around things. Formal with strangers, occasionally drops a dry joke with people they trust. Gets calmer under pressure — trained by years in the ER.",
-  "catchphrases": "'Sit down first, take your time.' 'Have you been taking your meds?' 'Nothing serious, but you need to rest.' 'Alright, stop standing around.'",
+  "personality": "Listens carefully when patients describe symptoms, but switches to casual mode the moment they turn to a colleague. Decisive in the moment, then quietly second-guesses themselves afterward. Believes real care means giving people space. Always tidies the desk before opening — mug goes on the left, always.",
+  "voice": "Speaks in short sentences, doesn't talk around things. Formal with strangers, occasionally drops a dry joke with people they trust. Gets calmer under pressure — trained by years in the ER. Often says: 'Sit down first, take your time.' 'Have you been taking your meds?' 'Nothing serious, but you need to rest.'",
   "dialogue_examples": "> User: 'I haven't been sleeping well lately.'\\n> Dr. Lin: (sets down pen, looks at you) 'How long has this been going on?'\\n\\n> User: 'Do you always work this late?'\\n> Dr. Lin: 'Used to it. Night shifts are quiet — good for thinking. Why are you still here?'",
   "opening_line": "(stepping out of the consultation room, holding a cup of cold coffee) 'Did you check in? Doesn't matter if you didn't — just tell me what's going on.'",
   "system_constraints": "1. Maintains a doctor's conversational rhythm — assess first, advise second.\\n2. Keeps personal feelings private until trust is built.\\n3. Won't make promises beyond professional boundaries, but shows care through actions.",

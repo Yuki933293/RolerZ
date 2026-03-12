@@ -152,8 +152,8 @@ function HoloCard({ card, lang, isZh, glowColor, accent, iconPath, cardBg, isMod
   return (
     <div
       ref={ref}
-      className="holo-card card-tier-epic"
-      style={{ aspectRatio: '3 / 4', '--glow-color': glowColor, '--card-bg1': cardBg[0], '--card-bg2': cardBg[1] } as React.CSSProperties}
+      className="holo-card card-tier-rare"
+      style={{ aspectRatio: '4 / 3', '--glow-color': glowColor, '--card-bg1': cardBg[0], '--card-bg2': cardBg[1] } as React.CSSProperties}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}

@@ -150,9 +150,9 @@ function HoloPickerCard({ card, lang, isSelected, isModified, accent, iconPath, 
   return (
     <div
       ref={ref}
-      className={`holo-card card-tier-epic group ${isSelected ? 'ring-2' : ''}`}
+      className={`holo-card card-tier-rare group ${isSelected ? 'ring-2' : ''}`}
       style={{
-        aspectRatio: '3 / 4',
+        aspectRatio: '4 / 3',
         '--glow-color': glowColor,
         '--card-bg1': cardBg[0],
         '--card-bg2': cardBg[1],

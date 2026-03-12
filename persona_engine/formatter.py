@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .domain import LocalizedText, PersonaSpec
-from .utils import safe_format
+from .utils import safe_format, strip_unresolved
 
 
 # Fields used in the long (full) card
@@ -11,13 +11,9 @@ LONG_FIELDS = [
     ("background",         "背景故事",      "Background"),
     ("personality",        "性格与行为准则", "Personality"),
     ("voice",              "说话风格",      "Speech Style"),
-    ("catchphrases",       "口癖与常用语",   "Catchphrases"),
     ("goals",              "目标与渴望",    "Goals"),
     ("relationships",      "与你的关系及互动规则", "Relationship & Interaction"),
     ("conflicts",          "内在冲突",      "Inner Conflicts"),
-    ("habits",             "习惯",          "Habits"),
-    ("skills",             "能力",          "Skills"),
-    ("values",             "价值观",        "Values"),
     ("taboos",             "禁忌",          "Taboos"),
     ("dialogue_examples",  "示例对话",       "Example Dialogues"),
     ("opening_line",       "开场白",        "Opening Line"),
@@ -31,7 +27,6 @@ SHORT_FIELDS = [
     ("background",   "背景故事",      "Background"),
     ("personality",  "性格与行为准则", "Personality"),
     ("voice",        "说话风格",      "Speech Style"),
-    ("catchphrases", "口癖与常用语",   "Catchphrases"),
     ("relationships","与你的关系及互动规则", "Relationship & Interaction"),
     ("opening_line", "开场白",        "Opening Line"),
     ("system_constraints", "系统约束（防跳戏协议）", "System Constraints"),
@@ -58,7 +53,7 @@ def render_natural_card(
                 if text:
                     ctx[field_name] = text
         tmpl = getattr(natural_card_template, lang)
-        result[lang] = safe_format(tmpl, ctx)
+        result[lang] = strip_unresolved(safe_format(tmpl, ctx))
 
     return result
 
@@ -96,6 +91,9 @@ def _render_lang(
             continue
         val = getattr(spec, key, None)
         text = (val.zh if lang == "zh" else val.en) if val else ""
+        if not text:
+            continue
+        text = strip_unresolved(text)
         if not text:
             continue
         label = zh_label if lang == "zh" else en_label
