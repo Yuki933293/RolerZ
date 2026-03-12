@@ -662,24 +662,23 @@ def _get_legendary_threshold() -> int:
 def list_shared_personas(limit: int = 50, offset: int = 0, sort: str = "latest",
                          tag: str = "", card_type: str = "",
                          current_user_id: int | None = None) -> list[dict]:
-    """List shared personas with author info, like status, and mythic_rank."""
-    conn = _get_conn()
-    conditions: list[str] = []
-    params: list = []
-    if tag:
-        conditions.append("sp.tags LIKE ?")
-        params.append(f'%"{tag}"%')
-    if card_type:
-        conditions.append("sp.card_type = ?")
-        params.append(card_type)
+    """List shared personas with author info, like status, and mythic_rank.
+    sort: 'latest' | 'popular' | 'hot' | 'rising' | 'explore'
+    """
+    # Delegate to specialized streams
+    if sort == "hot":
+        return list_shared_personas_hot(limit, offset, tag, card_type, current_user_id)
+    if sort == "rising":
+        return list_shared_personas_rising(limit, offset, tag, card_type, current_user_id)
+    if sort == "explore":
+        return list_shared_personas_explore(limit, offset, tag, card_type, current_user_id)
 
+    conn = _get_conn()
+    conditions, params = _build_persona_filters(tag, card_type)
     where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
     order = "sp.created_at DESC" if sort == "latest" else "sp.likes DESC, sp.created_at DESC"
 
-    # Dynamic legendary threshold based on current phase
     legendary_threshold = _get_legendary_threshold()
-
-    # Compute mythic ranks: top N among legendary-qualifying personas
     mythic_cte = (
         f"WITH mythic_ranks AS ("
         f"  SELECT id, ROW_NUMBER() OVER (ORDER BY likes DESC) as mythic_rank "
@@ -701,25 +700,7 @@ def list_shared_personas(limit: int = 50, offset: int = 0, sort: str = "latest",
         f"LIMIT ? OFFSET ?",
         params + [limit, offset],
     ).fetchall()
-
-    result = []
-    for r in rows:
-        d = dict(r)
-        d["tags"] = json.loads(d["tags"])
-        d["spec_data"] = json.loads(d["spec_data"])
-        d["mythic_rank"] = d["mythic_rank"] or None
-        if current_user_id:
-            liked = conn.execute(
-                "SELECT 1 FROM persona_likes WHERE user_id = ? AND persona_id = ?",
-                (current_user_id, d["id"]),
-            ).fetchone()
-            d["liked"] = liked is not None
-        else:
-            d["liked"] = False
-        result.append(d)
-
-    conn.close()
-    return result
+    return _format_persona_rows(conn, rows, current_user_id)
 
 
 def toggle_persona_like(user_id: int, persona_id: int) -> bool:
@@ -1151,9 +1132,232 @@ def check_phase_transition() -> dict | None:
     return {"old_phase": stored_phase, "new_phase": current_phase, "config": config}
 
 
+# ── Events (analytics) ──
+
+def _migrate_events_table() -> None:
+    """Create events table for view/click/save tracking."""
+    conn = _get_conn()
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            event_type TEXT NOT NULL,
+            persona_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (persona_id) REFERENCES shared_personas(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_events_persona
+            ON events(persona_id, event_type, created_at);
+        CREATE INDEX IF NOT EXISTS idx_events_created
+            ON events(created_at);
+    """)
+    conn.commit()
+    conn.close()
+
+
+def record_events(user_id: int | None, events_list: list[dict]) -> int:
+    """Record a batch of events. Each event: {event_type, persona_id}.
+    Returns count inserted."""
+    if not events_list:
+        return 0
+    conn = _get_conn()
+    count = 0
+    for ev in events_list:
+        etype = ev.get("event_type", "")
+        pid = ev.get("persona_id")
+        if etype not in ("view", "click", "save") or not pid:
+            continue
+        conn.execute(
+            "INSERT INTO events (user_id, event_type, persona_id) VALUES (?, ?, ?)",
+            (user_id, etype, pid),
+        )
+        count += 1
+    conn.commit()
+    conn.close()
+    return count
+
+
+def get_event_stats(days: int = 7) -> dict:
+    """Get aggregate event stats for admin dashboard."""
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT event_type, COUNT(*) as cnt "
+        "FROM events WHERE created_at >= datetime('now', ?) "
+        "GROUP BY event_type",
+        (f"-{days} days",),
+    ).fetchall()
+    daily = conn.execute(
+        "SELECT date(created_at) as day, event_type, COUNT(*) as cnt "
+        "FROM events WHERE created_at >= datetime('now', ?) "
+        "GROUP BY day, event_type ORDER BY day",
+        (f"-{days} days",),
+    ).fetchall()
+    conn.close()
+    return {
+        "totals": {r["event_type"]: r["cnt"] for r in rows},
+        "daily": [{"date": r["day"], "type": r["event_type"], "count": r["cnt"]} for r in daily],
+    }
+
+
+# ── Discovery streams ──
+
+def list_shared_personas_hot(limit: int = 50, offset: int = 0,
+                              tag: str = "", card_type: str = "",
+                              current_user_id: int | None = None) -> list[dict]:
+    """Hot stream: time-decayed popularity.
+    Score = likes / (hours_since_creation + 2)^1.5  (Hacker News-style gravity)
+    """
+    conn = _get_conn()
+    conditions, params = _build_persona_filters(tag, card_type)
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+    legendary_threshold = _get_legendary_threshold()
+
+    mythic_cte = (
+        f"WITH mythic_ranks AS ("
+        f"  SELECT id, ROW_NUMBER() OVER (ORDER BY likes DESC) as mythic_rank "
+        f"  FROM shared_personas WHERE likes >= {legendary_threshold} "
+        f"  LIMIT {_MYTHIC_TOP_N}"
+        f")"
+    )
+
+    rows = conn.execute(
+        f"{mythic_cte} "
+        f"SELECT sp.id, sp.name, sp.summary, sp.tags, sp.spec_data, sp.natural_text, "
+        f"sp.score, sp.language, sp.likes, sp.created_at, sp.user_id, sp.card_type, "
+        f"u.username as author, mr.mythic_rank, "
+        f"(sp.likes + 1.0) / POWER((julianday('now') - julianday(sp.created_at)) * 24 + 2, 1.5) as hot_score "
+        f"FROM shared_personas sp "
+        f"JOIN users u ON sp.user_id = u.id "
+        f"LEFT JOIN mythic_ranks mr ON sp.id = mr.id "
+        f"{where} "
+        f"ORDER BY hot_score DESC "
+        f"LIMIT ? OFFSET ?",
+        params + [limit, offset],
+    ).fetchall()
+    return _format_persona_rows(conn, rows, current_user_id)
+
+
+def list_shared_personas_rising(limit: int = 50, offset: int = 0,
+                                 tag: str = "", card_type: str = "",
+                                 current_user_id: int | None = None) -> list[dict]:
+    """Rising stream: personas with most likes gained in recent 72 hours."""
+    conn = _get_conn()
+    conditions, params = _build_persona_filters(tag, card_type)
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+    legendary_threshold = _get_legendary_threshold()
+
+    mythic_cte = (
+        f"WITH mythic_ranks AS ("
+        f"  SELECT id, ROW_NUMBER() OVER (ORDER BY likes DESC) as mythic_rank "
+        f"  FROM shared_personas WHERE likes >= {legendary_threshold} "
+        f"  LIMIT {_MYTHIC_TOP_N}"
+        f"), recent_likes AS ("
+        f"  SELECT persona_id, COUNT(*) as recent_count "
+        f"  FROM persona_likes "
+        f"  WHERE created_at >= datetime('now', '-3 days') "
+        f"  GROUP BY persona_id"
+        f")"
+    )
+
+    rows = conn.execute(
+        f"{mythic_cte} "
+        f"SELECT sp.id, sp.name, sp.summary, sp.tags, sp.spec_data, sp.natural_text, "
+        f"sp.score, sp.language, sp.likes, sp.created_at, sp.user_id, sp.card_type, "
+        f"u.username as author, mr.mythic_rank, "
+        f"COALESCE(rl.recent_count, 0) as rising_score "
+        f"FROM shared_personas sp "
+        f"JOIN users u ON sp.user_id = u.id "
+        f"LEFT JOIN mythic_ranks mr ON sp.id = mr.id "
+        f"LEFT JOIN recent_likes rl ON sp.id = rl.persona_id "
+        f"{where} "
+        f"ORDER BY rising_score DESC, sp.created_at DESC "
+        f"LIMIT ? OFFSET ?",
+        params + [limit, offset],
+    ).fetchall()
+    return _format_persona_rows(conn, rows, current_user_id)
+
+
+def list_shared_personas_explore(limit: int = 50, offset: int = 0,
+                                  tag: str = "", card_type: str = "",
+                                  current_user_id: int | None = None) -> list[dict]:
+    """Explore stream: random long-tail discovery with author dedup (max 2 per author)."""
+    conn = _get_conn()
+    conditions, params = _build_persona_filters(tag, card_type)
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+    legendary_threshold = _get_legendary_threshold()
+
+    mythic_cte = (
+        f"WITH mythic_ranks AS ("
+        f"  SELECT id, ROW_NUMBER() OVER (ORDER BY likes DESC) as mythic_rank "
+        f"  FROM shared_personas WHERE likes >= {legendary_threshold} "
+        f"  LIMIT {_MYTHIC_TOP_N}"
+        f"), author_ranked AS ("
+        f"  SELECT sp.*, u.username as author, "
+        f"  ROW_NUMBER() OVER (PARTITION BY sp.user_id ORDER BY RANDOM()) as author_rn "
+        f"  FROM shared_personas sp "
+        f"  JOIN users u ON sp.user_id = u.id "
+        f"  {where}"
+        f")"
+    )
+
+    rows = conn.execute(
+        f"{mythic_cte} "
+        f"SELECT ar.id, ar.name, ar.summary, ar.tags, ar.spec_data, ar.natural_text, "
+        f"ar.score, ar.language, ar.likes, ar.created_at, ar.user_id, ar.card_type, "
+        f"ar.author, mr.mythic_rank "
+        f"FROM author_ranked ar "
+        f"LEFT JOIN mythic_ranks mr ON ar.id = mr.id "
+        f"WHERE ar.author_rn <= 2 "
+        f"ORDER BY RANDOM() "
+        f"LIMIT ? OFFSET ?",
+        params + [limit, offset],
+    ).fetchall()
+    return _format_persona_rows(conn, rows, current_user_id)
+
+
+def _build_persona_filters(tag: str = "", card_type: str = "") -> tuple[list[str], list]:
+    """Build WHERE conditions and params for persona queries."""
+    conditions: list[str] = []
+    params: list = []
+    if tag:
+        conditions.append("sp.tags LIKE ?")
+        params.append(f'%"{tag}"%')
+    if card_type:
+        conditions.append("sp.card_type = ?")
+        params.append(card_type)
+    return conditions, params
+
+
+def _format_persona_rows(conn: sqlite3.Connection, rows: list,
+                          current_user_id: int | None) -> list[dict]:
+    """Format persona rows with JSON parsing and like status."""
+    result = []
+    for r in rows:
+        d = dict(r)
+        d["tags"] = json.loads(d["tags"])
+        d["spec_data"] = json.loads(d["spec_data"])
+        d["mythic_rank"] = d.get("mythic_rank") or None
+        # Remove internal scoring columns
+        d.pop("hot_score", None)
+        d.pop("rising_score", None)
+        d.pop("author_rn", None)
+        if current_user_id:
+            liked = conn.execute(
+                "SELECT 1 FROM persona_likes WHERE user_id = ? AND persona_id = ?",
+                (current_user_id, d["id"]),
+            ).fetchone()
+            d["liked"] = liked is not None
+        else:
+            d["liked"] = False
+        result.append(d)
+    conn.close()
+    return result
+
+
 # Auto-initialize on import
 init_db()
 _migrate_users_table()
 _migrate_shared_personas_table()
 _migrate_chat_sessions_table()
 _migrate_notifications_table()
+_migrate_events_table()

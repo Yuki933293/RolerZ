@@ -4,7 +4,7 @@ import { useConfig } from '../stores/useConfig';
 import { useT } from '../i18n';
 import {
   getCommunityPersonas, togglePersonaLike, deleteSharedPersona,
-  getTierConfig,
+  getTierConfig, recordEvents,
   type SharedPersona, type TierConfig,
 } from '../api/client';
 import LoginPrompt from '../components/LoginPrompt';
@@ -415,7 +415,7 @@ export default function Discover() {
   const t = useT(lang);
   const [personas, setPersonas] = useState<SharedPersona[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sort, setSort] = useState<'latest' | 'popular'>('latest');
+  const [sort, setSort] = useState<'hot' | 'latest' | 'rising' | 'popular' | 'explore'>('hot');
   const [category, setCategory] = useState<CategoryId>('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -475,8 +475,59 @@ export default function Discover() {
     }
   }, []);
 
+  // ── Event tracking (batched) ──
+  const pendingEventsRef = useRef<{ event_type: 'view' | 'click' | 'save'; persona_id: number }[]>([]);
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const trackEvent = useCallback((type: 'view' | 'click' | 'save', personaId: number) => {
+    pendingEventsRef.current.push({ event_type: type, persona_id: personaId });
+    if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+    flushTimerRef.current = setTimeout(() => {
+      const batch = pendingEventsRef.current.splice(0);
+      if (batch.length > 0) recordEvents(batch).catch(() => {});
+    }, 2000);
+  }, []);
+
+  // Flush events on unmount
+  useEffect(() => {
+    return () => {
+      if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+      const batch = pendingEventsRef.current.splice(0);
+      if (batch.length > 0) recordEvents(batch).catch(() => {});
+    };
+  }, []);
+
+  // IntersectionObserver for view tracking
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const viewedIdsRef = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const pid = Number(entry.target.getAttribute('data-persona-id'));
+            if (pid && !viewedIdsRef.current.has(pid)) {
+              viewedIdsRef.current.add(pid);
+              trackEvent('view', pid);
+            }
+          }
+        }
+      },
+      { threshold: 0.5 },
+    );
+    return () => observerRef.current?.disconnect();
+  }, [trackEvent]);
+
+  // Re-observe when personas change
+  const cardRefsCallback = useCallback((el: HTMLDivElement | null) => {
+    if (el && observerRef.current) observerRef.current.observe(el);
+  }, []);
+
   const loadPersonas = async () => {
     setLoading(true);
+    viewedIdsRef.current.clear();
+    observerRef.current?.disconnect();
     try {
       const data = await getCommunityPersonas({ sort, tag: '', limit: 100 });
       setPersonas(data);
@@ -573,25 +624,26 @@ export default function Discover() {
         })}
       </div>
 
-      {/* Toolbar */}
+      {/* Stream tabs */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
         <div className="flex rounded-lg border border-border overflow-hidden">
-          <button
-            onClick={() => setSort('latest')}
-            className={`text-[0.78rem] px-3.5 py-1.5 transition-colors ${
-              sort === 'latest' ? 'bg-accent text-white' : 'bg-white text-text-dim hover:bg-surface-2'
-            }`}
-          >
-            {t('sortLatest') as string}
-          </button>
-          <button
-            onClick={() => setSort('popular')}
-            className={`text-[0.78rem] px-3.5 py-1.5 transition-colors border-l border-border ${
-              sort === 'popular' ? 'bg-accent text-white' : 'bg-white text-text-dim hover:bg-surface-2'
-            }`}
-          >
-            {t('sortPopular') as string}
-          </button>
+          {([
+            ['hot', t('sortHot')],
+            ['latest', t('sortLatest')],
+            ['rising', t('sortRising')],
+            ['popular', t('sortPopular')],
+            ['explore', t('sortExplore')],
+          ] as const).map(([key, label], i) => (
+            <button
+              key={key}
+              onClick={() => setSort(key as typeof sort)}
+              className={`text-[0.78rem] px-3.5 py-1.5 transition-colors ${
+                i > 0 ? 'border-l border-border' : ''
+              } ${sort === key ? 'bg-accent text-white' : 'bg-white text-text-dim hover:bg-surface-2'}`}
+            >
+              {label as string}
+            </button>
+          ))}
         </div>
 
         {selectedTags.length > 0 && (
@@ -661,19 +713,20 @@ export default function Discover() {
             const isOwner = persona.author === username;
             const isExpanded = expandedId === persona.id;
             return (
-              <PersonaHoloCard
-                key={persona.id}
-                persona={persona}
-                tier={info.tier}
-                mythicRank={info.mythicRank}
-                isZh={isZh}
-                onLike={() => handleLike(persona.id)}
-                onDelete={() => handleDelete(persona.id)}
-                isOwner={isOwner}
-                token={token}
-                expanded={isExpanded}
-                onToggleExpand={() => setExpandedId(isExpanded ? null : persona.id)}
-              />
+              <div key={persona.id} ref={cardRefsCallback} data-persona-id={persona.id}>
+                <PersonaHoloCard
+                  persona={persona}
+                  tier={info.tier}
+                  mythicRank={info.mythicRank}
+                  isZh={isZh}
+                  onLike={() => { handleLike(persona.id); trackEvent('save', persona.id); }}
+                  onDelete={() => handleDelete(persona.id)}
+                  isOwner={isOwner}
+                  token={token}
+                  expanded={isExpanded}
+                  onToggleExpand={() => { setExpandedId(isExpanded ? null : persona.id); if (!isExpanded) trackEvent('click', persona.id); }}
+                />
+              </div>
             );
           })}
         </div>

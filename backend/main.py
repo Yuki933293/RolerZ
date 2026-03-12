@@ -150,6 +150,9 @@ class AnnouncementRequest(BaseModel):
 class SetAdminRequest(BaseModel):
     is_admin: bool
 
+class EventBatch(BaseModel):
+    events: list[dict]  # [{"event_type": "view"|"click"|"save", "persona_id": int}]
+
 class FusionRequest(BaseModel):
     card_ids: list[str]
     language: str = "zh"
@@ -643,6 +646,25 @@ def delete_shared(persona_id: int, authorization: str | None = Header(None)):
     if not ok:
         raise HTTPException(status_code=404, detail="角色不存在或无权删除")
     return {"ok": True}
+
+
+# ── Events (analytics) ─────────────────────────────────────────────
+@app.post("/api/events")
+def record_events(req: EventBatch, authorization: str | None = Header(None)):
+    """Record view/click/save events (fire-and-forget, no auth required but tracks user if logged in)."""
+    user = get_current_user(authorization)
+    user_id = user["user_id"] if user else None
+    count = db.record_events(user_id, req.events)
+    return {"ok": True, "recorded": count}
+
+
+@app.get("/api/admin/events/stats")
+def admin_event_stats(days: int = 7, authorization: str | None = Header(None)):
+    """Get event analytics (admin only)."""
+    user = get_current_user(authorization)
+    if not user or not db.is_admin(user["user_id"]):
+        raise HTTPException(status_code=403, detail="需要管理员权限")
+    return db.get_event_stats(days)
 
 
 # ── User config ────────────────────────────────────────────────────

@@ -526,6 +526,14 @@ export function deleteSharedPersona(personaId: number) {
   return request(`/api/community/personas/${personaId}`, { method: 'DELETE' });
 }
 
+// ── Events (analytics) ──
+export function recordEvents(events: { event_type: 'view' | 'click' | 'save'; persona_id: number }[]) {
+  return request<{ ok: boolean; recorded: number }>('/api/events', {
+    method: 'POST',
+    body: JSON.stringify({ events }),
+  });
+}
+
 // ── Fusion Lab ──
 export interface FusionParams {
   card_ids: string[];
