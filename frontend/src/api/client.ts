@@ -355,6 +355,57 @@ export function chatPreview(data: {
   });
 }
 
+// ── Chat sessions ──
+export interface ChatSession {
+  id: number;
+  char_name: string;
+  message_count: number;
+  last_message: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatSessionDetail {
+  id: number;
+  char_name: string;
+  system_prompt: string;
+  messages: ChatMessage[];
+  created_at: string;
+  updated_at: string;
+}
+
+export function listChatSessions() {
+  return request<ChatSession[]>('/api/chat/sessions');
+}
+
+export function createChatSession(data: {
+  char_name: string;
+  system_prompt: string;
+  messages: ChatMessage[];
+}) {
+  return request<{ ok: boolean; id: number }>('/api/chat/sessions', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function getChatSession(sessionId: number) {
+  return request<ChatSessionDetail>(`/api/chat/sessions/${sessionId}`);
+}
+
+export function updateChatSession(sessionId: number, messages: ChatMessage[]) {
+  return request<{ ok: boolean }>(`/api/chat/sessions/${sessionId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ messages }),
+  });
+}
+
+export function deleteChatSession(sessionId: number) {
+  return request<{ ok: boolean }>(`/api/chat/sessions/${sessionId}`, {
+    method: 'DELETE',
+  });
+}
+
 // ── Community ──
 export interface SharedPersona {
   id: number;

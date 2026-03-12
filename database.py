@@ -82,6 +82,16 @@ def init_db() -> None:
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             UNIQUE(user_id, group_id)
         );
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            char_name TEXT NOT NULL,
+            system_prompt TEXT NOT NULL DEFAULT '',
+            messages TEXT NOT NULL DEFAULT '[]',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
         CREATE TABLE IF NOT EXISTS shared_personas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -660,6 +670,111 @@ def get_admin_stats() -> dict:
         "today_generations": today_generations,
         "generation_trend": [{"date": r["day"], "count": r["cnt"]} for r in trend],
     }
+
+
+# ── Chat sessions ──
+
+def create_chat_session(user_id: int, char_name: str, system_prompt: str,
+                        messages: list[dict]) -> int:
+    """Create a new chat session. Returns session id."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "INSERT INTO chat_sessions (user_id, char_name, system_prompt, messages) "
+        "VALUES (?, ?, ?, ?)",
+        (user_id, char_name, system_prompt, json.dumps(messages, ensure_ascii=False)),
+    )
+    conn.commit()
+    sid = cur.lastrowid
+    conn.close()
+    return sid or 0
+
+
+def list_chat_sessions(user_id: int, limit: int = 50) -> list[dict]:
+    """Returns chat sessions for the user, newest first."""
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT id, char_name, messages, created_at, updated_at "
+        "FROM chat_sessions WHERE user_id = ? ORDER BY updated_at DESC LIMIT ?",
+        (user_id, limit),
+    ).fetchall()
+    conn.close()
+    result = []
+    for row in rows:
+        try:
+            msgs = json.loads(row["messages"])
+        except json.JSONDecodeError:
+            msgs = []
+        result.append({
+            "id": row["id"],
+            "char_name": row["char_name"],
+            "message_count": len(msgs),
+            "last_message": msgs[-1]["content"][:60] if msgs else "",
+            "created_at": row["created_at"],
+            "updated_at": row["updated_at"],
+        })
+    return result
+
+
+def get_chat_session(user_id: int, session_id: int) -> dict | None:
+    """Returns full session data including messages."""
+    conn = _get_conn()
+    row = conn.execute(
+        "SELECT id, char_name, system_prompt, messages, created_at, updated_at "
+        "FROM chat_sessions WHERE id = ? AND user_id = ?",
+        (session_id, user_id),
+    ).fetchone()
+    conn.close()
+    if row is None:
+        return None
+    try:
+        msgs = json.loads(row["messages"])
+    except json.JSONDecodeError:
+        msgs = []
+    return {
+        "id": row["id"],
+        "char_name": row["char_name"],
+        "system_prompt": row["system_prompt"],
+        "messages": msgs,
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def update_chat_session(user_id: int, session_id: int, messages: list[dict]) -> bool:
+    """Update messages in a chat session. Returns True if updated."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "UPDATE chat_sessions SET messages = ?, updated_at = CURRENT_TIMESTAMP "
+        "WHERE id = ? AND user_id = ?",
+        (json.dumps(messages, ensure_ascii=False), session_id, user_id),
+    )
+    conn.commit()
+    ok = cur.rowcount > 0
+    conn.close()
+    return ok
+
+
+def delete_chat_session(user_id: int, session_id: int) -> bool:
+    """Delete a chat session. Returns True if deleted."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "DELETE FROM chat_sessions WHERE id = ? AND user_id = ?",
+        (session_id, user_id),
+    )
+    conn.commit()
+    ok = cur.rowcount > 0
+    conn.close()
+    return ok
+
+
+def clear_chat_sessions(user_id: int) -> int:
+    """Delete all chat sessions for a user. Returns count deleted."""
+    conn = _get_conn()
+    cur = conn.execute("DELETE FROM chat_sessions WHERE user_id = ?", (user_id,))
+    conn.commit()
+    count = cur.rowcount
+    conn.close()
+    return count
 
 
 # Auto-initialize on import

@@ -281,6 +281,14 @@ const translations = {
     statTodayUsers: '今日新增',
     statTodayGenerations: '今日生成',
     generationTrend: '7日生成趋势',
+
+    // Chat sessions
+    chatSessions: '聊天记录',
+    newChat: '新对话',
+    noSessions: '暂无聊天记录',
+    deleteSession: '删除此对话',
+    deleteSessionConfirm: '确定要删除这条对话记录吗？',
+    messagesCount: (n: number) => `${n} 条消息`,
   },
 
   'zh-Hant': {
@@ -565,6 +573,14 @@ const translations = {
     statTodayUsers: '今日新增',
     statTodayGenerations: '今日生成',
     generationTrend: '7日生成趨勢',
+
+    // Chat sessions
+    chatSessions: '聊天記錄',
+    newChat: '新對話',
+    noSessions: '暫無聊天記錄',
+    deleteSession: '刪除此對話',
+    deleteSessionConfirm: '確定要刪除這條對話記錄嗎？',
+    messagesCount: (n: number) => `${n} 條訊息`,
   },
 
   en: {
@@ -849,6 +865,14 @@ const translations = {
     statTodayUsers: 'New Today',
     statTodayGenerations: 'Generated Today',
     generationTrend: '7-Day Generation Trend',
+
+    // Chat sessions
+    chatSessions: 'Chat History',
+    newChat: 'New Chat',
+    noSessions: 'No chat history',
+    deleteSession: 'Delete chat',
+    deleteSessionConfirm: 'Delete this chat session?',
+    messagesCount: (n: number) => `${n} messages`,
   },
 } as const;
 

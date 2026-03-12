@@ -161,6 +161,14 @@ class ChatPreviewRequest(BaseModel):
     top_p: float | None = None
     max_tokens: int | None = None
 
+class CreateChatSessionRequest(BaseModel):
+    char_name: str
+    system_prompt: str
+    messages: list[dict] = []
+
+class UpdateChatSessionRequest(BaseModel):
+    messages: list[dict]
+
 
 # ── JWT helpers ─────────────────────────────────────────────────────────
 def create_access_token(user_id: int, username: str) -> str:
@@ -832,6 +840,57 @@ def chat_preview(req: ChatPreviewRequest, authorization: str | None = Header(Non
         raise HTTPException(status_code=500, detail=str(exc))
 
     return {"reply": reply}
+
+
+# ── Chat sessions ──────────────────────────────────────────────────────
+@app.get("/api/chat/sessions")
+def list_chat_sessions(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    return db.list_chat_sessions(user["user_id"])
+
+
+@app.post("/api/chat/sessions")
+def create_chat_session(req: CreateChatSessionRequest, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    sid = db.create_chat_session(user["user_id"], req.char_name, req.system_prompt, req.messages)
+    return {"ok": True, "id": sid}
+
+
+@app.get("/api/chat/sessions/{session_id}")
+def get_chat_session(session_id: int, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    session = db.get_chat_session(user["user_id"], session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return session
+
+
+@app.put("/api/chat/sessions/{session_id}")
+def update_chat_session(session_id: int, req: UpdateChatSessionRequest, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    ok = db.update_chat_session(user["user_id"], session_id, req.messages)
+    if not ok:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return {"ok": True}
+
+
+@app.delete("/api/chat/sessions/{session_id}")
+def delete_chat_session(session_id: int, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    ok = db.delete_chat_session(user["user_id"], session_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return {"ok": True}
 
 
 # ── Wizard ──────────────────────────────────────────────────────────────
