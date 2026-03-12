@@ -11,6 +11,7 @@ import Announcements from './pages/Announcements';
 import UserManagement from './pages/UserManagement';
 import AdminDashboard from './pages/AdminDashboard';
 import FusionLab from './pages/FusionLab';
+import Landing from './pages/Landing';
 import { useAuth } from './stores/useAuth';
 import { useConfig } from './stores/useConfig';
 import { login as apiLogin, register as apiRegister, getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from './api/client';
@@ -22,7 +23,10 @@ const LANG_OPTIONS = [
   { value: 'en', label: 'English' },
 ] as const;
 
-function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onToggleSidebar: () => void }) {
+function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal }: {
+  sidebarOpen: boolean; onToggleSidebar: () => void;
+  showAuthModal: boolean; setShowAuthModal: (v: boolean) => void;
+}) {
   const navigate = useNavigate();
   const language = useConfig(s => s.language);
   const setLanguage = useConfig(s => s.setLanguage);
@@ -33,7 +37,6 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
 
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [authUser, setAuthUser] = useState('');
   const [authPass, setAuthPass] = useState('');
@@ -467,6 +470,7 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
 export default function App() {
   const token = useAuth(s => s.token);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Apply saved theme on mount
   useEffect(() => {
@@ -484,35 +488,44 @@ export default function App() {
     <BrowserRouter>
       <div className="flex flex-col h-screen overflow-hidden">
         {/* Top navbar — full width */}
-        <TopBar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <TopBar
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          showAuthModal={showAuthModal}
+          setShowAuthModal={setShowAuthModal}
+        />
 
         {/* Body: sidebar + main */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar with smooth transition */}
-          <div
-            className="flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
-            style={{ width: sidebarOpen ? 240 : 0 }}
-          >
-            <div className="w-60 h-full">
-              <Sidebar />
+          {/* Sidebar with smooth transition — hidden on landing */}
+          {token && (
+            <div
+              className="flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+              style={{ width: sidebarOpen ? 240 : 0 }}
+            >
+              <div className="w-60 h-full">
+                <Sidebar />
+              </div>
             </div>
-          </div>
+          )}
 
           <main className="flex-1 overflow-y-auto">
-            <div className="max-w-[1100px] mx-auto px-8 py-6">
-              <Routes>
-                <Route path="/" element={<Generate />} />
-                <Route path="/fusion" element={<FusionLab />} />
-                <Route path="/discover" element={<Discover />} />
-                <Route path="/model" element={<ModelProvider />} />
-                <Route path="/inspirations" element={<Inspirations />} />
-                <Route path="/announcements" element={<Announcements />} />
-                <Route path="/help" element={<Help />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/admin/users" element={<UserManagement />} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              </Routes>
-            </div>
+            <Routes>
+              <Route path="/" element={
+                token
+                  ? <div className="max-w-[1100px] mx-auto px-8 py-6"><Generate /></div>
+                  : <Landing onOpenAuth={() => setShowAuthModal(true)} />
+              } />
+              <Route path="/fusion" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><FusionLab /></div>} />
+              <Route path="/discover" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Discover /></div>} />
+              <Route path="/model" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><ModelProvider /></div>} />
+              <Route path="/inspirations" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Inspirations /></div>} />
+              <Route path="/announcements" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Announcements /></div>} />
+              <Route path="/help" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Help /></div>} />
+              <Route path="/profile" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Profile /></div>} />
+              <Route path="/admin/users" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><UserManagement /></div>} />
+              <Route path="/admin/dashboard" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><AdminDashboard /></div>} />
+            </Routes>
           </main>
         </div>
       </div>
