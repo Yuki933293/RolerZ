@@ -526,6 +526,44 @@ export function deleteSharedPersona(personaId: number) {
   return request(`/api/community/personas/${personaId}`, { method: 'DELETE' });
 }
 
+// ── Fusion Lab ──
+export interface FusionParams {
+  card_ids: string[];
+  language: string;
+  provider: string;
+  model?: string;
+  api_key?: string;
+  base_url?: string;
+  temperature?: number | null;
+  top_p?: number | null;
+  max_tokens?: number | null;
+}
+
+export interface FusionResult {
+  identity: string;
+  appearance: string;
+  background: string;
+  personality: string;
+  voice: string;
+  goals: string;
+  relationships: string;
+  conflicts: string;
+  taboos: string;
+  dialogue_examples: string;
+  opening_line: string;
+  system_constraints: string;
+  tags: string[];
+  fusion_note: string;
+  source_cards: string[];
+}
+
+export function fusionGenerate(params: FusionParams) {
+  return request<FusionResult>('/api/fusion/generate', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
 // ── Admin stats ──
 export interface AdminStats {
   total_users: number;

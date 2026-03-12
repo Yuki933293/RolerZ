@@ -26,6 +26,12 @@ const IconDiscover = () => (
   </svg>
 );
 
+const IconFusion = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+  </svg>
+);
+
 const IconInspiration = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -92,6 +98,7 @@ export default function Sidebar() {
       label: t('sidebarCreate') as string,
       items: [
         { id: '/', label: t('create') as string, icon: <IconGenerate /> },
+        { id: '/fusion', label: t('fusionLab') as string, icon: <IconFusion /> },
         { id: '/inspirations', label: t('inspirationLibrary') as string, icon: <IconInspiration /> },
         { id: '/discover', label: t('discover') as string, icon: <IconDiscover /> },
       ],

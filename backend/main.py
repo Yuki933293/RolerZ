@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import database as db
 from persona_engine import EngineConfig, GenerationCancelledError, PersonaEngine, PersonaSeed
 from persona_engine.inspiration import InspirationLibrary
-from persona_engine.llm import PROVIDER_DEFAULTS, create_llm_client, _PROVIDER_BASE_URLS
+from persona_engine.llm import PROVIDER_DEFAULTS, create_llm_client, _PROVIDER_BASE_URLS, build_fusion_prompt, get_system_prompt, parse_llm_response
 from persona_engine.wizard import REQUIRED_FIELDS, WizardEngine
 
 # ── JWT config ──────────────────────────────────────────────────────────
@@ -149,6 +149,18 @@ class AnnouncementRequest(BaseModel):
 
 class SetAdminRequest(BaseModel):
     is_admin: bool
+
+class FusionRequest(BaseModel):
+    card_ids: list[str]
+    language: str = "zh"
+    provider: str = "claude"
+    model: str | None = None
+    api_key: str | None = None
+    base_url: str | None = None
+    temperature: float | None = None
+    top_p: float | None = None
+    max_tokens: int | None = None
+
 
 class ChatPreviewRequest(BaseModel):
     messages: list[dict]  # [{"role": "user"|"assistant", "content": "..."}]
@@ -819,6 +831,91 @@ def generate(req: GenerateRequest, authorization: str | None = Header(None)):
     finally:
         if user_id is not None:
             _cancel_events.pop(user_id, None)
+
+
+# ── Fusion Lab ─────────────────────────────────────────────────────────
+@app.post("/api/fusion/generate")
+def fusion_generate(req: FusionRequest, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    if len(req.card_ids) < 2:
+        raise HTTPException(status_code=400, detail="至少需要 2 张卡牌进行融合")
+    if len(req.card_ids) > 5:
+        raise HTTPException(status_code=400, detail="最多支持 5 张卡牌融合")
+
+    # Load cards and find selected ones
+    lib = InspirationLibrary.load()
+    id_map = {c.id: c for c in lib.cards}
+    selected_cards = [id_map[cid] for cid in req.card_ids if cid in id_map]
+    if len(selected_cards) < 2:
+        raise HTTPException(status_code=400, detail="未找到足够的有效卡牌")
+
+    # Apply user overrides if any
+    overrides = db.get_card_overrides(user["user_id"])
+    if overrides:
+        for card in selected_cards:
+            if card.id in overrides:
+                ov = overrides[card.id]
+                if ov.get("prompt_zh"):
+                    card.prompt_fragment.zh = ov["prompt_zh"]
+                if ov.get("prompt_en"):
+                    card.prompt_fragment.en = ov["prompt_en"]
+
+    # Build fusion prompt and call LLM
+    prompt = build_fusion_prompt(selected_cards, language=req.language)
+    system = get_system_prompt(req.language)
+    max_tokens = req.max_tokens or 6400
+    client = create_llm_client(
+        provider=req.provider,
+        model=req.model or None,
+        api_key=req.api_key or None,
+        base_url=req.base_url or None,
+        max_tokens=max_tokens,
+    )
+
+    try:
+        kwargs: dict = dict(
+            system=system,
+            temperature=req.temperature if req.temperature is not None else 0.8,
+        )
+        if req.top_p is not None:
+            kwargs["top_p"] = req.top_p
+        raw = client.generate(prompt, **kwargs)
+        spec = parse_llm_response(raw, language=req.language)
+        if spec is None:
+            raise RuntimeError("LLM 返回的内容无法解析为有效角色卡")
+
+        # Extract fusion_note from raw JSON
+        import json as _json
+        fusion_note = ""
+        try:
+            raw_stripped = raw.strip()
+            if raw_stripped.startswith("```"):
+                lines = raw_stripped.split("\n")
+                end = -1 if lines[-1].strip() == "```" else len(lines)
+                raw_stripped = "\n".join(lines[1:end])
+            parsed = _json.loads(raw_stripped)
+            fusion_note = parsed.get("fusion_note", "")
+        except (ValueError, _json.JSONDecodeError):
+            pass
+
+        result = spec.as_dict(req.language)
+        result["fusion_note"] = fusion_note
+        result["source_cards"] = req.card_ids
+
+        # Save to generation history
+        db.save_generation(
+            user["user_id"],
+            f"[融合] {' + '.join(c.title.zh if req.language != 'en' else c.title.en for c in selected_cards)}",
+            req.language, 1,
+            {"candidates": [result]},
+        )
+        return result
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 # ── Chat preview ───────────────────────────────────────────────────────

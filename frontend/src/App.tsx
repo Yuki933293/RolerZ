@@ -10,6 +10,7 @@ import Help from './pages/Help';
 import Announcements from './pages/Announcements';
 import UserManagement from './pages/UserManagement';
 import AdminDashboard from './pages/AdminDashboard';
+import FusionLab from './pages/FusionLab';
 import { useAuth } from './stores/useAuth';
 import { useConfig } from './stores/useConfig';
 import { login as apiLogin, register as apiRegister, getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from './api/client';
@@ -501,6 +502,7 @@ export default function App() {
             <div className="max-w-[1100px] mx-auto px-8 py-6">
               <Routes>
                 <Route path="/" element={<Generate />} />
+                <Route path="/fusion" element={<FusionLab />} />
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/model" element={<ModelProvider />} />
                 <Route path="/inspirations" element={<Inspirations />} />

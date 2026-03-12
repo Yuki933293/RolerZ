@@ -526,6 +526,110 @@ Example format:
 """
 
 
+def build_fusion_prompt(
+    cards: list[InspirationCard],
+    language: str = "zh",
+) -> str:
+    """Build a prompt that fuses multiple inspiration cards into a character."""
+    lang = language
+
+    card_details = []
+    for i, card in enumerate(cards, 1):
+        title = getattr(card.title, lang)
+        category = card.category
+        fragment = getattr(card.prompt_fragment, lang)
+        snippets_text = "\n".join(
+            f"    - {key}: {getattr(val, lang)}"
+            for key, val in card.snippets.items()
+            if getattr(val, lang)
+        )
+        card_details.append(f"### Card {i}: [{category}] {title}\n{fragment}\n{snippets_text}")
+
+    cards_section = "\n\n".join(card_details)
+
+    if lang == "zh":
+        return f"""\
+你是一名角色卡融合师。你的任务是将以下灵感卡**深度融合**为一个完整的角色。
+
+不是简单拼接——要找到这些元素之间的化学反应，创造一个这些特质自然共存的人物。
+
+## 待融合的灵感卡
+
+{cards_section}
+
+## 融合要求
+- 每张卡的核心元素都必须在最终角色中有所体现，但要融入得自然
+- 找到卡片之间的内在联系——为什么这个人会同时具有这些特质？
+- 矛盾和张力是好的，让角色因此更立体
+- 不要简单罗列卡片内容，要创造性地整合
+
+## 输出要求
+输出一个 JSON 对象，包含以下字段，每个字段的值是中文字符串：
+identity, appearance, background, personality, voice,
+goals, relationships, conflicts, taboos,
+dialogue_examples, opening_line, system_constraints
+
+另外输出 "tags" 字段（字符串列表，5-8 个英文标签描述关键特质）。
+另外输出 "fusion_note" 字段（中文字符串，1-2 句话解释这些卡片是如何融合的）。
+
+## 字段说明
+- identity: 一句话介绍角色是谁（姓名 + 身份）
+- appearance: 外貌描写要具体，包括五官特征、穿衣偏好、给人的第一印象
+- background: 写成经历而非简历，重点写塑造这个人的关键事件
+- personality: 用行为举例来体现性格，不要堆性格形容词
+- voice: 描述说话的节奏、用词偏好、情绪表达方式，并包含 3-5 句代表性台词
+- dialogue_examples: 2-3组对话示例（格式：> 用户：xxx\\n> 角色：xxx）
+- opening_line: 角色主动说出的第一句话（带动作或场景描写）
+- system_constraints: 3-4条维持角色一致性的规则
+- fusion_note: 解释融合逻辑（如"将X的Y特质与Z的W特质结合，创造了一个..."）
+
+## 写作要求
+- 像描述一个你认识的真人一样写
+- 用具体的场景和细节代替抽象的性格标签
+- 每个角色应该有自己独特的矛盾点
+"""
+    else:
+        return f"""\
+You are a character fusion specialist. Your task is to **deeply fuse** the following inspiration cards into a complete character.
+
+Don't just stitch them together — find the chemistry between these elements and create a person where these traits naturally coexist.
+
+## Cards to Fuse
+
+{cards_section}
+
+## Fusion Requirements
+- Every card's core element must be reflected in the final character, but woven in naturally
+- Find the internal connections between cards — why would this person have all these traits simultaneously?
+- Tension and contradiction are good — they make the character more dimensional
+- Don't simply list card contents; integrate them creatively
+
+## Output Requirements
+Output a JSON object with the following fields, each value is an English string:
+identity, appearance, background, personality, voice,
+goals, relationships, conflicts, taboos,
+dialogue_examples, opening_line, system_constraints
+
+Also include "tags" (string list, 5-8 English tags) and "fusion_note" (English string, 1-2 sentences explaining how the cards were fused).
+
+## Field Descriptions
+- identity: One-line intro — who is this person (name + role)
+- appearance: Concrete physical details — features, clothing, first impression
+- background: Write as lived experience, not a resume; focus on formative events
+- personality: Show personality through behavior examples, not adjective lists
+- voice: Describe speech rhythm, word choice, emotional expression, with 3-5 representative lines
+- dialogue_examples: 2-3 dialogue pairs (format: > User: xxx\\n> Character: xxx)
+- opening_line: Character's first line (with action/scene description)
+- system_constraints: 3-4 rules for maintaining character consistency
+- fusion_note: Explain the fusion logic (e.g., "Combined X's Y trait with Z's W trait to create...")
+
+## Writing Requirements
+- Write as if describing someone you actually know
+- Use concrete scenes and details instead of abstract personality labels
+- Each character should have their own unique contradictions
+"""
+
+
 _REQUIRED_LLM_FIELDS = ("background", "personality", "voice")
 
 

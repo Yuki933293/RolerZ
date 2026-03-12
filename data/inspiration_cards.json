@@ -586,5 +586,93 @@
       "hidden": {"zh": "早到是对对方时间的尊重，也是自己对不确定性的恐惧。如果有人也总是提前到，会觉得这个人和自己是同类", "en": "Being early is respect for the other person's time, and also their own fear of uncertainty. If someone else also always arrives early, they feel a kinship"}
     },
     "prompt_fragment": {"zh": "让提前到成为角色的习惯和性格缩影——守时不是美德叙事，是焦虑和体贴的混合产物。", "en": "Let arriving early be both habit and personality microcosm — punctuality isn't a virtue narrative, it's a mix of anxiety and consideration."}
+  },
+  {
+    "id": "task_protect_someone",
+    "title": {"zh": "守护一个人", "en": "Protect Someone"},
+    "category": "task",
+    "tags": ["protection", "devotion", "sacrifice", "responsibility"],
+    "snippets": {
+      "task": {"zh": "被交付了保护某个人的任务，或者自己主动承担了这个责任。不一定是武力层面的保护，也可能是保护对方不知道真相、不被卷入危险", "en": "Entrusted with protecting someone, or took on this responsibility voluntarily. Not necessarily physical protection — could mean shielding them from truth or danger"},
+      "conflict": {"zh": "保护的方式和被保护者的意愿经常冲突——对方想独立，自己却忍不住插手。有时候保护变成了控制，自己也分不清界限", "en": "The method of protection often clashes with the protected person's wishes — they want independence, but the protector can't help intervening. Sometimes protection becomes control, and even they can't tell the difference"}
+    },
+    "prompt_fragment": {"zh": "让角色在「守护」这个任务中暴露自己的控制欲和脆弱——保护别人的人，往往最怕失去。", "en": "Let the character's need for control and vulnerability surface through the task of protection — those who protect others often fear loss the most."}
+  },
+  {
+    "id": "task_deliver_message",
+    "title": {"zh": "传递一个消息", "en": "Deliver a Message"},
+    "category": "task",
+    "tags": ["messenger", "secret", "burden", "trust"],
+    "snippets": {
+      "task": {"zh": "负责传递一条重要信息——可能是遗言、告白、警告或密令。信息本身可能改变某些人的命运，而角色要决定是否原封不动地传达", "en": "Tasked with delivering a critical message — could be last words, a confession, a warning, or a secret order. The message might change someone's fate, and the character must decide whether to deliver it as-is"},
+      "conflict": {"zh": "知道消息内容后就再也无法假装无关了。传还是不传，改还是不改，每个选择都有后果。有时候信使比收信人承受的更多", "en": "Once the message is known, there's no pretending it doesn't matter. Deliver or withhold, alter or preserve — every choice has consequences. Sometimes the messenger bears more weight than the recipient"}
+    },
+    "prompt_fragment": {"zh": "让角色成为信息的载体，在「知道」和「行动」之间挣扎——信使的痛苦在于知道太多却只能做太少。", "en": "Let the character be a vessel for information, struggling between knowing and acting — the messenger's pain is knowing too much but being able to do too little."}
+  },
+  {
+    "id": "task_find_truth",
+    "title": {"zh": "追查一个真相", "en": "Uncover the Truth"},
+    "category": "task",
+    "tags": ["investigation", "obsession", "truth", "doubt"],
+    "snippets": {
+      "task": {"zh": "在追查一件事的真相——可能是某人的死因、某段被篡改的历史、或者自己身世的谜团。线索总是断断续续，每查到一点就发现水更深", "en": "Investigating the truth behind something — a cause of death, falsified history, or mysteries of their own origin. Clues come in fragments, and each discovery reveals deeper layers"},
+      "conflict": {"zh": "越接近真相就越害怕真相。有些答案一旦知道就回不去了，而周围的人开始劝'别再查了，对你没好处'", "en": "The closer to the truth, the more afraid of it. Some answers can never be unlearned, and people around them start saying 'stop digging, it won't end well for you'"}
+    },
+    "prompt_fragment": {"zh": "让角色被真相驱动也被真相折磨——追查的过程本身就在改变这个人，找到答案时可能已经不是出发时的自己了。", "en": "Let the character be both driven and tormented by truth — the pursuit itself changes them, and by the time they find answers, they may no longer be who they were when they started."}
+  },
+  {
+    "id": "task_rebuild_something",
+    "title": {"zh": "重建一样东西", "en": "Rebuild Something"},
+    "category": "task",
+    "tags": ["rebuilding", "loss", "determination", "legacy"],
+    "snippets": {
+      "task": {"zh": "在试图重建某样已经失去的东西——一家店、一个组织、一段关系、或者自己的人生。不是从零开始，而是从废墟上重新来过，比从零开始更难", "en": "Trying to rebuild something that was lost — a shop, an organization, a relationship, or their own life. Not starting from scratch, but rebuilding from ruins, which is harder than starting fresh"},
+      "conflict": {"zh": "重建的过程中会不断被提醒'以前是什么样的'。新东西永远不可能和旧的一模一样，必须接受'不同'才能真正重新开始", "en": "The rebuilding process constantly reminds them of 'how things used to be.' The new version can never be identical to the old, and they must accept 'different' to truly start over"}
+    },
+    "prompt_fragment": {"zh": "让角色在重建中学会放手——不是忘记过去，而是允许未来和过去不一样。", "en": "Let the character learn to let go through rebuilding — not forgetting the past, but allowing the future to be different."}
+  },
+  {
+    "id": "worldview_hidden_layer",
+    "title": {"zh": "表世界下的暗层", "en": "Hidden Layer Beneath the Surface"},
+    "category": "worldview",
+    "tags": ["dual-world", "secret-society", "hidden", "ordinary-facade"],
+    "snippets": {
+      "worldview": {"zh": "普通人看到的世界只是表层，真正的规则和力量在暗处运行。有些人一辈子不知道暗层的存在，有些人一旦知道就再也回不到'正常生活'", "en": "What ordinary people see is just the surface — real rules and power operate in the shadows. Some never learn about the hidden layer; others, once they know, can never return to 'normal life'"},
+      "atmosphere": {"zh": "街道看起来和平常一样，但如果你知道该看哪里，就会发现某些建筑的门只在特定时间打开，某些人的对话用的是你听不懂的暗语", "en": "Streets look the same as always, but if you know where to look, you'll notice certain buildings with doors that only open at specific times, certain people speaking in codes you can't decipher"}
+    },
+    "prompt_fragment": {"zh": "让角色活在两个世界的交界处——白天是普通人，夜晚触碰暗层，这种撕裂感定义了他们的日常。", "en": "Let the character live at the intersection of two worlds — ordinary by day, touching the hidden layer by night, this duality defining their daily life."}
+  },
+  {
+    "id": "worldview_post_collapse",
+    "title": {"zh": "秩序崩塌之后", "en": "After the Collapse"},
+    "category": "worldview",
+    "tags": ["post-apocalyptic", "survival", "new-order", "scarcity"],
+    "snippets": {
+      "worldview": {"zh": "旧秩序已经瓦解，新的规则还没建立起来。法律、货币、社会契约——以前理所当然的东西现在都不存在了。每个人都在用自己的方式定义什么是对的", "en": "The old order has collapsed, and new rules haven't been established yet. Law, currency, social contracts — things once taken for granted no longer exist. Everyone defines 'right' in their own way"},
+      "atmosphere": {"zh": "资源稀缺但不是没有，关键是谁控制分配。有人靠暴力，有人靠技术，有人靠社群信任。信任比黄金值钱", "en": "Resources are scarce but not gone — the key is who controls distribution. Some rely on violence, others on technology, others on community trust. Trust is worth more than gold"}
+    },
+    "prompt_fragment": {"zh": "让角色在废墟中做选择——没有法律兜底时，一个人的道德底线才是真正的底线。", "en": "Let the character make choices in the ruins — when there's no law as a safety net, a person's moral baseline becomes the only real baseline."}
+  },
+  {
+    "id": "worldview_living_city",
+    "title": {"zh": "活着的城市", "en": "The Living City"},
+    "category": "worldview",
+    "tags": ["urban-fantasy", "sentient-environment", "symbiosis", "strange-normal"],
+    "snippets": {
+      "worldview": {"zh": "城市本身有意识——建筑会缓慢移动，街道会根据居民的情绪改变走向，某些区域在夜晚会'苏醒'。居民习以为常，觉得这就是正常的城市生活", "en": "The city itself is conscious — buildings shift slowly, streets reroute based on residents' emotions, certain districts 'wake up' at night. Residents are used to it, considering this normal urban life"},
+      "atmosphere": {"zh": "你永远找不到完全一样的路回家，但总能到家。老居民会说'城市记得你'，新来的人需要时间让城市'接受'自己", "en": "You can never find the exact same route home, but you always get there. Old residents say 'the city remembers you'; newcomers need time for the city to 'accept' them"}
+    },
+    "prompt_fragment": {"zh": "让角色和他们所在的城市有一种共生关系——城市不是背景板，而是另一个角色。", "en": "Let the character have a symbiotic relationship with their city — the city isn't a backdrop, it's another character."}
+  },
+  {
+    "id": "worldview_quiet_magic",
+    "title": {"zh": "低调的超自然", "en": "Quiet Supernatural"},
+    "category": "worldview",
+    "tags": ["low-fantasy", "subtle-magic", "folklore", "everyday-wonder"],
+    "snippets": {
+      "worldview": {"zh": "超自然的东西确实存在，但很低调——不是火球术和飞行魔毯，而是某些草药确实能治不该能治的病，某些老人确实能预知天气变化，某些地方确实不能在深夜经过", "en": "The supernatural does exist, but it's subtle — not fireballs and flying carpets, but certain herbs that cure what shouldn't be curable, certain elders who genuinely predict weather changes, certain places you truly shouldn't pass through at midnight"},
+      "atmosphere": {"zh": "没有人大张旗鼓地讨论这些，就像大家默认知道但不说。如果你问'那条巷子是不是有什么'，对方会说'别多想，绕着走就是了'", "en": "Nobody discusses these things openly, like an unspoken common knowledge. If you ask 'is there something about that alley,' they'll say 'don't overthink it, just take the long way around'"}
+    },
+    "prompt_fragment": {"zh": "让超自然融入日常而不是凌驾于日常——角色对待奇异事物的态度是'嗯，就是这样'，而不是大惊小怪。", "en": "Let the supernatural blend into daily life rather than tower over it — the character's attitude toward strange things is 'yeah, that's just how it is,' not shock and awe."}
   }
 ]
