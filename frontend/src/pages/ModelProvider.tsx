@@ -338,14 +338,9 @@ export default function ModelProvider() {
               type="text"
               value={formLabel}
               onChange={e => setFormLabel(e.target.value)}
-              placeholder={isZh ? '如「二次元专用」「写实风格」，可留空' : 'e.g. "Anime style", "Realistic" — optional'}
+              placeholder={isZh ? '给这个配置起个名字，方便记住它的用途' : 'Name this config to remember its purpose'}
               className="w-full px-3 py-2 text-[0.88rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none shadow-xs placeholder:text-text-muted"
             />
-            <div className="mt-1 text-[0.72rem] text-text-faint">
-              {isZh
-                ? '给这个配置起个名字，方便记住它的用途'
-                : 'Give this config a name to remember what it\'s for'}
-            </div>
           </div>
 
           {/* ID */}
