@@ -176,7 +176,7 @@ function TierCardModal({ config, isZh, lang, onClose }: {
   const features = TIER_FEATURES[tier];
   const t = useT(lang);
   const [flipped, setFlipped] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const hasMouseTracking = tier === 'epic' || tier === 'legendary' || tier === 'mythic';
   const isMythic = tier === 'mythic';
 
@@ -187,38 +187,39 @@ function TierCardModal({ config, isZh, lang, onClose }: {
   }, [onClose]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!hasMouseTracking || flipped) return;
-    const el = cardRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
+    if (!hasMouseTracking) return;
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-    el.style.setProperty('--rx', String((y - 0.5) * 2));
-    el.style.setProperty('--ry', String((x - 0.5) * 2));
-    el.style.setProperty('--mx', `${x * 100}%`);
-    el.style.setProperty('--my', `${y * 100}%`);
-  }, [hasMouseTracking, flipped]);
-
-  const handleMouseLeave = useCallback(() => {
-    if (!hasMouseTracking) return;
-    const el = cardRef.current;
-    if (!el) return;
-    el.style.setProperty('--rx', '0');
-    el.style.setProperty('--ry', '0');
-    el.style.setProperty('--mx', '50%');
-    el.style.setProperty('--my', '50%');
+    const rx = (y - 0.5) * 2;
+    const ry = (x - 0.5) * 2;
+    container.style.transform = `rotateY(${ry * 12}deg) rotateX(${rx * -12}deg)`;
+    container.querySelectorAll<HTMLElement>('.holo-card').forEach((el) => {
+      el.style.setProperty('--rx', String(rx));
+      el.style.setProperty('--ry', String(ry));
+      el.style.setProperty('--mx', `${x * 100}%`);
+      el.style.setProperty('--my', `${y * 100}%`);
+    });
   }, [hasMouseTracking]);
 
-  const handleFlip = useCallback(() => {
-    setFlipped(f => !f);
-    const el = cardRef.current;
-    if (el) {
-      el.style.setProperty('--rx', '0');
-      el.style.setProperty('--ry', '0');
-      el.style.setProperty('--mx', '50%');
-      el.style.setProperty('--my', '50%');
+  const resetEffects = useCallback((resetTilt: boolean) => {
+    if (!hasMouseTracking) return;
+    const container = containerRef.current;
+    if (container) {
+      if (resetTilt) container.style.transform = '';
+      container.querySelectorAll<HTMLElement>('.holo-card').forEach((el) => {
+        el.style.setProperty('--rx', '0');
+        el.style.setProperty('--ry', '0');
+        el.style.setProperty('--mx', '50%');
+        el.style.setProperty('--my', '50%');
+      });
     }
-  }, []);
+  }, [hasMouseTracking]);
+
+  const handleMouseLeave = useCallback(() => resetEffects(true), [resetEffects]);
+  const handleFlip = useCallback(() => { setFlipped(f => !f); resetEffects(true); }, [resetEffects]);
 
   const glowColor = tier === 'mythic'
     ? 'rgba(212,175,55,0.25)'
@@ -237,15 +238,17 @@ function TierCardModal({ config, isZh, lang, onClose }: {
       onClick={onClose}
     >
       <div
+        ref={containerRef}
         className="card-flip-container card-modal-pop"
-        style={{ width: 340, aspectRatio: '3 / 4' }}
+        style={{ width: 340, aspectRatio: '3 / 4', transition: 'transform 0.15s ease-out' }}
         onClick={(e) => { e.stopPropagation(); handleFlip(); }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
       >
         <div className={`card-flip-inner ${flipped ? 'flipped' : ''}`}>
           {/* Front */}
           <div className="card-flip-face">
             <div
-              ref={cardRef}
               className={`holo-card card-tier-${tier}`}
               style={{
                 width: '100%',
@@ -254,10 +257,8 @@ function TierCardModal({ config, isZh, lang, onClose }: {
                 '--card-bg2': bg[1],
                 '--glow-color': glowColor,
               } as React.CSSProperties}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
             >
-              <div className="holo-card-inner">
+              <div className="holo-card-inner" style={{ transform: 'none' }}>
                 <div className="card-base" />
                 <div className="holo-layer" />
                 <div className="holo-lines" />
@@ -284,33 +285,38 @@ function TierCardModal({ config, isZh, lang, onClose }: {
 
           {/* Back */}
           <div className="card-flip-face card-flip-back">
-            <div
-              className="h-full flex flex-col items-center justify-center p-6 text-center"
-              style={{
-                background: `linear-gradient(160deg, ${bg[0]}, ${bg[1]})`,
-                borderRadius: '16px',
-                border: isMythic ? '1px solid rgba(212,175,55,0.3)' : '1px solid rgba(0,0,0,0.08)',
-              }}
-            >
-              <div className={`text-xl font-bold mb-1 ${isMythic ? 'text-amber-200' : 'text-text-primary'}`}>
-                {t(label as 'tierNormal') as string}
-              </div>
-              {threshold > 0 && (
-                <div className={`text-xs mb-5 ${isMythic ? 'text-amber-200/60' : 'text-text-faint'}`}>
-                  {`${threshold.toLocaleString()}+ ${isZh ? '次使用解锁' : 'uses to unlock'}`}
-                </div>
-              )}
-              <div className={`w-12 h-px mb-5 ${isMythic ? 'bg-amber-400/30' : 'bg-black/10'}`} />
-              <div className="space-y-2.5">
-                {features.map((f, i) => (
-                  <div key={i} className={`flex items-center gap-2.5 text-sm ${isMythic ? 'text-amber-100/80' : 'text-text-dim'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMythic ? 'bg-amber-400/50' : 'bg-accent/40'}`} />
-                    {isZh ? f.zh : f.en}
+            <div className={`holo-card card-tier-${tier}`} style={{ width: '100%', height: '100%' }}>
+              <div className="holo-card-inner" style={{ transform: 'none' }}>
+                <div className="card-base" />
+                {tier === 'legendary' && <><div className="holo-layer" /><div className="holo-spot" /></>}
+                {isMythic && (
+                  <>
+                    <div className="gold-sweep" />
+                    <div className="mythic-particles"><span /><span /><span /><span /><span /><span /></div>
+                  </>
+                )}
+                <div className="card-content h-full flex flex-col items-center justify-center p-6 text-center">
+                  <div className={`text-xl font-bold mb-1 ${isMythic ? 'text-amber-200' : 'text-text-primary'}`}>
+                    {t(label as 'tierNormal') as string}
                   </div>
-                ))}
-              </div>
-              <div className={`mt-6 text-[0.62rem] ${isMythic ? 'text-amber-200/30' : 'text-text-faint/50'}`}>
-                {isZh ? '点击翻回正面' : 'Click to flip back'}
+                  {threshold > 0 && (
+                    <div className={`text-xs mb-5 ${isMythic ? 'text-amber-200/60' : 'text-text-faint'}`}>
+                      {`${threshold.toLocaleString()}+ ${isZh ? '次使用解锁' : 'uses to unlock'}`}
+                    </div>
+                  )}
+                  <div className={`w-12 h-px mb-5 ${isMythic ? 'bg-amber-400/30' : 'bg-black/10'}`} />
+                  <div className="space-y-2.5">
+                    {features.map((f, i) => (
+                      <div key={i} className={`flex items-center gap-2.5 text-sm ${isMythic ? 'text-amber-100/80' : 'text-text-dim'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMythic ? 'bg-amber-400/50' : 'bg-accent/40'}`} />
+                        {isZh ? f.zh : f.en}
+                      </div>
+                    ))}
+                  </div>
+                  <div className={`mt-6 text-[0.62rem] ${isMythic ? 'text-amber-200/30' : 'text-text-faint/50'}`}>
+                    {isZh ? '点击翻回正面' : 'Click to flip back'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
