@@ -4,6 +4,11 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
+class GenerationCancelledError(Exception):
+    """Raised when generation is cancelled by the user."""
+    pass
+
+
 @dataclass
 class LocalizedText:
     zh: str = ""

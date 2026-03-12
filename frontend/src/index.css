@@ -246,25 +246,29 @@ button, [role="button"], a, select, label[for], input[type="checkbox"], input[ty
   border-color: rgba(0,0,0,0.06);
 }
 
-/* Tier 2: Rare — silver with lavender undertone */
+/* Tier 2: Rare — silver with lavender undertone, card elevation */
 .card-tier-rare .holo-layer,
 .card-tier-rare .holo-lines,
 .card-tier-rare .holo-spot { display: none; }
 .card-tier-rare .holo-card-inner {
   transform: none;
   background: linear-gradient(160deg, #edeaf2 0%, #d8d3e2 50%, #ccc8d8 100%) !important;
-  transition: box-shadow 0.4s ease;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.08),
+    0 1px 3px rgba(0,0,0,0.06);
 }
 .card-tier-rare .card-base {
   background: linear-gradient(160deg, #edeaf2 0%, #d8d3e2 50%, #ccc8d8 100%) !important;
 }
 .card-tier-rare .holo-card-inner::before {
-  border-color: rgba(0,0,0,0.06);
+  border-color: rgba(120,100,160,0.15);
 }
 .card-tier-rare:hover .holo-card-inner {
+  transform: translateY(-2px);
   box-shadow:
-    0 4px 20px rgba(120,100,160,0.12),
-    0 0 18px rgba(160,140,200,0.18);
+    0 6px 24px rgba(120,100,160,0.15),
+    0 0 20px rgba(160,140,200,0.18);
 }
 
 /* Tier 3: Epic — ice blue */

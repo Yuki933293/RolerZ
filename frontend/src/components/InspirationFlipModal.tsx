@@ -28,15 +28,24 @@ interface Props {
   cardBg: [string, string];
   glowColor: string;
   categoryLabel: string;
+  tier?: string;
   tagLabel: (tag: string) => string;
   onEdit: () => void;
   onClose: () => void;
 }
 
+const TIER_BG: Record<string, [string, string]> = {
+  normal:    ['#f3f4f6', '#e5e7eb'],
+  rare:      ['#edeaf2', '#ccc8d8'],
+  epic:      ['#e8f2ff', '#c8ddf5'],
+  legendary: ['#f3eae4', '#dfc8b4'],
+  mythic:    ['#1a1a2e', '#0f3460'],
+};
+
 export default function InspirationFlipModal({
   card, override, lang, isZh, isLoggedIn,
   accent, iconPath, cardBg, glowColor, categoryLabel,
-  tagLabel, onEdit, onClose,
+  tier = 'rare', tagLabel, onEdit, onClose,
 }: Props) {
   const [flipped, setFlipped] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -99,7 +108,7 @@ export default function InspirationFlipModal({
     >
       <div
         className="card-flip-container card-modal-pop"
-        style={{ width: 280, aspectRatio: '3 / 4' }}
+        style={{ width: 340, aspectRatio: '3 / 4' }}
         onClick={(e) => { e.stopPropagation(); handleFlip(); }}
       >
         <div className={`card-flip-inner ${flipped ? 'flipped' : ''}`}>
@@ -107,7 +116,7 @@ export default function InspirationFlipModal({
           <div className="card-flip-face">
             <div
               ref={cardRef}
-              className="holo-card card-tier-epic"
+              className={`holo-card card-tier-${tier}`}
               style={{
                 width: '100%',
                 height: '100%',
@@ -158,7 +167,7 @@ export default function InspirationFlipModal({
             <div
               className="h-full flex flex-col rounded-2xl overflow-hidden"
               style={{
-                background: `linear-gradient(160deg, ${cardBg[0]}, ${cardBg[1]})`,
+                background: `linear-gradient(160deg, ${(TIER_BG[tier] || TIER_BG.rare)[0]}, ${(TIER_BG[tier] || TIER_BG.rare)[1]})`,
                 border: '1px solid rgba(0,0,0,0.08)',
               }}
             >

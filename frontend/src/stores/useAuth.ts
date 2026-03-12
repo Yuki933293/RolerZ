@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useConfig } from './useConfig';
+import { useGenerateSession } from './useGenerateSession';
 
 interface AuthStore {
   token: string | null;
@@ -32,5 +33,6 @@ export const useAuth = create<AuthStore>((set) => ({
     localStorage.removeItem('isAdmin');
     set({ token: null, username: null, isAdmin: false });
     config.resetToDefaults();
+    useGenerateSession.getState().clearSession();
   },
 }));

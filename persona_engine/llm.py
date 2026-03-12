@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import os
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 
-from .domain import LocalizedText, PersonaSeed, PersonaSpec
+from .domain import GenerationCancelledError, LocalizedText, PersonaSeed, PersonaSpec
 from .inspiration import InspirationCard
 from .templates import PersonaTemplate
 from .utils import is_cjk
@@ -18,6 +19,29 @@ class LLMClient(ABC):
         presence_penalty: float | None = None,
     ) -> str:
         raise NotImplementedError
+
+    def generate_stream(
+        self, prompt: str, system: str | None = None, temperature: float = 0.7,
+        top_p: float | None = None, frequency_penalty: float | None = None,
+        presence_penalty: float | None = None,
+    ) -> Iterator[str]:
+        """Yield text chunks via streaming. Default fallback: yield full result."""
+        yield self.generate(prompt, system=system, temperature=temperature,
+                            top_p=top_p, frequency_penalty=frequency_penalty,
+                            presence_penalty=presence_penalty)
+
+    def generate_with_cancel(
+        self, prompt: str, cancel_check=None, **kwargs,
+    ) -> str:
+        """Generate text, checking cancel_check between streamed chunks."""
+        if cancel_check is None:
+            return self.generate(prompt, **kwargs)
+        chunks: list[str] = []
+        for chunk in self.generate_stream(prompt, **kwargs):
+            chunks.append(chunk)
+            if cancel_check():
+                raise GenerationCancelledError("Generation cancelled by user")
+        return "".join(chunks)
 
 
 class NullLLMClient(LLMClient):
@@ -91,6 +115,50 @@ class OpenAICompatibleClient(LLMClient):
 
         content = response.choices[0].message.content
         return content if content is not None else ""
+
+    def generate_stream(
+        self, prompt: str, system: str | None = None, temperature: float = 0.7,
+        top_p: float | None = None, frequency_penalty: float | None = None,
+        presence_penalty: float | None = None,
+    ) -> Iterator[str]:
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
+        kwargs: dict = {
+            "model": self.model,
+            "messages": messages,
+            "max_tokens": self.max_tokens,
+            "temperature": temperature,
+            "stream": True,
+        }
+        if top_p is not None:
+            kwargs["top_p"] = top_p
+        if frequency_penalty is not None:
+            kwargs["frequency_penalty"] = frequency_penalty
+        if presence_penalty is not None:
+            kwargs["presence_penalty"] = presence_penalty
+
+        try:
+            stream = self._client.chat.completions.create(**kwargs)
+            for chunk in stream:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+        except ImportError as exc:
+            if "socksio" in str(exc):
+                raise ImportError(
+                    "检测到系统 SOCKS 代理，但缺少必要依赖。\n"
+                    "请运行：pip install 'httpx[socks]'\n"
+                    "Detected SOCKS proxy. Run: pip install 'httpx[socks]'"
+                ) from exc
+            raise
+        except Exception as exc:
+            err_msg = str(exc)
+            if "not a chat model" in err_msg or "not supported in the v1/chat/completions" in err_msg:
+                yield self._generate_via_responses(prompt, system)
+                return
+            raise
 
     def _generate_via_responses(self, prompt: str, system: str | None = None) -> str:
         """Fallback to OpenAI Responses API for models that don't support chat/completions."""
@@ -228,6 +296,35 @@ class ClaudeClient(LLMClient):
                 ) from exc
             raise
         return response.content[0].text
+
+    def generate_stream(
+        self, prompt: str, system: str | None = None, temperature: float = 0.7,
+        top_p: float | None = None, frequency_penalty: float | None = None,
+        presence_penalty: float | None = None,
+    ) -> Iterator[str]:
+        kwargs: dict = {
+            "model": self.model,
+            "max_tokens": self.max_tokens,
+            "temperature": temperature,
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": True,
+        }
+        if top_p is not None:
+            kwargs["top_p"] = top_p
+        if system:
+            kwargs["system"] = system
+        try:
+            with self._client.messages.stream(**kwargs) as stream:
+                for text in stream.text_stream:
+                    yield text
+        except ImportError as exc:
+            if "socksio" in str(exc):
+                raise ImportError(
+                    "检测到系统 SOCKS 代理，但缺少必要依赖。\n"
+                    "请运行：pip install 'httpx[socks]'\n"
+                    "Detected SOCKS proxy. Run: pip install 'httpx[socks]'"
+                ) from exc
+            raise
 
 
 PERSONA_SYSTEM_PROMPT_ZH = """\

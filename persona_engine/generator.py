@@ -60,7 +60,8 @@ class LLMGenerator:
         return GenerationContext(values=values)
 
     def generate(
-        self, seed: PersonaSeed, template: PersonaTemplate, cards: list[InspirationCard]
+        self, seed: PersonaSeed, template: PersonaTemplate, cards: list[InspirationCard],
+        cancel_check=None,
     ) -> tuple[PersonaSpec, GenerationContext]:
         from .llm import (
             build_persona_prompt,
@@ -81,16 +82,20 @@ class LLMGenerator:
         raw: str | None = None
         last_error: Exception | None = None
 
+        llm_kwargs = dict(
+            system=system_prompt, temperature=temperature,
+            top_p=top_p, frequency_penalty=frequency_penalty,
+            presence_penalty=presence_penalty,
+        )
+
         for attempt in range(max_attempts):
             try:
                 if attempt == 0:
                     prompt = build_persona_prompt(seed, template, cards, language=language)
                 else:
                     prompt = build_repair_prompt(raw or "", language=language)
-                raw = self.llm.generate(
-                    prompt, system=system_prompt, temperature=temperature,
-                    top_p=top_p, frequency_penalty=frequency_penalty,
-                    presence_penalty=presence_penalty,
+                raw = self.llm.generate_with_cancel(
+                    prompt, cancel_check=cancel_check, **llm_kwargs,
                 )
                 spec = parse_llm_response(raw, language=language)
                 if spec is not None:
@@ -100,6 +105,10 @@ class LLMGenerator:
                 last_error = ValueError("LLM returned invalid or incomplete JSON")
             except Exception as exc:
                 last_error = exc
+                # Re-raise cancellation immediately, don't retry
+                from .domain import GenerationCancelledError
+                if isinstance(exc, GenerationCancelledError):
+                    raise
 
         raise RuntimeError(
             f"LLM generation failed after {max_attempts} attempt(s): {last_error}"

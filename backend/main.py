@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import threading
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from urllib import error as urlerror
@@ -20,7 +21,7 @@ from pydantic import BaseModel
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import database as db
-from persona_engine import EngineConfig, PersonaEngine, PersonaSeed
+from persona_engine import EngineConfig, GenerationCancelledError, PersonaEngine, PersonaSeed
 from persona_engine.inspiration import InspirationLibrary
 from persona_engine.llm import PROVIDER_DEFAULTS, create_llm_client, _PROVIDER_BASE_URLS
 from persona_engine.wizard import REQUIRED_FIELDS, WizardEngine
@@ -676,6 +677,21 @@ def delete_account(authorization: str | None = Header(None)):
     return {"ok": True}
 
 
+# ── Generation cancel registry ─────────────────────────────────────────
+_cancel_events: dict[int, threading.Event] = {}
+
+
+@app.post("/api/generate/cancel")
+def cancel_generation(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    event = _cancel_events.get(user["user_id"])
+    if event:
+        event.set()
+    return {"ok": True}
+
+
 # ── Generation ──────────────────────────────────────────────────────────
 def _apply_overrides(engine: PersonaEngine, overrides: dict[str, dict]) -> None:
     if not overrides:
@@ -725,18 +741,29 @@ def generate(req: GenerateRequest, authorization: str | None = Header(None)):
         overrides = db.get_card_overrides(user["user_id"])
         _apply_overrides(engine, overrides)
 
+    # Set up cancellation for this user
+    cancel_event = threading.Event()
+    user_id = user["user_id"] if user else None
+    if user_id is not None:
+        _cancel_events[user_id] = cancel_event
+
     seed = PersonaSeed(
         concept=req.concept,
         selected_inspirations=req.selected_inspirations,
     )
     try:
-        output = engine.generate(seed)
+        output = engine.generate(seed, cancel_check=cancel_event.is_set)
         result = output.as_dict(req.language)
         if user:
             db.save_generation(user["user_id"], req.concept, req.language, req.count, result)
         return result
+    except GenerationCancelledError:
+        raise HTTPException(status_code=499, detail="生成已取消")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+    finally:
+        if user_id is not None:
+            _cancel_events.pop(user_id, None)
 
 
 # ── Chat preview ───────────────────────────────────────────────────────

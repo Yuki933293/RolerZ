@@ -160,11 +160,16 @@ export interface GenerateResult {
   meta: Record<string, unknown>;
 }
 
-export function generate(params: GenerateParams) {
+export function generate(params: GenerateParams, signal?: AbortSignal) {
   return request<GenerateResult>('/api/generate', {
     method: 'POST',
     body: JSON.stringify(params),
+    signal,
   });
+}
+
+export function cancelGeneration() {
+  return request<{ ok: boolean }>('/api/generate/cancel', { method: 'POST' });
 }
 
 // ── Wizard ──

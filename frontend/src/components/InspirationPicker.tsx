@@ -152,7 +152,8 @@ function HoloPickerCard({ card, lang, isSelected, isModified, accent, iconPath, 
       ref={ref}
       className={`holo-card card-tier-rare group ${isSelected ? 'ring-2' : ''}`}
       style={{
-        aspectRatio: '4 / 3',
+        width: '100%',
+        aspectRatio: '3 / 4',
         '--glow-color': glowColor,
         '--card-bg1': cardBg[0],
         '--card-bg2': cardBg[1],
@@ -556,7 +557,7 @@ export default function InspirationPicker({ language, selected, onSelectionChang
                 {isZh ? '没有找到匹配的灵感卡' : 'No matching cards found'}
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-2">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 240px))', gap: '16px', justifyContent: 'center' }}>
                 {filteredCards.map(card => {
                   const accent = '#4E8CFF';
                   const glow = 'rgba(78,140,255,0.25)';

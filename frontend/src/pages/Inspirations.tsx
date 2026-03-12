@@ -153,7 +153,7 @@ function HoloCard({ card, lang, isZh, glowColor, accent, iconPath, cardBg, isMod
     <div
       ref={ref}
       className="holo-card card-tier-rare"
-      style={{ aspectRatio: '4 / 3', '--glow-color': glowColor, '--card-bg1': cardBg[0], '--card-bg2': cardBg[1] } as React.CSSProperties}
+      style={{ width: '100%', aspectRatio: '3 / 4', '--glow-color': glowColor, '--card-bg1': cardBg[0], '--card-bg2': cardBg[1] } as React.CSSProperties}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
@@ -333,7 +333,7 @@ export default function Inspirations() {
           {isZh ? '没有找到匹配的灵感卡' : 'No matching cards found'}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 280px))', gap: '24px', justifyContent: 'center' }}>
           {filteredCards.map(card => {
             const accent = CATEGORY_ACCENT[card.category] || '#999';
             const glow = CATEGORY_GLOW[card.category] || 'rgba(100,100,255,0.15)';

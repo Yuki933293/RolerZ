@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .compressor import compress_spec
 from .config import EngineConfig
-from .domain import PersonaCandidate, PersonaOutput, PersonaSeed, Question
+from .domain import GenerationCancelledError, PersonaCandidate, PersonaOutput, PersonaSeed, Question
 from .formatter import render_natural, render_natural_card
 from .generator import LLMGenerator
 from .inspiration import InspirationLibrary
@@ -19,6 +19,7 @@ from .templates import TemplateLibrary
 from .utils import rng
 
 VERSION = "0.3.0"
+
 
 _SCHEMA_PATH = Path(__file__).resolve().parent.parent / "schemas" / "persona_spec.schema.json"
 _SCHEMA: dict | None = None
@@ -120,7 +121,7 @@ class PersonaEngine:
             )
         return questions
 
-    def generate(self, seed: PersonaSeed) -> PersonaOutput:
+    def generate(self, seed: PersonaSeed, cancel_check: callable = None) -> PersonaOutput:
         llm_client = create_llm_client(
             provider=self.config.llm_provider,
             model=self.config.llm_model,
@@ -153,6 +154,10 @@ class PersonaEngine:
 
         pool: list[tuple] = []
         for i in range(effective_generate):
+            # Check cancellation before each candidate generation (saves LLM tokens)
+            if cancel_check and cancel_check():
+                raise GenerationCancelledError("Generation cancelled by user")
+
             template = templates_for_run[i]
             cards = self.inspirations.select_cards(
                 seed.preferences,
@@ -160,7 +165,7 @@ class PersonaEngine:
                 randomizer,
                 selected_ids=seed.selected_inspirations or None,
             )
-            spec, gen_context = generator.generate(seed, template, cards)
+            spec, gen_context = generator.generate(seed, template, cards, cancel_check=cancel_check)
             score = score_candidate(spec, self.config)
             safety_flags = scan_spec(spec)
             if safety_flags:

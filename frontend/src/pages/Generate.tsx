@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from '../stores/useConfig';
 import { useAuth } from '../stores/useAuth';
-import { generate, type Candidate } from '../api/client';
+import { useGenerateSession } from '../stores/useGenerateSession';
+import { generate } from '../api/client';
 import CandidateCard from '../components/CandidateCard';
 import InspirationPicker from '../components/InspirationPicker';
 import ChatWizard from '../components/ChatWizard';
@@ -16,18 +17,16 @@ export default function Generate() {
   const t = useT(config.language);
   const [activeTab, setActiveTab] = useState<'create' | 'chat'>('create');
 
-  // Batch state
   const [concept, setConcept] = useState('');
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
-  const [results, setResults] = useState<Candidate[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
+  // Use session store for generation state (persists across navigation)
+  const session = useGenerateSession();
 
   const handleGenerate = async () => {
     if (!concept.trim()) return;
-    setLoading(true);
-    setError('');
-    setResults(null);
+    const controller = new AbortController();
+    session.startGeneration(concept.trim(), controller);
     try {
       const res = await generate({
         concept: concept.trim(),
@@ -43,19 +42,24 @@ export default function Generate() {
         max_tokens: config.advanced.maxTokens,
         frequency_penalty: config.advanced.frequencyPenalty,
         presence_penalty: config.advanced.presencePenalty,
-      });
-      setResults(res.candidates);
+      }, controller.signal);
+      session.finishGeneration(res.candidates);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : t('generateFailed') as string);
-    } finally {
-      setLoading(false);
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      session.failGeneration(e instanceof Error ? e.message : t('generateFailed') as string);
     }
+  };
+
+  const handleCancel = () => {
+    session.cancelGeneration();
   };
 
   const tabs = [
     { id: 'create' as const, label: t('freeCreate') as string, desc: t('freeCreateDesc') as string },
     { id: 'chat' as const, label: t('guidedCreate') as string, desc: t('guidedCreateDesc') as string },
   ];
+
+  const isZh = config.language === 'zh' || config.language === 'zh-Hant';
 
   if (!token) {
     return <LoginPrompt titleKey="loginToCreate" descKey="loginToCreateDesc" />;
@@ -126,7 +130,8 @@ export default function Generate() {
               onChange={e => setConcept(e.target.value)}
               placeholder={t('conceptPlaceholder') as string}
               rows={3}
-              className="w-full px-3 py-2.5 text-[0.88rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none resize-none placeholder:text-text-muted"
+              disabled={session.isGenerating}
+              className="w-full px-3 py-2.5 text-[0.88rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none resize-none placeholder:text-text-muted disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -146,7 +151,7 @@ export default function Generate() {
               <div className="flex items-center border border-border rounded-lg overflow-hidden">
                 <button
                   onClick={() => { if (config.count > 1) config.setCount(config.count - 1); }}
-                  disabled={config.count <= 1}
+                  disabled={config.count <= 1 || session.isGenerating}
                   className="w-8 h-8 flex items-center justify-center text-text-dim hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm"
                 >
                   −
@@ -162,52 +167,88 @@ export default function Generate() {
                     config.setCount(n);
                   }}
                   onBlur={() => { if (config.count < 1) config.setCount(1); if (config.count > 10) config.setCount(10); }}
-                  className="w-10 text-center text-[0.84rem] font-semibold text-text-primary outline-none bg-transparent border-x border-border py-1"
+                  disabled={session.isGenerating}
+                  className="w-10 text-center text-[0.84rem] font-semibold text-text-primary outline-none bg-transparent border-x border-border py-1 disabled:opacity-50"
                 />
                 <button
                   onClick={() => { if (config.count < 10) config.setCount(config.count + 1); }}
-                  disabled={config.count >= 10}
+                  disabled={config.count >= 10 || session.isGenerating}
                   className="w-8 h-8 flex items-center justify-center text-text-dim hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm"
                 >
                   +
                 </button>
               </div>
-              <span className="text-[0.72rem] text-text-faint">
-                {config.language === 'en' ? 'max 10' : config.language === 'zh-Hant' ? 'max number:10' : 'max number:10'}
-              </span>
+              <span className="text-[0.72rem] text-text-faint">max 10</span>
             </div>
-            <button
-              onClick={handleGenerate}
-              disabled={loading || !concept.trim() || !config.configured}
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[0.85rem] font-semibold px-7 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  {t('generating') as string}
-                </span>
-              ) : (
-                <>{t('generateBtn') as string} {selectedCards.length > 0 && <span className="text-white/70 ml-1">({selectedCards.length} {t('inspirationSuffix') as string})</span>}</>
+
+            <div className="flex items-center gap-3">
+              {session.isGenerating && (
+                <button
+                  onClick={handleCancel}
+                  className="text-[0.84rem] font-medium text-error border border-error/30 bg-error/5 hover:bg-error/10 px-5 py-2.5 rounded-xl transition-all"
+                >
+                  {isZh ? '取消生成' : 'Cancel'}
+                </button>
               )}
-            </button>
+              <button
+                onClick={handleGenerate}
+                disabled={session.isGenerating || !concept.trim() || !config.configured}
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-[0.85rem] font-semibold px-7 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg"
+              >
+                {session.isGenerating ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    {t('generating') as string}
+                  </span>
+                ) : (
+                  <>{t('generateBtn') as string} {selectedCards.length > 0 && <span className="text-white/70 ml-1">({selectedCards.length} {t('inspirationSuffix') as string})</span>}</>
+                )}
+              </button>
+            </div>
           </div>
 
-          {error && (
-            <div className="mb-4 px-4 py-3 bg-error/5 border border-error/20 rounded-lg text-[0.84rem] text-error">
-              {error}
+          {/* Generating indicator */}
+          {session.isGenerating && (
+            <div className="mb-6 px-5 py-4 bg-accent/5 border border-accent/20 rounded-xl">
+              <div className="flex items-center gap-3">
+                <span className="w-5 h-5 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+                <div>
+                  <div className="text-[0.84rem] font-medium text-accent">
+                    {isZh ? '正在生成角色...' : 'Generating character...'}
+                  </div>
+                  <div className="text-[0.72rem] text-text-faint mt-0.5">
+                    {isZh ? `概念：${session.currentConcept}` : `Concept: ${session.currentConcept}`}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          {results && results.length > 0 && (
-            <div>
-              <div className="text-[0.82rem] font-semibold text-text-dim mb-3">
-                {t('generateResult') as string} · {results.length} {t('candidateUnit') as string}
+          {session.error && (
+            <div className="mb-4 px-4 py-3 bg-error/5 border border-error/20 rounded-lg text-[0.84rem] text-error">
+              {session.error}
+            </div>
+          )}
+
+          {/* Session history: all generation runs from this login */}
+          {session.runs.map((run) => (
+            <div key={run.id} className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="text-[0.82rem] font-semibold text-text-dim">
+                  {run.concept}
+                </div>
+                <span className="text-[0.7rem] text-text-faint">
+                  · {run.candidates.length} {isZh ? '个候选' : 'candidates'}
+                </span>
+                <span className="text-[0.66rem] text-text-muted ml-auto">
+                  {new Date(run.timestamp).toLocaleTimeString()}
+                </span>
               </div>
-              {results.map((c, i) => (
+              {run.candidates.map((c, i) => (
                 <CandidateCard key={c.id} candidate={c} index={i} language={config.language} />
               ))}
             </div>
-          )}
+          ))}
         </div>
       )}
 

@@ -109,7 +109,7 @@ function TierCard({ tier, threshold, label, bg, isZh, lang, features, onOpen }: 
         className={`holo-card card-tier-${tier} shrink-0`}
         onClick={onOpen}
         style={{
-          width: 160,
+          width: 200,
           aspectRatio: '3 / 4',
           '--card-bg1': bg[0],
           '--card-bg2': bg[1],
@@ -238,7 +238,7 @@ function TierCardModal({ config, isZh, lang, onClose }: {
     >
       <div
         className="card-flip-container card-modal-pop"
-        style={{ width: 280, aspectRatio: '3 / 4' }}
+        style={{ width: 340, aspectRatio: '3 / 4' }}
         onClick={(e) => { e.stopPropagation(); handleFlip(); }}
       >
         <div className={`card-flip-inner ${flipped ? 'flipped' : ''}`}>
@@ -667,7 +667,7 @@ export default function Announcements() {
                 onOpen={() => setActiveTier(tier)}
               />
               {tier !== 'mythic' && (
-                <div className="flex items-center gap-2 ml-[76px] mt-4 mb-2">
+                <div className="flex items-center gap-2 ml-[96px] mt-4 mb-2">
                   <div className="w-[2px] h-5 bg-border" />
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-faint">
                     <polyline points="6 9 12 15 18 9" />
