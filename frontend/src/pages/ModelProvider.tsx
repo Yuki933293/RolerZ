@@ -213,102 +213,83 @@ export default function ModelProvider() {
         </p>
       </div>
 
-      {/* My Configs section */}
-      {(() => {
-        const configuredProviders = Object.entries(config.providerConfigs)
-          .filter(([, cfg]) => cfg.configured)
-          .map(([id, cfg]) => ({ id, ...cfg }));
-
-        return (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <div className="text-[0.92rem] font-semibold text-text-primary">{t('myConfigs') as string}</div>
-                <div className="text-[0.72rem] text-text-faint mt-0.5">{t('myConfigsDesc') as string}</div>
-              </div>
-            </div>
-
-            {configuredProviders.length === 0 ? (
-              <div className="text-center py-6 text-text-faint text-[0.82rem] bg-surface-2 border border-border rounded-xl">
-                {t('noConfigs') as string}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {configuredProviders.map(cfg => {
-                  const isCurrent = config.provider === cfg.id;
-                  const displayName = cfg.label || PROVIDER_NAMES[cfg.id] || cfg.id;
-                  const providerTag = cfg.label ? (PROVIDER_NAMES[cfg.id] || cfg.id) : null;
-                  const urlPreview = cfg.baseUrl
-                    ? cfg.baseUrl.replace(/^https?:\/\//, '').slice(0, 30) + (cfg.baseUrl.replace(/^https?:\/\//, '').length > 30 ? '...' : '')
-                    : '';
-
-                  return (
-                    <div
-                      key={cfg.id}
-                      className={`flex items-center gap-4 px-4 py-3 rounded-xl border transition-colors cursor-pointer ${
-                        isCurrent
-                          ? 'bg-accent/5 border-accent/25'
-                          : 'bg-white border-border hover:bg-surface-2'
-                      }`}
-                      onClick={() => { if (!isCurrent) config.setProvider(cfg.id); }}
-                    >
-                      {/* Provider icon placeholder */}
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                        isCurrent ? 'bg-accent/10' : 'bg-surface-3'
-                      }`}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isCurrent ? 'var(--color-accent)' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isCurrent ? '' : 'text-text-faint'}>
-                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                          <line x1="12" y1="22.08" x2="12" y2="12" />
-                        </svg>
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[0.88rem] font-semibold text-text-primary truncate">{displayName}</span>
-                          {providerTag && (
-                            <span className="text-[0.62rem] text-text-faint bg-surface-3 px-1.5 py-0.5 rounded shrink-0">{providerTag}</span>
-                          )}
-                          {isCurrent && (
-                            <span className="text-[0.62rem] text-accent bg-accent/10 px-1.5 py-0.5 rounded font-semibold shrink-0">
-                              {t('usingNow') as string}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[0.72rem] text-text-faint font-mono truncate mt-0.5">
-                          {cfg.modelName || cfg.modelId || ''}
-                          {urlPreview && <span className="ml-2 opacity-60">· {urlPreview}</span>}
-                        </div>
-                      </div>
-
-                      {/* Delete button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(t('confirmDeleteConfig') as string)) {
-                            config.deleteProviderConfig(cfg.id);
-                          }
-                        }}
-                        className="text-text-faint hover:text-error p-1.5 rounded-lg hover:bg-error/10 transition-colors shrink-0"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
       <div className="flex gap-6">
-        {/* Left: Provider list */}
-        <div className="w-48 flex-shrink-0 sticky top-4 self-start max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin">
+        {/* Left: My Configs */}
+        {(() => {
+          const configuredProviders = Object.entries(config.providerConfigs)
+            .filter(([, cfg]) => cfg.configured)
+            .map(([id, cfg]) => ({ id, ...cfg }));
+
+          return (
+            <div className="w-56 flex-shrink-0 sticky top-4 self-start max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin">
+              <div className="text-[0.78rem] font-semibold text-text-secondary mb-2">
+                {t('myConfigs') as string}
+              </div>
+              <div className="text-[0.68rem] text-text-faint mb-3">{t('myConfigsDesc') as string}</div>
+
+              {configuredProviders.length === 0 ? (
+                <div className="text-center py-5 text-text-faint text-[0.76rem] bg-surface-2 border border-border rounded-xl">
+                  {t('noConfigs') as string}
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {configuredProviders.map(cfg => {
+                    const isCurrent = config.provider === cfg.id;
+                    const displayName = cfg.label || PROVIDER_NAMES[cfg.id] || cfg.id;
+                    const providerTag = cfg.label ? (PROVIDER_NAMES[cfg.id] || cfg.id) : null;
+
+                    return (
+                      <div
+                        key={cfg.id}
+                        className={`px-3 py-2.5 rounded-xl border transition-colors cursor-pointer ${
+                          isCurrent
+                            ? 'bg-accent/5 border-accent/25'
+                            : 'bg-white border-border hover:bg-surface-2'
+                        }`}
+                        onClick={() => { if (!isCurrent) config.setProvider(cfg.id); }}
+                      >
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[0.82rem] font-semibold text-text-primary truncate">{displayName}</span>
+                          {providerTag && (
+                            <span className="text-[0.58rem] text-text-faint bg-surface-3 px-1 py-0.5 rounded shrink-0">{providerTag}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-[0.68rem] text-text-faint font-mono truncate">
+                            {cfg.modelName || cfg.modelId || '—'}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0 ml-1">
+                            {isCurrent && (
+                              <span className="text-[0.58rem] text-accent bg-accent/10 px-1.5 py-0.5 rounded font-semibold">
+                                {t('usingNow') as string}
+                              </span>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(t('confirmDeleteConfig') as string)) {
+                                  config.deleteProviderConfig(cfg.id);
+                                }
+                              }}
+                              className="text-text-faint hover:text-error p-1 rounded hover:bg-error/10 transition-colors"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Middle: Provider list */}
+        <div className="w-44 flex-shrink-0 sticky top-4 self-start max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin">
           <div className="text-[0.78rem] font-semibold text-text-secondary mb-3">
             {t('providerSource') as string}
           </div>
@@ -319,7 +300,7 @@ export default function ModelProvider() {
                 <button
                   key={p.id}
                   onClick={() => config.setProvider(p.id)}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-lg text-[0.82rem] font-medium transition-all border ${
+                  className={`w-full text-left px-3 py-2 rounded-lg text-[0.8rem] font-medium transition-all border ${
                     isActive
                       ? 'bg-[#D0D0D0] text-text-primary border-[#BBBBBB] font-semibold'
                       : 'bg-white text-text-primary border-border hover:bg-surface-3'
