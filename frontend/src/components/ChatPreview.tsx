@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   chatPreview, listChatSessions, createChatSession,
   getChatSession, updateChatSession, deleteChatSession,
+  hideChatSession, clearChatSessions,
   type ChatMessage, type ChatSession,
 } from '../api/client';
 import { useConfig } from '../stores/useConfig';
@@ -12,6 +13,7 @@ interface Props {
   candidate: Candidate;
   language: string;
   onClose: () => void;
+  filterCharName?: string;
 }
 
 function buildSystemPrompt(candidate: Candidate, language: string): string {
@@ -57,7 +59,7 @@ function buildSystemPrompt(candidate: Candidate, language: string): string {
   return parts.join('\n\n');
 }
 
-export default function ChatPreview({ candidate, language, onClose }: Props) {
+export default function ChatPreview({ candidate, language, onClose, filterCharName }: Props) {
   const config = useConfig();
   const t = useT(language);
   const spec = candidate.spec_long as Record<string, string>;
@@ -69,13 +71,22 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
     openingLine ? [{ role: 'assistant', content: openingLine }] : []
   );
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showHidden, setShowHidden] = useState(false);
+  const [charFilter, setCharFilter] = useState<string | null>(filterCharName || null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Per-session loading: track which session IDs are currently generating
+  const [loadingSessionIds, setLoadingSessionIds] = useState<number[]>([]);
+  // Ref to always know current session ID in async callbacks
+  const sessionIdRef = useRef<number | null>(null);
+  useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
+
+  const isCurrentLoading = sessionId !== null && loadingSessionIds.includes(sessionId);
 
   const isZh = language === 'zh' || language === 'zh-Hant';
 
@@ -88,12 +99,16 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
   }, []);
 
   // Load sessions on mount
-  useEffect(() => {
-    listChatSessions()
-      .then(setSessions)
-      .catch(() => {})
-      .finally(() => setSessionsLoading(false));
-  }, []);
+  const loadSessions = useCallback(async () => {
+    setSessionsLoading(true);
+    try {
+      const data = await listChatSessions(showHidden ? 'hidden' : 'visible', charFilter || undefined);
+      setSessions(data);
+    } catch { /* ignore */ }
+    setSessionsLoading(false);
+  }, [showHidden, charFilter]);
+
+  useEffect(() => { loadSessions(); }, [loadSessions]);
 
   // Auto-save messages to current session
   const saveToSession = useCallback(async (msgs: ChatMessage[]) => {
@@ -104,28 +119,33 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || isCurrentLoading) return;
 
     const userMsg: ChatMessage = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
-    setLoading(true);
 
     // Create session on first user message if no session yet
-    let currentSessionId = sessionId;
-    if (!currentSessionId) {
+    let sendSessionId = sessionId;
+    if (!sendSessionId) {
       try {
         const res = await createChatSession({
           char_name: charName,
           system_prompt: systemPrompt,
           messages: newMessages,
         });
-        currentSessionId = res.id;
+        sendSessionId = res.id;
         setSessionId(res.id);
-        listChatSessions().then(setSessions).catch(() => {});
+        sessionIdRef.current = res.id;
+        loadSessions();
       } catch { /* ignore */ }
     }
+
+    if (!sendSessionId) return;
+
+    // Mark this session as loading
+    setLoadingSessionIds(prev => [...prev, sendSessionId]);
 
     try {
       const res = await chatPreview({
@@ -137,21 +157,26 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
         base_url: config.baseUrl || undefined,
       });
       const updated = [...newMessages, { role: 'assistant' as const, content: res.reply }];
-      setMessages(updated);
-      if (currentSessionId) {
-        updateChatSession(currentSessionId, updated).catch(() => {});
+
+      // Only update UI if we're still viewing this session
+      if (sessionIdRef.current === sendSessionId) {
+        setMessages(updated);
       }
+      // Always save to DB
+      updateChatSession(sendSessionId, updated).catch(() => {});
     } catch (e) {
       const errorMsg = [...newMessages, {
         role: 'assistant' as const,
         content: `[Error] ${e instanceof Error ? e.message : String(e)}`,
       }];
-      setMessages(errorMsg);
-      if (currentSessionId) {
-        updateChatSession(currentSessionId, errorMsg).catch(() => {});
+      if (sessionIdRef.current === sendSessionId) {
+        setMessages(errorMsg);
       }
+      updateChatSession(sendSessionId, errorMsg).catch(() => {});
     } finally {
-      setLoading(false);
+      setLoadingSessionIds(prev => prev.filter(id => id !== sendSessionId));
+      // Refresh session list to update last_message
+      loadSessions();
     }
   };
 
@@ -163,6 +188,10 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
   };
 
   const handleLoadSession = async (sid: number) => {
+    // Save current session before switching (if not currently generating)
+    if (sessionId && messages.length > 0 && !loadingSessionIds.includes(sessionId)) {
+      saveToSession(messages);
+    }
     try {
       const detail = await getChatSession(sid);
       setMessages(detail.messages);
@@ -171,7 +200,8 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
   };
 
   const handleNewChat = () => {
-    if (sessionId && messages.length > 0) {
+    // Save current session before switching (if not generating)
+    if (sessionId && messages.length > 0 && !loadingSessionIds.includes(sessionId)) {
       saveToSession(messages);
     }
     setSessionId(null);
@@ -190,6 +220,37 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
       }
     } catch { /* ignore */ }
   };
+
+  const handleHideSession = async (sid: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await hideChatSession(sid, true);
+      setSessions(prev => prev.filter(s => s.id !== sid));
+      if (sessionId === sid) {
+        handleNewChat();
+      }
+    } catch { /* ignore */ }
+  };
+
+  const handleUnhideSession = async (sid: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await hideChatSession(sid, false);
+      setSessions(prev => prev.filter(s => s.id !== sid));
+    } catch { /* ignore */ }
+  };
+
+  const handleClearAll = async () => {
+    if (!confirm(isZh ? '确定要清空所有聊天记录吗？此操作不可撤销。' : 'Clear all chat sessions? This cannot be undone.')) return;
+    try {
+      await clearChatSessions();
+      setSessions([]);
+      handleNewChat();
+    } catch { /* ignore */ }
+  };
+
+  // Unique character names for filter
+  const allCharNames = [...new Set(sessions.map(s => s.char_name))];
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr + 'Z');
@@ -223,15 +284,62 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
             <span className="text-[0.78rem] font-semibold text-text-secondary truncate">
               {t('chatSessions') as string}
             </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowHidden(v => !v)}
+                className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${
+                  showHidden ? 'bg-accent/10 text-accent' : 'hover:bg-surface-3 text-text-dim'
+                }`}
+                title={isZh ? (showHidden ? '查看可见对话' : '查看隐藏对话') : (showHidden ? 'Show visible' : 'Show hidden')}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {showHidden ? (
+                    <>
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </>
+                  )}
+                </svg>
+              </button>
+              <button
+                onClick={handleNewChat}
+                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-surface-3 text-text-dim transition-colors"
+                title={t('newChat') as string}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Character filter */}
+          <div className="px-2 py-1.5 border-b border-border/50 flex items-center gap-1 flex-wrap flex-shrink-0">
             <button
-              onClick={handleNewChat}
-              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-surface-3 text-text-dim transition-colors"
-              title={t('newChat') as string}
+              onClick={() => setCharFilter(null)}
+              className={`text-[0.66rem] px-2 py-0.5 rounded-full border transition-colors ${
+                !charFilter ? 'bg-accent/10 border-accent/30 text-accent' : 'bg-white border-border text-text-faint hover:bg-surface-2'
+              }`}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              {isZh ? '全部' : 'All'}
             </button>
+            {allCharNames.map(name => (
+              <button
+                key={name}
+                onClick={() => setCharFilter(charFilter === name ? null : name)}
+                className={`text-[0.66rem] px-2 py-0.5 rounded-full border transition-colors truncate max-w-[100px] ${
+                  charFilter === name ? 'bg-accent/10 border-accent/30 text-accent' : 'bg-white border-border text-text-faint hover:bg-surface-2'
+                }`}
+              >
+                {name}
+              </button>
+            ))}
           </div>
 
           {/* Session list */}
@@ -242,12 +350,15 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
               </div>
             ) : sessions.length === 0 ? (
               <div className="text-center py-6 text-text-faint text-[0.72rem] px-3">
-                {t('noSessions') as string}
+                {showHidden
+                  ? (isZh ? '没有隐藏的对话' : 'No hidden chats')
+                  : (t('noSessions') as string)}
               </div>
             ) : (
               <div className="py-1">
                 {sessions.map(s => {
                   const isActive = sessionId === s.id;
+                  const isSessionLoading = loadingSessionIds.includes(s.id);
                   return (
                     <div
                       key={s.id}
@@ -259,19 +370,50 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
                       }`}
                     >
                       <div className="flex items-center justify-between mb-0.5">
-                        <span className={`text-[0.78rem] font-medium truncate ${
-                          isActive ? 'text-accent' : 'text-text-primary'
-                        }`}>
-                          {s.char_name}
-                        </span>
-                        <button
-                          onClick={(e) => handleDeleteSession(s.id, e)}
-                          className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded text-text-faint hover:text-error hover:bg-error/10 transition-all flex-shrink-0"
-                        >
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                          </svg>
-                        </button>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className={`text-[0.78rem] font-medium truncate ${
+                            isActive ? 'text-accent' : 'text-text-primary'
+                          }`}>
+                            {s.char_name}
+                          </span>
+                          {isSessionLoading && (
+                            <div className="w-3 h-3 border-2 border-accent/30 border-t-accent rounded-full animate-spin flex-shrink-0" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
+                          {showHidden ? (
+                            <button
+                              onClick={(e) => handleUnhideSession(s.id, e)}
+                              className="w-5 h-5 flex items-center justify-center rounded text-text-faint hover:text-accent hover:bg-accent/10 transition-all"
+                              title={isZh ? '取消隐藏' : 'Unhide'}
+                            >
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => handleHideSession(s.id, e)}
+                              className="w-5 h-5 flex items-center justify-center rounded text-text-faint hover:text-text-dim hover:bg-surface-3 transition-all"
+                              title={isZh ? '隐藏对话' : 'Hide chat'}
+                            >
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                              </svg>
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => handleDeleteSession(s.id, e)}
+                            className="w-5 h-5 flex items-center justify-center rounded text-text-faint hover:text-error hover:bg-error/10 transition-all"
+                          >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                       <div className="text-[0.66rem] text-text-faint truncate">
                         {s.last_message || (isZh ? '暂无消息' : 'No messages')}
@@ -290,6 +432,18 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
               </div>
             )}
           </div>
+
+          {/* Sidebar footer */}
+          {sessions.length > 0 && !showHidden && (
+            <div className="px-3 py-2 border-t border-border flex-shrink-0">
+              <button
+                onClick={handleClearAll}
+                className="w-full text-[0.7rem] text-text-faint hover:text-error py-1.5 rounded-lg hover:bg-error/5 transition-colors"
+              >
+                {isZh ? '清空所有对话' : 'Clear all chats'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Main chat area */}
@@ -346,7 +500,7 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
                 </div>
               </div>
             ))}
-            {loading && (
+            {isCurrentLoading && (
               <div className="flex justify-start">
                 <div className="bg-surface-2 border border-border rounded-2xl rounded-bl-md px-4 py-3">
                   <div className="flex gap-1.5">
@@ -375,7 +529,7 @@ export default function ChatPreview({ candidate, language, onClose }: Props) {
               />
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || loading}
+                disabled={!input.trim() || isCurrentLoading}
                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 text-white disabled:opacity-30 transition-opacity flex-shrink-0"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

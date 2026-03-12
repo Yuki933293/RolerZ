@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Generate from './pages/Generate';
@@ -12,7 +12,7 @@ import UserManagement from './pages/UserManagement';
 import AdminDashboard from './pages/AdminDashboard';
 import { useAuth } from './stores/useAuth';
 import { useConfig } from './stores/useConfig';
-import { login as apiLogin, register as apiRegister } from './api/client';
+import { login as apiLogin, register as apiRegister, getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from './api/client';
 import { useT } from './i18n';
 
 const LANG_OPTIONS = [
@@ -41,6 +41,44 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
   const langRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
 
+  // Notification state
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  const isZh = language === 'zh' || language === 'zh-Hant';
+
+  const refreshUnread = useCallback(() => {
+    if (!token) return;
+    getUnreadCount().then(r => setUnreadCount(r.count)).catch(() => {});
+  }, [token]);
+
+  // Poll unread count every 60s
+  useEffect(() => {
+    refreshUnread();
+    const interval = setInterval(refreshUnread, 60_000);
+    return () => clearInterval(interval);
+  }, [refreshUnread]);
+
+  const openNotifPanel = useCallback(() => {
+    if (!token) return;
+    setShowNotifPanel(true);
+    getNotifications().then(setNotifications).catch(() => {});
+  }, [token]);
+
+  const handleMarkRead = useCallback(async (id: number) => {
+    await markNotificationRead(id).catch(() => {});
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  }, []);
+
+  const handleMarkAllRead = useCallback(async () => {
+    await markAllNotificationsRead().catch(() => {});
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
+    setUnreadCount(0);
+  }, []);
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (langRef.current && !langRef.current.contains(e.target as Node)) {
@@ -48,6 +86,9 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
       }
       if (userRef.current && !userRef.current.contains(e.target as Node)) {
         setShowUserMenu(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifPanel(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -137,6 +178,84 @@ function TopBar({ sidebarOpen, onToggleSidebar }: { sidebarOpen: boolean; onTogg
               </div>
             )}
           </div>
+
+          {/* Notification bell */}
+          {token && (
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={() => showNotifPanel ? setShowNotifPanel(false) : openNotifPanel()}
+                className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-2 transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-text-dim">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center bg-error text-white text-[0.58rem] font-bold rounded-full">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifPanel && (
+                <div className="absolute right-0 top-full mt-1 bg-white border border-border rounded-xl shadow-lg w-[340px] max-h-[420px] flex flex-col z-50">
+                  {/* Header */}
+                  <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                    <span className="text-[0.86rem] font-semibold text-text-primary">
+                      {isZh ? '通知' : 'Notifications'}
+                    </span>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-[0.72rem] text-accent hover:text-accent/80 transition-colors"
+                      >
+                        {isZh ? '全部已读' : 'Mark all read'}
+                      </button>
+                    )}
+                  </div>
+                  {/* List */}
+                  <div className="flex-1 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="py-10 text-center text-[0.82rem] text-text-faint">
+                        {isZh ? '暂无通知' : 'No notifications'}
+                      </div>
+                    ) : (
+                      notifications.map(n => (
+                        <div
+                          key={n.id}
+                          className={`px-4 py-3 border-b border-border last:border-0 cursor-pointer hover:bg-surface-2 transition-colors ${
+                            n.is_read ? '' : 'bg-accent/[0.03]'
+                          }`}
+                          onClick={() => !n.is_read && handleMarkRead(n.id)}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            {!n.is_read && (
+                              <span className="w-2 h-2 mt-1.5 rounded-full bg-accent shrink-0" />
+                            )}
+                            <div className={`flex-1 ${n.is_read ? 'ml-[18px]' : ''}`}>
+                              <div className="text-[0.82rem] font-medium text-text-primary leading-snug">
+                                {isZh ? n.title_zh : n.title_en}
+                              </div>
+                              {(n.body_zh || n.body_en) && (
+                                <div className="text-[0.72rem] text-text-faint mt-1 leading-relaxed line-clamp-2">
+                                  {isZh ? n.body_zh : n.body_en}
+                                </div>
+                              )}
+                              <div className="text-[0.64rem] text-text-muted mt-1">
+                                {new Date(n.created_at).toLocaleDateString(isZh ? 'zh-CN' : 'en-US', {
+                                  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* User button */}
           <div className="relative" ref={userRef}>

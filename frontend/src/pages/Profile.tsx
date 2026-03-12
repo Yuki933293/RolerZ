@@ -4,6 +4,7 @@ import { useConfig } from '../stores/useConfig';
 import {
   getProfileStats, getProfileInfo, updateProfileInfo,
   getHistory, deleteHistory, changePassword, clearAllHistory, deleteAccount,
+  clearChatSessions,
   type ProfileStats, type HistoryRecord, type UserProfile,
 } from '../api/client';
 import CandidateCard from '../components/CandidateCard';
@@ -17,6 +18,7 @@ export default function Profile() {
   const lang = useConfig(s => s.language);
   const t = useT(lang);
 
+  const isZh = lang === 'zh' || lang === 'zh-Hant';
   const [tab, setTab] = useState<Tab>('history');
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [history, setHistory] = useState<HistoryRecord[]>([]);
@@ -117,6 +119,15 @@ export default function Profile() {
       setHistory([]);
       if (stats) setStats({ ...stats, total_generations: 0, total_candidates: 0 });
       setDataMsg(t('historyCleared') as string);
+    } catch { /* ignore */ }
+  };
+
+  const handleClearChatSessions = async () => {
+    const msg = isZh ? '确定要清空所有聊天记录吗？此操作不可撤销。' : 'Clear all chat sessions? This cannot be undone.';
+    if (!window.confirm(msg)) return;
+    try {
+      await clearChatSessions();
+      setDataMsg(isZh ? '聊天记录已清空' : 'Chat sessions cleared');
     } catch { /* ignore */ }
   };
 
@@ -359,7 +370,7 @@ export default function Profile() {
       {/* Data management tab */}
       {tab === 'data' && (
         <div className="max-w-lg space-y-5">
-          {/* Clear history */}
+          {/* Clear generation history */}
           <div className="bg-white border border-border rounded-xl p-5">
             <h3 className="text-[0.92rem] font-semibold text-text-primary mb-1">{t('clearHistory') as string}</h3>
             <p className="text-[0.78rem] text-text-faint mb-3">{t('clearHistoryDesc') as string}</p>
@@ -369,6 +380,22 @@ export default function Profile() {
               className="text-[0.84rem] font-medium px-4 py-2 rounded-lg border border-border text-text-dim hover:bg-surface-2 transition-colors"
             >
               {t('clearHistory') as string}
+            </button>
+          </div>
+
+          {/* Clear chat sessions */}
+          <div className="bg-white border border-border rounded-xl p-5">
+            <h3 className="text-[0.92rem] font-semibold text-text-primary mb-1">
+              {isZh ? '清空聊天记录' : 'Clear Chat Sessions'}
+            </h3>
+            <p className="text-[0.78rem] text-text-faint mb-3">
+              {isZh ? '删除所有角色对话记录，包括隐藏的对话。此操作不可撤销。' : 'Delete all character chat sessions, including hidden ones. This cannot be undone.'}
+            </p>
+            <button
+              onClick={handleClearChatSessions}
+              className="text-[0.84rem] font-medium px-4 py-2 rounded-lg border border-border text-text-dim hover:bg-surface-2 transition-colors"
+            >
+              {isZh ? '清空聊天记录' : 'Clear Chat Sessions'}
             </button>
           </div>
 

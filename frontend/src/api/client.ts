@@ -374,8 +374,12 @@ export interface ChatSessionDetail {
   updated_at: string;
 }
 
-export function listChatSessions() {
-  return request<ChatSession[]>('/api/chat/sessions');
+export function listChatSessions(visibility?: string, charName?: string) {
+  const params = new URLSearchParams();
+  if (visibility) params.set('visibility', visibility);
+  if (charName) params.set('char_name', charName);
+  const qs = params.toString();
+  return request<ChatSession[]>(`/api/chat/sessions${qs ? `?${qs}` : ''}`);
 }
 
 export function createChatSession(data: {
@@ -406,6 +410,67 @@ export function deleteChatSession(sessionId: number) {
   });
 }
 
+export function hideChatSession(sessionId: number, hidden: boolean = true) {
+  return request<{ ok: boolean }>(`/api/chat/sessions/${sessionId}/hide?hidden=${hidden}`, {
+    method: 'PUT',
+  });
+}
+
+export function batchDeleteChatSessions(sessionIds: number[]) {
+  return request<{ ok: boolean; deleted: number }>('/api/chat/sessions/batch-delete', {
+    method: 'POST',
+    body: JSON.stringify({ session_ids: sessionIds }),
+  });
+}
+
+export function clearChatSessions() {
+  return request<{ ok: boolean; deleted: number }>('/api/chat/sessions', {
+    method: 'DELETE',
+  });
+}
+
+// ── Notifications ──
+export interface Notification {
+  id: number;
+  type: string;
+  title_zh: string;
+  title_en: string;
+  body_zh: string;
+  body_en: string;
+  is_read: number;
+  created_at: string;
+}
+
+export function getNotifications(unreadOnly?: boolean) {
+  const q = unreadOnly ? '?unread_only=true' : '';
+  return request<Notification[]>(`/api/notifications${q}`);
+}
+
+export function getUnreadCount() {
+  return request<{ count: number }>('/api/notifications/unread-count');
+}
+
+export function markNotificationRead(id: number) {
+  return request<{ ok: boolean }>(`/api/notifications/${id}/read`, { method: 'PUT' });
+}
+
+export function markAllNotificationsRead() {
+  return request<{ ok: boolean }>('/api/notifications/read-all', { method: 'PUT' });
+}
+
+// ── Tier config ──
+export interface TierConfig {
+  phase: number;
+  user_count: number;
+  mythic_top_n: number;
+  thresholds: { rare: number; epic: number; legendary: number };
+  mode: 'fixed' | 'percentile';
+}
+
+export function getTierConfig() {
+  return request<TierConfig>('/api/tier/config');
+}
+
 // ── Community ──
 export interface SharedPersona {
   id: number;
@@ -421,6 +486,8 @@ export interface SharedPersona {
   author: string;
   user_id: number;
   created_at: string;
+  card_type: string;
+  mythic_rank: number | null;
 }
 
 export function sharePersona(data: {
@@ -431,6 +498,7 @@ export function sharePersona(data: {
   natural_text: string;
   score: number;
   language: string;
+  card_type?: string;
 }) {
   return request<{ ok: boolean; id: number }>('/api/community/share', {
     method: 'POST',
@@ -438,12 +506,13 @@ export function sharePersona(data: {
   });
 }
 
-export function getCommunityPersonas(params?: { limit?: number; offset?: number; sort?: string; tag?: string }) {
+export function getCommunityPersonas(params?: { limit?: number; offset?: number; sort?: string; tag?: string; card_type?: string }) {
   const q = new URLSearchParams();
   if (params?.limit) q.set('limit', String(params.limit));
   if (params?.offset) q.set('offset', String(params.offset));
   if (params?.sort) q.set('sort', params.sort);
   if (params?.tag) q.set('tag', params.tag);
+  if (params?.card_type) q.set('card_type', params.card_type);
   return request<SharedPersona[]>(`/api/community/personas?${q}`);
 }
 

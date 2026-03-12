@@ -497,6 +497,41 @@ def delete_announcement(ann_id: str, authorization: str | None = Header(None)):
     return {"ok": True}
 
 
+# ── Notifications ──────────────────────────────────────────────────
+@app.get("/api/notifications")
+def list_notifications(unread_only: bool = False, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    return db.list_notifications(user["user_id"], unread_only=unread_only)
+
+
+@app.get("/api/notifications/unread-count")
+def unread_notification_count(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    return {"count": db.count_unread_notifications(user["user_id"])}
+
+
+@app.put("/api/notifications/{notification_id}/read")
+def mark_notification_read(notification_id: int, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    db.mark_notification_read(user["user_id"], notification_id)
+    return {"ok": True}
+
+
+@app.put("/api/notifications/read-all")
+def mark_all_notifications_read(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    count = db.mark_all_notifications_read(user["user_id"])
+    return {"ok": True, "count": count}
+
+
 # ── Admin: user management ────────────────────────────────────────
 @app.get("/api/admin/users")
 def list_users(authorization: str | None = Header(None)):
@@ -542,6 +577,7 @@ class SharePersonaRequest(BaseModel):
     natural_text: str = ""
     score: float = 0
     language: str = "zh"
+    card_type: str = ""
 
 
 @app.post("/api/community/share")
@@ -552,18 +588,29 @@ def share_persona(req: SharePersonaRequest, authorization: str | None = Header(N
     pid = db.share_persona(
         user["user_id"], req.name, req.summary, req.tags,
         req.spec_data, req.natural_text, req.score, req.language,
+        req.card_type,
     )
     return {"ok": True, "id": pid}
+
+
+@app.get("/api/tier/config")
+def tier_config():
+    """Return current tier thresholds (phase, thresholds, mode).
+    Also checks for phase transitions and auto-generates notifications.
+    """
+    db.check_phase_transition()
+    return db.get_tier_config()
 
 
 @app.get("/api/community/personas")
 def list_community_personas(
     limit: int = 50, offset: int = 0, sort: str = "latest", tag: str = "",
+    card_type: str = "",
     authorization: str | None = Header(None),
 ):
     user = get_current_user(authorization)
     user_id = user["user_id"] if user else None
-    return db.list_shared_personas(limit, offset, sort, tag, user_id)
+    return db.list_shared_personas(limit, offset, sort, tag, card_type, user_id)
 
 
 @app.post("/api/community/personas/{persona_id}/like")
@@ -604,7 +651,7 @@ def save_user_config(req: dict, authorization: str | None = Header(None)):
     return {"ok": True}
 
 
-# ── Profile ────────────────────────────────────────────────────────────
+# ── Profile ─────────────────────────────────────��──────────────────────
 @app.post("/api/auth/change-password")
 def change_password(req: ChangePasswordRequest, authorization: str | None = Header(None)):
     user = get_current_user(authorization)
@@ -844,11 +891,16 @@ def chat_preview(req: ChatPreviewRequest, authorization: str | None = Header(Non
 
 # ── Chat sessions ──────────────────────────────────────────────────────
 @app.get("/api/chat/sessions")
-def list_chat_sessions(authorization: str | None = Header(None)):
+def list_chat_sessions(
+    visibility: str = "visible",
+    char_name: str | None = None,
+    authorization: str | None = Header(None),
+):
     user = get_current_user(authorization)
     if not user:
         raise HTTPException(status_code=401, detail="需要登录")
-    return db.list_chat_sessions(user["user_id"])
+    return db.list_chat_sessions(user["user_id"], visibility=visibility,
+                                  char_name=char_name or None)
 
 
 @app.post("/api/chat/sessions")
@@ -891,6 +943,38 @@ def delete_chat_session(session_id: int, authorization: str | None = Header(None
     if not ok:
         raise HTTPException(status_code=404, detail="会话不存在")
     return {"ok": True}
+
+
+@app.put("/api/chat/sessions/{session_id}/hide")
+def hide_chat_session(session_id: int, hidden: bool = True, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    ok = db.hide_chat_session(user["user_id"], session_id, hidden)
+    if not ok:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return {"ok": True}
+
+
+class BatchDeleteRequest(BaseModel):
+    session_ids: list[int]
+
+@app.post("/api/chat/sessions/batch-delete")
+def batch_delete_chat_sessions(req: BatchDeleteRequest, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    count = db.batch_delete_chat_sessions(user["user_id"], req.session_ids)
+    return {"ok": True, "deleted": count}
+
+
+@app.delete("/api/chat/sessions")
+def clear_all_chat_sessions(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    count = db.clear_chat_sessions(user["user_id"])
+    return {"ok": True, "deleted": count}
 
 
 # ── Wizard ──────────────────────────────────────────────────────────────

@@ -189,7 +189,18 @@ export default function CandidateCard({ candidate, index, language }: Props) {
     setExporting(false);
   };
 
-  const handleShare = async () => {
+  const [showSharePicker, setShowSharePicker] = useState(false);
+
+  const CARD_TYPES = [
+    { id: 'personality', zh: '性格卡', en: 'Personality' },
+    { id: 'character',   zh: '角色卡', en: 'Character' },
+    { id: 'background',  zh: '背景卡', en: 'Background' },
+    { id: 'emotion',     zh: '情感卡', en: 'Emotion' },
+    { id: 'scenario',    zh: '场景卡', en: 'Scenario' },
+    { id: 'appearance',  zh: '外貌卡', en: 'Appearance' },
+  ];
+
+  const handleShare = async (cardType: string) => {
     if (shared) return;
     const name = spec?.identity || spec?.name || 'Character';
     const summary = natural?.slice(0, 200) || '';
@@ -202,8 +213,10 @@ export default function CandidateCard({ candidate, index, language }: Props) {
         natural_text: natural || '',
         score: candidate.score,
         language,
+        card_type: cardType,
       });
       setShared(true);
+      setShowSharePicker(false);
     } catch { /* ignore */ }
   };
 
@@ -365,22 +378,40 @@ export default function CandidateCard({ candidate, index, language }: Props) {
         </button>
 
         {/* Share */}
-        <button
-          onClick={handleShare}
-          disabled={shared}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.8rem] font-medium transition-all ${
-            shared
-              ? 'bg-green-50 text-green-600 border border-green-200 dark:bg-green-900/20 dark:border-green-700'
-              : 'bg-surface-2 text-text-dim border border-border hover:bg-green-50 hover:text-green-600 hover:border-green-200'
-          }`}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" y1="2" x2="12" y2="15" />
-          </svg>
-          {shared ? t('shared') as string : t('shareToCommunity') as string}
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => { if (!shared) setShowSharePicker(v => !v); }}
+            disabled={shared}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.8rem] font-medium transition-all ${
+              shared
+                ? 'bg-green-50 text-green-600 border border-green-200 dark:bg-green-900/20 dark:border-green-700'
+                : 'bg-surface-2 text-text-dim border border-border hover:bg-green-50 hover:text-green-600 hover:border-green-200'
+            }`}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+            {shared ? t('shared') as string : t('shareToCommunity') as string}
+          </button>
+          {showSharePicker && !shared && (
+            <div className="absolute bottom-full mb-1 left-0 bg-white dark:bg-surface-1 border border-border rounded-xl shadow-lg py-1.5 z-20 min-w-[140px]">
+              <div className="px-3 py-1.5 text-[0.68rem] text-text-faint font-semibold">
+                {language === 'zh' ? '选择卡片类型' : 'Card type'}
+              </div>
+              {CARD_TYPES.map(ct => (
+                <button
+                  key={ct.id}
+                  onClick={() => handleShare(ct.id)}
+                  className="w-full text-left px-3 py-1.5 text-[0.78rem] text-text-primary hover:bg-surface-2 transition-colors"
+                >
+                  {language === 'zh' ? ct.zh : ct.en}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Spacer */}
         <div className="flex-1" />

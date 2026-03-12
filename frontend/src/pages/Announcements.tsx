@@ -7,7 +7,9 @@ import {
   createAnnouncement,
   updateAnnouncement,
   deleteAnnouncement,
+  getTierConfig,
   type Announcement as ApiAnnouncement,
+  type TierConfig,
 } from '../api/client';
 
 /* ── Type style mapping ── */
@@ -19,14 +21,31 @@ const TYPE_STYLE: Record<AnnouncementType, { label: string; labelEn: string; cls
   fix:         { label: '修复',   labelEn: 'Fix',         cls: 'bg-amber-50 text-amber-600 border-amber-200' },
 };
 
-/* ── Tier config ── */
-const TIER_CONFIG = [
-  { tier: 'normal',    threshold: 0,      label: 'tierNormal',    bg: ['#f3f4f6', '#e5e7eb'] as [string, string] },
-  { tier: 'rare',      threshold: 500,    label: 'tierRare',      bg: ['#edeaf2', '#ccc8d8'] as [string, string] },
-  { tier: 'epic',      threshold: 5000,   label: 'tierEpic',      bg: ['#e8f2ff', '#c8ddf5'] as [string, string] },
-  { tier: 'legendary', threshold: 50000,  label: 'tierLegendary', bg: ['#f3eae4', '#dfc8b4'] as [string, string] },
-  { tier: 'mythic',    threshold: 100000, label: 'tierMythic',    bg: ['#1a1a2e', '#0f3460'] as [string, string] },
-];
+/* ── Tier config (dynamic from backend) ── */
+type TierConfigItem = { tier: string; threshold: number; label: string; bg: [string, string] };
+
+const TIER_BG: Record<string, [string, string]> = {
+  normal:    ['#f3f4f6', '#e5e7eb'],
+  rare:      ['#edeaf2', '#ccc8d8'],
+  epic:      ['#e8f2ff', '#c8ddf5'],
+  legendary: ['#f3eae4', '#dfc8b4'],
+  mythic:    ['#1a1a2e', '#0f3460'],
+};
+
+function buildTierConfig(cfg: TierConfig): TierConfigItem[] {
+  return [
+    { tier: 'normal',    threshold: 0,                      label: 'tierNormal',    bg: TIER_BG.normal },
+    { tier: 'rare',      threshold: cfg.thresholds.rare,    label: 'tierRare',      bg: TIER_BG.rare },
+    { tier: 'epic',      threshold: cfg.thresholds.epic,    label: 'tierEpic',      bg: TIER_BG.epic },
+    { tier: 'legendary', threshold: cfg.thresholds.legendary, label: 'tierLegendary', bg: TIER_BG.legendary },
+    { tier: 'mythic',    threshold: -1,                     label: 'tierMythic',    bg: TIER_BG.mythic },
+  ];
+}
+
+const DEFAULT_TIER_CONFIG: TierConfigItem[] = buildTierConfig({
+  phase: 1, user_count: 0, mythic_top_n: 750,
+  thresholds: { rare: 10, epic: 50, legendary: 200 }, mode: 'fixed',
+});
 
 /* Per-tier feature descriptions */
 const TIER_FEATURES: Record<string, { zh: string; en: string }[]> = {
@@ -138,6 +157,11 @@ function TierCard({ tier, threshold, label, bg, isZh, lang, features, onOpen }: 
                 {`${threshold.toLocaleString()}+ ${isZh ? '次使用' : 'uses'}`}
               </div>
             )}
+            {threshold === -1 && (
+              <div className="text-[0.62rem] text-text-faint text-center px-2">
+                {isZh ? 'Legendary 前 750 名' : 'Top 750 Legendary'}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -149,7 +173,11 @@ function TierCard({ tier, threshold, label, bg, isZh, lang, features, onOpen }: 
             {t(label as 'tierNormal') as string}
           </div>
           <div className="text-[0.72rem] text-text-faint mb-3">
-            {`${threshold.toLocaleString()}+ ${isZh ? '次使用解锁' : 'uses to unlock'}`}
+            {threshold > 0
+              ? `${threshold.toLocaleString()}+ ${isZh ? '次使用解锁' : 'uses to unlock'}`
+              : isZh
+                ? '达到 Legendary 等级后，排名前 750 的卡片动态升级'
+                : 'Top 750 Legendary cards are dynamically promoted'}
           </div>
           <div className="space-y-1.5">
             {features.map((f, i) => (
@@ -167,7 +195,7 @@ function TierCard({ tier, threshold, label, bg, isZh, lang, features, onOpen }: 
 
 /* ── Card flip modal ── */
 function TierCardModal({ config, isZh, lang, onClose }: {
-  config: typeof TIER_CONFIG[0];
+  config: TierConfigItem;
   isZh: boolean;
   lang: string;
   onClose: () => void;
@@ -273,9 +301,11 @@ function TierCardModal({ config, isZh, lang, onClose }: {
                   <div className="text-xl font-bold text-text-primary mb-1">
                     {t(label as 'tierNormal') as string}
                   </div>
-                  {threshold > 0 && (
+                  {(threshold > 0 || threshold === -1) && (
                     <div className="text-xs text-text-faint">
-                      {`${threshold.toLocaleString()}+ ${isZh ? '次使用' : 'uses'}`}
+                      {threshold > 0
+                        ? `${threshold.toLocaleString()}+ ${isZh ? '次使用' : 'uses'}`
+                        : isZh ? 'Legendary 前 750 名' : 'Top 750 Legendary'}
                     </div>
                   )}
                 </div>
@@ -299,9 +329,13 @@ function TierCardModal({ config, isZh, lang, onClose }: {
                   <div className={`text-xl font-bold mb-1 ${isMythic ? 'text-amber-200' : 'text-text-primary'}`}>
                     {t(label as 'tierNormal') as string}
                   </div>
-                  {threshold > 0 && (
+                  {(threshold > 0 || threshold === -1) && (
                     <div className={`text-xs mb-5 ${isMythic ? 'text-amber-200/60' : 'text-text-faint'}`}>
-                      {`${threshold.toLocaleString()}+ ${isZh ? '次使用解锁' : 'uses to unlock'}`}
+                      {threshold > 0
+                        ? `${threshold.toLocaleString()}+ ${isZh ? '次使用解锁' : 'uses to unlock'}`
+                        : isZh
+                          ? 'Legendary 排名前 750 动态升级'
+                          : 'Top 750 Legendary — dynamic promotion'}
                     </div>
                   )}
                   <div className={`w-12 h-px mb-5 ${isMythic ? 'bg-amber-400/30' : 'bg-black/10'}`} />
@@ -518,7 +552,16 @@ export default function Announcements() {
   const { isAdmin, token } = useAuth();
 
   const [activeTier, setActiveTier] = useState<string | null>(null);
-  const activeConfig = activeTier ? TIER_CONFIG.find(c => c.tier === activeTier) : null;
+  const [tierItems, setTierItems] = useState<TierConfigItem[]>(DEFAULT_TIER_CONFIG);
+  const [tierPhaseInfo, setTierPhaseInfo] = useState<{ phase: number; mode: string } | null>(null);
+  const activeConfig = activeTier ? tierItems.find(c => c.tier === activeTier) : null;
+
+  useEffect(() => {
+    getTierConfig().then(cfg => {
+      setTierItems(buildTierConfig(cfg));
+      setTierPhaseInfo({ phase: cfg.phase, mode: cfg.mode });
+    }).catch(() => {});
+  }, []);
 
   // Announcement state
   const [announcements, setAnnouncements] = useState<ApiAnnouncement[]>([]);
@@ -657,10 +700,125 @@ export default function Announcements() {
           </svg>
           <h2 className="text-[1.1rem] font-semibold text-text-primary">{t('tierShowcaseTitle') as string}</h2>
         </div>
-        <p className="text-[0.82rem] text-text-dim mb-6 ml-[30px]">{t('tierShowcaseDesc') as string}</p>
+        <p className="text-[0.82rem] text-text-dim mb-3 ml-[30px]">{t('tierShowcaseDesc') as string}</p>
+        {/* Phase roadmap */}
+        <div className="ml-[30px] mb-8">
+          {tierPhaseInfo && (
+            <div className="inline-flex items-center gap-2 bg-surface-2 border border-border rounded-lg px-3 py-1.5 mb-5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[0.72rem] text-text-dim">
+                {isZh
+                  ? `当前阶段：${tierPhaseInfo.phase === 4 ? '正式运营' : `第 ${tierPhaseInfo.phase} 阶段`}`
+                  : `Current: ${tierPhaseInfo.phase === 4 ? 'Dynamic percentile' : `Phase ${tierPhaseInfo.phase}`}`}
+              </span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {([
+              {
+                phase: 1,
+                titleZh: '第 1 阶段 · 试运营', titleEn: 'Phase 1 · Cold Start',
+                condZh: '用户 < 5,000', condEn: 'Users < 5,000',
+                thresholds: { rare: 10, epic: 50, legendary: 200 },
+                descZh: '',
+                descEn: '',
+              },
+              {
+                phase: 2,
+                titleZh: '第 2 阶段 · 成长期', titleEn: 'Phase 2 · Growth',
+                condZh: '5,000 ≤ 用户 < 50,000', condEn: '5K ≤ Users < 50K',
+                thresholds: { rare: 249, epic: 2499, legendary: 24999 },
+                descZh: '',
+                descEn: '',
+              },
+              {
+                phase: 3,
+                titleZh: '第 3 阶段 · 上升期', titleEn: 'Phase 3 · Production',
+                condZh: '50,000 ≤ 用户 < 100,000', condEn: '50K ≤ Users < 100K',
+                thresholds: { rare: 500, epic: 5000, legendary: 50000 },
+                descZh: '',
+                descEn: '',
+              },
+              {
+                phase: 4,
+                titleZh: '第 4 阶段 · 正式运营', titleEn: 'Phase 4 · Dynamic',
+                condZh: '用户 ≥ 100,000', condEn: 'Users ≥ 100K',
+                thresholds: null,
+                descZh: '稀有 = 前 50%，史诗 = 前 20%，传说 = 前 1%',
+                descEn: 'Rare = top 50%, Epic = top 20%, Legendary = top 1%',
+              },
+            ] as const).map(p => {
+              const isCurrent = tierPhaseInfo?.phase === p.phase;
+              return (
+                <div
+                  key={p.phase}
+                  className={`rounded-xl border p-4 transition-colors ${
+                    isCurrent
+                      ? 'border-accent/30 bg-accent/[0.04] ring-1 ring-accent/10'
+                      : 'border-border bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[0.62rem] font-bold ${
+                      isCurrent ? 'bg-accent text-white' : 'bg-surface-3 text-text-faint'
+                    }`}>
+                      {p.phase}
+                    </span>
+                    <span className="text-[0.84rem] font-semibold text-text-primary">
+                      {isZh ? p.titleZh : p.titleEn}
+                    </span>
+                    {isCurrent && (
+                      <span className="ml-auto text-[0.6rem] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                        {isZh ? '当前' : 'Current'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[0.72rem] text-text-faint mb-2 font-mono">
+                    {isZh ? p.condZh : p.condEn}
+                  </div>
+                  {p.thresholds ? (
+                    <div className="flex gap-3 mb-2">
+                      {(['rare', 'epic', 'legendary'] as const).map(t => (
+                        <div key={t} className="text-[0.68rem]">
+                          <span className="text-text-faint capitalize">{t}: </span>
+                          <span className="font-semibold text-text-primary">{p.thresholds![t].toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex gap-3 mb-2">
+                      <div className="text-[0.68rem] text-text-faint italic">
+                        {isZh ? '百分位动态计算' : 'Percentile-based'}
+                      </div>
+                    </div>
+                  )}
+                  {(isZh ? p.descZh : p.descEn) && (
+                    <div className="text-[0.72rem] text-text-dim">
+                      {isZh ? p.descZh : p.descEn}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 flex items-start gap-2 text-[0.72rem] text-text-faint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <span>
+              {isZh
+                ? 'Mythic（神话）规则在所有阶段保持不变：Legendary 等级中点赞数排名前 750 的卡片自动升级为 Mythic。阶段切换时阈值变化可能导致部分卡片等级变更。'
+                : 'Mythic tier is consistent across all phases: the top 750 Legendary cards by likes are automatically promoted. Phase transitions may cause tier changes for some cards.'}
+            </span>
+          </div>
+        </div>
 
         <div className="space-y-6 ml-[30px]">
-          {TIER_CONFIG.map(({ tier, threshold, label, bg }) => (
+          {tierItems.map(({ tier, threshold, label, bg }) => (
             <div key={tier}>
               <TierCard
                 tier={tier}

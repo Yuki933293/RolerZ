@@ -387,6 +387,30 @@ def _migrate_users_table() -> None:
         conn.close()
 
 
+def _migrate_shared_personas_table() -> None:
+    """Add card_type column to shared_personas if it doesn't exist."""
+    conn = _get_conn()
+    try:
+        cols = [r["name"] for r in conn.execute("PRAGMA table_info(shared_personas)").fetchall()]
+        if "card_type" not in cols:
+            conn.execute("ALTER TABLE shared_personas ADD COLUMN card_type TEXT NOT NULL DEFAULT ''")
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _migrate_chat_sessions_table() -> None:
+    """Add hidden column to chat_sessions if it doesn't exist."""
+    conn = _get_conn()
+    try:
+        cols = [r["name"] for r in conn.execute("PRAGMA table_info(chat_sessions)").fetchall()]
+        if "hidden" not in cols:
+            conn.execute("ALTER TABLE chat_sessions ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def is_admin(user_id: int) -> bool:
     """Check if the user is an admin."""
     conn = _get_conn()
@@ -537,13 +561,14 @@ def clear_generation_history(user_id: int) -> int:
 # ── Shared personas (community) ──
 
 def share_persona(user_id: int, name: str, summary: str, tags: list[str],
-                  spec_data: dict, natural_text: str, score: float, language: str) -> int:
+                  spec_data: dict, natural_text: str, score: float, language: str,
+                  card_type: str = "") -> int:
     """Share a persona to the community. Returns persona id."""
     conn = _get_conn()
     cur = conn.execute(
-        "INSERT INTO shared_personas (user_id, name, summary, tags, spec_data, natural_text, score, language) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (user_id, name, summary, json.dumps(tags), json.dumps(spec_data), natural_text, score, language),
+        "INSERT INTO shared_personas (user_id, name, summary, tags, spec_data, natural_text, score, language, card_type) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (user_id, name, summary, json.dumps(tags), json.dumps(spec_data), natural_text, score, language, card_type),
     )
     conn.commit()
     pid = cur.lastrowid
@@ -551,24 +576,126 @@ def share_persona(user_id: int, name: str, summary: str, tags: list[str],
     return pid
 
 
-def list_shared_personas(limit: int = 50, offset: int = 0, sort: str = "latest",
-                         tag: str = "", current_user_id: int | None = None) -> list[dict]:
-    """List shared personas with author info and like status."""
+# ── Tier system (4-phase dynamic thresholds) ──
+_MYTHIC_TOP_N = 750
+
+# Phase thresholds by user count
+_TIER_PHASES = [
+    # (max_users, rare, epic, legendary)
+    (5_000,   10,    50,     200),      # Phase 1: cold start
+    (50_000,  249,   2_499,  24_999),   # Phase 2: growth
+    (100_000, 500,   5_000,  50_000),   # Phase 3: production
+]
+# Phase 4 (users >= 100K): percentile-based (rare=top50%, epic=top20%, legendary=top1%)
+
+
+def _get_user_count(conn: sqlite3.Connection | None = None) -> int:
+    """Get total registered user count."""
+    own = conn is None
+    if own:
+        conn = _get_conn()
+    count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    if own:
+        conn.close()
+    return count
+
+
+def get_tier_config() -> dict:
+    """Return current tier thresholds based on user count.
+
+    Returns: { phase: int, user_count: int, mythic_top_n: int,
+               thresholds: { rare, epic, legendary },
+               mode: 'fixed' | 'percentile' }
+    """
     conn = _get_conn()
-    where = ""
+    user_count = _get_user_count(conn)
+
+    for max_users, rare, epic, legendary in _TIER_PHASES:
+        if user_count < max_users:
+            conn.close()
+            return {
+                "phase": _TIER_PHASES.index((max_users, rare, epic, legendary)) + 1,
+                "user_count": user_count,
+                "mythic_top_n": _MYTHIC_TOP_N,
+                "thresholds": {"rare": rare, "epic": epic, "legendary": legendary},
+                "mode": "fixed",
+            }
+
+    # Phase 4: percentile-based (users >= 100K)
+    # rare=top50%, epic=top20%, legendary=top1%
+    total_personas = conn.execute("SELECT COUNT(*) FROM shared_personas").fetchone()[0]
+    if total_personas == 0:
+        conn.close()
+        return {
+            "phase": 4, "user_count": user_count, "mythic_top_n": _MYTHIC_TOP_N,
+            "thresholds": {"rare": 1, "epic": 1, "legendary": 1}, "mode": "percentile",
+        }
+
+    # Get likes at each percentile cutoff
+    def _percentile_likes(pct: float) -> int:
+        """Get the minimum likes needed to be in the top pct% of all personas."""
+        offset = max(0, int(total_personas * (1 - pct)) - 1)
+        row = conn.execute(
+            "SELECT likes FROM shared_personas ORDER BY likes DESC LIMIT 1 OFFSET ?",
+            (offset,),
+        ).fetchone()
+        return max(1, row[0] if row else 1)
+
+    rare_threshold = _percentile_likes(0.50)     # top 50%
+    epic_threshold = _percentile_likes(0.20)      # top 20%
+    legendary_threshold = _percentile_likes(0.01) # top 1%
+    conn.close()
+
+    return {
+        "phase": 4, "user_count": user_count, "mythic_top_n": _MYTHIC_TOP_N,
+        "thresholds": {"rare": rare_threshold, "epic": epic_threshold, "legendary": legendary_threshold},
+        "mode": "percentile",
+    }
+
+
+def _get_legendary_threshold() -> int:
+    """Get current legendary threshold for mythic CTE."""
+    config = get_tier_config()
+    return config["thresholds"]["legendary"]
+
+
+def list_shared_personas(limit: int = 50, offset: int = 0, sort: str = "latest",
+                         tag: str = "", card_type: str = "",
+                         current_user_id: int | None = None) -> list[dict]:
+    """List shared personas with author info, like status, and mythic_rank."""
+    conn = _get_conn()
+    conditions: list[str] = []
     params: list = []
     if tag:
-        where = "WHERE sp.tags LIKE ?"
+        conditions.append("sp.tags LIKE ?")
         params.append(f'%"{tag}"%')
+    if card_type:
+        conditions.append("sp.card_type = ?")
+        params.append(card_type)
 
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
     order = "sp.created_at DESC" if sort == "latest" else "sp.likes DESC, sp.created_at DESC"
 
+    # Dynamic legendary threshold based on current phase
+    legendary_threshold = _get_legendary_threshold()
+
+    # Compute mythic ranks: top N among legendary-qualifying personas
+    mythic_cte = (
+        f"WITH mythic_ranks AS ("
+        f"  SELECT id, ROW_NUMBER() OVER (ORDER BY likes DESC) as mythic_rank "
+        f"  FROM shared_personas WHERE likes >= {legendary_threshold} "
+        f"  LIMIT {_MYTHIC_TOP_N}"
+        f")"
+    )
+
     rows = conn.execute(
+        f"{mythic_cte} "
         f"SELECT sp.id, sp.name, sp.summary, sp.tags, sp.spec_data, sp.natural_text, "
-        f"sp.score, sp.language, sp.likes, sp.created_at, sp.user_id, "
-        f"u.username as author "
+        f"sp.score, sp.language, sp.likes, sp.created_at, sp.user_id, sp.card_type, "
+        f"u.username as author, mr.mythic_rank "
         f"FROM shared_personas sp "
         f"JOIN users u ON sp.user_id = u.id "
+        f"LEFT JOIN mythic_ranks mr ON sp.id = mr.id "
         f"{where} "
         f"ORDER BY {order} "
         f"LIMIT ? OFFSET ?",
@@ -580,7 +707,7 @@ def list_shared_personas(limit: int = 50, offset: int = 0, sort: str = "latest",
         d = dict(r)
         d["tags"] = json.loads(d["tags"])
         d["spec_data"] = json.loads(d["spec_data"])
-        # Check if current user liked this persona
+        d["mythic_rank"] = d["mythic_rank"] or None
         if current_user_id:
             liked = conn.execute(
                 "SELECT 1 FROM persona_likes WHERE user_id = ? AND persona_id = ?",
@@ -689,13 +816,28 @@ def create_chat_session(user_id: int, char_name: str, system_prompt: str,
     return sid or 0
 
 
-def list_chat_sessions(user_id: int, limit: int = 50) -> list[dict]:
-    """Returns chat sessions for the user, newest first."""
+def list_chat_sessions(user_id: int, limit: int = 50,
+                       visibility: str = "visible",
+                       char_name: str | None = None) -> list[dict]:
+    """Returns chat sessions for the user, newest first.
+    visibility: 'visible' (hidden=0), 'hidden' (hidden=1), 'all'.
+    char_name: filter by character name if provided.
+    """
     conn = _get_conn()
+    where = ["user_id = ?"]
+    params: list = [user_id]
+    if visibility == "visible":
+        where.append("hidden = 0")
+    elif visibility == "hidden":
+        where.append("hidden = 1")
+    if char_name:
+        where.append("char_name = ?")
+        params.append(char_name)
+    params.append(limit)
     rows = conn.execute(
-        "SELECT id, char_name, messages, created_at, updated_at "
-        "FROM chat_sessions WHERE user_id = ? ORDER BY updated_at DESC LIMIT ?",
-        (user_id, limit),
+        f"SELECT id, char_name, messages, created_at, updated_at "
+        f"FROM chat_sessions WHERE {' AND '.join(where)} ORDER BY updated_at DESC LIMIT ?",
+        params,
     ).fetchall()
     conn.close()
     result = []
@@ -767,6 +909,35 @@ def delete_chat_session(user_id: int, session_id: int) -> bool:
     return ok
 
 
+def hide_chat_session(user_id: int, session_id: int, hidden: bool = True) -> bool:
+    """Hide or unhide a chat session. Returns True if updated."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "UPDATE chat_sessions SET hidden = ? WHERE id = ? AND user_id = ?",
+        (1 if hidden else 0, session_id, user_id),
+    )
+    conn.commit()
+    ok = cur.rowcount > 0
+    conn.close()
+    return ok
+
+
+def batch_delete_chat_sessions(user_id: int, session_ids: list[int]) -> int:
+    """Delete multiple chat sessions. Returns count deleted."""
+    if not session_ids:
+        return 0
+    conn = _get_conn()
+    placeholders = ",".join("?" for _ in session_ids)
+    cur = conn.execute(
+        f"DELETE FROM chat_sessions WHERE user_id = ? AND id IN ({placeholders})",
+        [user_id] + session_ids,
+    )
+    conn.commit()
+    count = cur.rowcount
+    conn.close()
+    return count
+
+
 def clear_chat_sessions(user_id: int) -> int:
     """Delete all chat sessions for a user. Returns count deleted."""
     conn = _get_conn()
@@ -777,6 +948,212 @@ def clear_chat_sessions(user_id: int) -> int:
     return count
 
 
+# ── Notifications ──
+
+def _migrate_notifications_table() -> None:
+    """Create notifications table if it doesn't exist."""
+    conn = _get_conn()
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL DEFAULT 'info',
+            title_zh TEXT NOT NULL DEFAULT '',
+            title_en TEXT NOT NULL DEFAULT '',
+            body_zh TEXT NOT NULL DEFAULT '',
+            body_en TEXT NOT NULL DEFAULT '',
+            is_read INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_notifications_user
+            ON notifications(user_id, is_read, created_at DESC);
+    """)
+    conn.commit()
+    conn.close()
+
+
+def create_notification(user_id: int, ntype: str,
+                        title_zh: str, title_en: str,
+                        body_zh: str = "", body_en: str = "") -> int:
+    """Create a notification for a user. Returns notification id."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "INSERT INTO notifications (user_id, type, title_zh, title_en, body_zh, body_en) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (user_id, ntype, title_zh, title_en, body_zh, body_en),
+    )
+    conn.commit()
+    nid = cur.lastrowid
+    conn.close()
+    return nid or 0
+
+
+def create_broadcast_notification(ntype: str,
+                                  title_zh: str, title_en: str,
+                                  body_zh: str = "", body_en: str = "") -> int:
+    """Create a notification for ALL users. Returns count created."""
+    conn = _get_conn()
+    user_ids = [r[0] for r in conn.execute("SELECT id FROM users").fetchall()]
+    for uid in user_ids:
+        conn.execute(
+            "INSERT INTO notifications (user_id, type, title_zh, title_en, body_zh, body_en) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (uid, ntype, title_zh, title_en, body_zh, body_en),
+        )
+    conn.commit()
+    conn.close()
+    return len(user_ids)
+
+
+def list_notifications(user_id: int, limit: int = 30,
+                       unread_only: bool = False) -> list[dict]:
+    """List notifications for a user, newest first."""
+    conn = _get_conn()
+    where = "WHERE user_id = ?"
+    params: list = [user_id]
+    if unread_only:
+        where += " AND is_read = 0"
+    rows = conn.execute(
+        f"SELECT id, type, title_zh, title_en, body_zh, body_en, is_read, created_at "
+        f"FROM notifications {where} ORDER BY created_at DESC LIMIT ?",
+        params + [limit],
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def count_unread_notifications(user_id: int) -> int:
+    """Count unread notifications for a user."""
+    conn = _get_conn()
+    count = conn.execute(
+        "SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0",
+        (user_id,),
+    ).fetchone()[0]
+    conn.close()
+    return count
+
+
+def mark_notification_read(user_id: int, notification_id: int) -> bool:
+    """Mark a single notification as read."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?",
+        (notification_id, user_id),
+    )
+    conn.commit()
+    ok = cur.rowcount > 0
+    conn.close()
+    return ok
+
+
+def mark_all_notifications_read(user_id: int) -> int:
+    """Mark all notifications as read. Returns count updated."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0",
+        (user_id,),
+    )
+    conn.commit()
+    count = cur.rowcount
+    conn.close()
+    return count
+
+
+# ── Phase transition tracking ──
+
+_PHASE_STORAGE_KEY = "tier_phase"
+
+
+def _get_stored_phase() -> int | None:
+    """Get last known tier phase from a simple key-value store."""
+    conn = _get_conn()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS kv_store (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    row = conn.execute("SELECT value FROM kv_store WHERE key = ?", (_PHASE_STORAGE_KEY,)).fetchone()
+    conn.close()
+    if row:
+        return int(row[0])
+    return None
+
+
+def _set_stored_phase(phase: int) -> None:
+    """Store current tier phase."""
+    conn = _get_conn()
+    conn.execute(
+        "INSERT OR REPLACE INTO kv_store (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)",
+        (_PHASE_STORAGE_KEY, str(phase)),
+    )
+    conn.commit()
+    conn.close()
+
+
+def check_phase_transition() -> dict | None:
+    """Check if tier phase has changed since last check.
+    Returns { old_phase, new_phase, config } if changed, None otherwise.
+    Also creates a broadcast notification and announcement on transition.
+    """
+    config = get_tier_config()
+    current_phase = config["phase"]
+    stored_phase = _get_stored_phase()
+
+    if stored_phase is None:
+        # First run — just store current phase, no notification
+        _set_stored_phase(current_phase)
+        return None
+
+    if current_phase == stored_phase:
+        return None
+
+    # Phase changed!
+    _set_stored_phase(current_phase)
+
+    phase_names_zh = {1: "试运营", 2: "成长期", 3: "上升期", 4: "正式运营"}
+    phase_names_en = {1: "Cold Start", 2: "Growth", 3: "Production", 4: "Dynamic Percentile"}
+
+    title_zh = f"等级制度已升级至第 {current_phase} 阶段"
+    title_en = f"Tier system upgraded to Phase {current_phase}"
+    body_zh = (
+        f"随着用户规模增长，等级制度已从「{phase_names_zh.get(stored_phase, '')}」"
+        f"切换至「{phase_names_zh.get(current_phase, '')}」阶段。"
+        f"新阈值：稀有 {config['thresholds']['rare']}、"
+        f"史诗 {config['thresholds']['epic']}、"
+        f"传说 {config['thresholds']['legendary']}。"
+    )
+    body_en = (
+        f"As the user base grows, the tier system has transitioned from "
+        f"'{phase_names_en.get(stored_phase, '')}' to '{phase_names_en.get(current_phase, '')}'. "
+        f"New thresholds: Rare {config['thresholds']['rare']}, "
+        f"Epic {config['thresholds']['epic']}, "
+        f"Legendary {config['thresholds']['legendary']}."
+    )
+
+    # Broadcast notification to all users
+    create_broadcast_notification("phase_change", title_zh, title_en, body_zh, body_en)
+
+    # Auto-create announcement
+    import datetime
+    ann_id = f"phase-{current_phase}-{datetime.date.today().isoformat()}"
+    create_announcement(
+        ann_id,
+        datetime.date.today().isoformat(),
+        "improvement",
+        title_zh, title_en, body_zh, body_en,
+        sort_order=0,
+    )
+
+    return {"old_phase": stored_phase, "new_phase": current_phase, "config": config}
+
+
 # Auto-initialize on import
 init_db()
 _migrate_users_table()
+_migrate_shared_personas_table()
+_migrate_chat_sessions_table()
+_migrate_notifications_table()
