@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { Candidate } from '../api/client';
 import { sharePersona } from '../api/client';
 import { useT } from '../i18n';
@@ -20,6 +20,105 @@ const SPEC_LABELS: Record<string, string> = {
   emotional_pattern: '情感模式', catchphrase: '口头禅',
 };
 
+/* ── Section theme mapping ── */
+const SECTION_THEMES: Record<string, { icon: string; color: string; bg: string; border: string }> = {
+  '角色卡':       { icon: '🎭', color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-900/15', border: 'border-violet-200 dark:border-violet-800' },
+  '外貌':         { icon: '👤', color: 'text-sky-600',    bg: 'bg-sky-50 dark:bg-sky-900/15',       border: 'border-sky-200 dark:border-sky-800' },
+  '背景':         { icon: '📖', color: 'text-amber-600',  bg: 'bg-amber-50 dark:bg-amber-900/15',   border: 'border-amber-200 dark:border-amber-800' },
+  '性格':         { icon: '💡', color: 'text-rose-600',   bg: 'bg-rose-50 dark:bg-rose-900/15',     border: 'border-rose-200 dark:border-rose-800' },
+  '说话':         { icon: '💬', color: 'text-teal-600',   bg: 'bg-teal-50 dark:bg-teal-900/15',     border: 'border-teal-200 dark:border-teal-800' },
+  '口癖':         { icon: '🗨️', color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/15', border: 'border-indigo-200 dark:border-indigo-800' },
+  '目标':         { icon: '🎯', color: 'text-emerald-600',bg: 'bg-emerald-50 dark:bg-emerald-900/15',border: 'border-emerald-200 dark:border-emerald-800' },
+  '渴望':         { icon: '🎯', color: 'text-emerald-600',bg: 'bg-emerald-50 dark:bg-emerald-900/15',border: 'border-emerald-200 dark:border-emerald-800' },
+  '关系':         { icon: '🤝', color: 'text-pink-600',   bg: 'bg-pink-50 dark:bg-pink-900/15',     border: 'border-pink-200 dark:border-pink-800' },
+  '冲突':         { icon: '⚡', color: 'text-orange-600', bg: 'bg-orange-50 dark:bg-orange-900/15', border: 'border-orange-200 dark:border-orange-800' },
+  '习惯':         { icon: '🔄', color: 'text-cyan-600',   bg: 'bg-cyan-50 dark:bg-cyan-900/15',     border: 'border-cyan-200 dark:border-cyan-800' },
+  '能力':         { icon: '⭐', color: 'text-yellow-600', bg: 'bg-yellow-50 dark:bg-yellow-900/15', border: 'border-yellow-200 dark:border-yellow-800' },
+  '价值观':       { icon: '💎', color: 'text-blue-600',   bg: 'bg-blue-50 dark:bg-blue-900/15',     border: 'border-blue-200 dark:border-blue-800' },
+  '禁忌':         { icon: '🚫', color: 'text-red-600',    bg: 'bg-red-50 dark:bg-red-900/15',       border: 'border-red-200 dark:border-red-800' },
+  '对话':         { icon: '💭', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/15', border: 'border-purple-200 dark:border-purple-800' },
+  '示例':         { icon: '💭', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/15', border: 'border-purple-200 dark:border-purple-800' },
+  '开场白':       { icon: '🎬', color: 'text-blue-600',   bg: 'bg-blue-50 dark:bg-blue-900/15',     border: 'border-blue-200 dark:border-blue-800' },
+  '系统':         { icon: '⚙️', color: 'text-slate-600',  bg: 'bg-slate-50 dark:bg-slate-900/15',   border: 'border-slate-200 dark:border-slate-800' },
+  '约束':         { icon: '⚙️', color: 'text-slate-600',  bg: 'bg-slate-50 dark:bg-slate-900/15',   border: 'border-slate-200 dark:border-slate-800' },
+};
+
+const FALLBACK_COLORS = [
+  { icon: '📋', color: 'text-slate-600', bg: 'bg-slate-50 dark:bg-slate-800/30', border: 'border-slate-200 dark:border-slate-700' },
+  { icon: '📋', color: 'text-blue-600',  bg: 'bg-blue-50 dark:bg-blue-900/15',   border: 'border-blue-200 dark:border-blue-800' },
+  { icon: '📋', color: 'text-teal-600',  bg: 'bg-teal-50 dark:bg-teal-900/15',   border: 'border-teal-200 dark:border-teal-800' },
+  { icon: '📋', color: 'text-violet-600',bg: 'bg-violet-50 dark:bg-violet-900/15',border: 'border-violet-200 dark:border-violet-800' },
+];
+
+function getSectionTheme(title: string, idx: number) {
+  for (const [keyword, theme] of Object.entries(SECTION_THEMES)) {
+    if (title.includes(keyword)) return theme;
+  }
+  return FALLBACK_COLORS[idx % FALLBACK_COLORS.length];
+}
+
+interface ParsedSection {
+  title: string;
+  content: string;
+}
+
+function parseNaturalSections(text: string): { intro: string; sections: ParsedSection[] } {
+  // Split by **header** pattern
+  const parts = text.split(/\*\*([^*]+)\*\*/);
+  // parts[0] = text before first header, parts[1] = first header, parts[2] = content after first header, ...
+  const intro = (parts[0] || '').trim();
+  const sections: ParsedSection[] = [];
+  for (let i = 1; i < parts.length; i += 2) {
+    const title = parts[i].trim();
+    const content = (parts[i + 1] || '').trim();
+    if (title && content) {
+      sections.push({ title, content });
+    }
+  }
+  return { intro, sections };
+}
+
+function SectionCard({ section, index }: { section: ParsedSection; index: number }) {
+  const [open, setOpen] = useState(false);
+  const theme = getSectionTheme(section.title, index);
+  const preview = section.content.slice(0, 80).replace(/\n/g, ' ');
+
+  return (
+    <div
+      className={`rounded-xl border ${theme.border} ${theme.bg} overflow-hidden transition-all cursor-pointer group`}
+      onClick={() => setOpen(o => !o)}
+    >
+      <div className="flex items-center gap-2.5 px-4 py-3">
+        <span className="text-base flex-shrink-0">{theme.icon}</span>
+        <span className={`text-[0.82rem] font-semibold ${theme.color} flex-1 min-w-0`}>
+          {section.title}
+        </span>
+        <svg
+          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          className={`text-text-faint transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+      {!open && (
+        <div className="px-4 pb-3 -mt-1">
+          <div className="text-[0.78rem] text-text-dim leading-relaxed line-clamp-2 opacity-70">
+            {preview}...
+          </div>
+        </div>
+      )}
+      {open && (
+        <div className="px-4 pb-4 -mt-0.5">
+          <div className="text-[0.84rem] text-text-secondary leading-[1.8] whitespace-pre-line">
+            {section.content}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CandidateCard({ candidate, index, language }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState('');
@@ -27,6 +126,7 @@ export default function CandidateCard({ candidate, index, language }: Props) {
   const [exporting, setExporting] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [shared, setShared] = useState(false);
+  const [showAllSections, setShowAllSections] = useState(false);
   const t = useT(language);
   const showDetails = t('showDetails') as (n: number) => string;
 
@@ -46,6 +146,15 @@ export default function CandidateCard({ candidate, index, language }: Props) {
   const specEntries = Object.entries(spec || {}).filter(
     ([k, v]) => k !== 'opening_line' && v && typeof v === 'string'
   );
+
+  // Parse natural text into sections
+  const parsed = useMemo(() => parseNaturalSections(natural), [natural]);
+  const hasSections = parsed.sections.length > 0;
+
+  // How many sections to show collapsed
+  const INITIAL_SECTIONS = 4;
+  const visibleSections = showAllSections ? parsed.sections : parsed.sections.slice(0, INITIAL_SECTIONS);
+  const hiddenCount = parsed.sections.length - INITIAL_SECTIONS;
 
   const handleCopy = async (text: string, label: string) => {
     try {
@@ -156,10 +265,41 @@ export default function CandidateCard({ candidate, index, language }: Props) {
         </div>
       )}
 
-      {/* Natural text */}
-      {natural && (
+      {/* Natural text: sectioned or plain */}
+      {natural && hasSections ? (
+        <div className="mt-4">
+          {/* Intro paragraph (before first **header**) */}
+          {parsed.intro && (
+            <div className="text-[0.88rem] text-text-secondary leading-[1.75] mb-4">{parsed.intro}</div>
+          )}
+          {/* Section cards grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {visibleSections.map((sec, i) => (
+              <SectionCard key={i} section={sec} index={i} />
+            ))}
+          </div>
+          {/* Show more / less */}
+          {hiddenCount > 0 && (
+            <button
+              onClick={() => setShowAllSections(s => !s)}
+              className="mt-3 flex items-center gap-1.5 mx-auto text-[0.8rem] text-text-dim hover:text-accent transition-colors"
+            >
+              <svg
+                width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className={`transition-transform ${showAllSections ? 'rotate-180' : ''}`}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+              {showAllSections
+                ? (language === 'zh' ? '收起' : 'Show less')
+                : (language === 'zh' ? `展开剩余 ${hiddenCount} 个维度` : `Show ${hiddenCount} more sections`)}
+            </button>
+          )}
+        </div>
+      ) : natural ? (
         <div className="mt-3.5 text-[0.88rem] text-text-secondary leading-[1.75]">{natural}</div>
-      )}
+      ) : null}
 
       {/* Expand/collapse for structured spec */}
       {specEntries.length > 0 && (
