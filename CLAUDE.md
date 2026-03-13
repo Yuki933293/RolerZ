@@ -137,6 +137,24 @@ cd frontend && npm run dev
 - 核心原则：**每次改动都要问自己「还有哪些地方会被这个改动影响？」**
 - 如果推演出可能的关联影响但不确定是否需要改，在**[深度交互]**中主动反馈，让用户决定
 
+## 下载与链接安全规则（强制执行）
+
+### 原则
+所有涉及外部 URL、文件下载、依赖安装的操作，必须经过安全检查后才能执行。
+
+### 代码层面
+- **用户输入的 URL**：前端 `<img>`/`<a>` 等标签中用户提供的 URL，必须做协议白名单校验（仅允许 `https://`、`http://`），禁止 `javascript:`、`data:`、`file://` 等协议
+- **头像/外部图片**：使用 `img` 标签时添加 `referrerPolicy="no-referrer"` + `crossOrigin="anonymous"`，防止信息泄露
+- **API 请求**：只向已知的后端地址发请求，禁止拼接用户输入构造任意 URL fetch
+- **依赖安装**：`pip install` / `npm install` 新包前，先确认包名正确（防 typosquatting），检查是否为知名维护的包
+- **文件下载功能**：导出 PNG/JSON 等使用 `Blob` + `URL.createObjectURL`，不引入外部下载服务
+
+### 开发流程层面
+- **不执行 `curl`/`wget` 下载未知脚本**：如需安装工具，使用包管理器（brew/apt/pip/npm）
+- **不在代码中硬编码外部 CDN 链接**：所有前端依赖通过 npm 管理，不使用 `<script src="外部CDN">`
+- **审查 `.env` 和密钥文件**：绝不提交 `.env`、`.encryption_key`、API key 到 Git，`.gitignore` 必须包含这些路径
+- **第三方 API 对接**：新增外部 API 调用前，确认目标域名合法性，使用 HTTPS，设置合理的超时时间
+
 ## 核心交互原则（最高优先级）
 
 ### 第一性原理思维
