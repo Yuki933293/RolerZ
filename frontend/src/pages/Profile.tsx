@@ -5,6 +5,7 @@ import {
   getProfileStats, getProfileInfo, updateProfileInfo,
   getHistory, deleteHistory, changePassword, clearAllHistory, deleteAccount,
   clearChatSessions, getCollections, getCollectionIds, removeFromCollection, clearCollection,
+  sendVerificationCode, verifyEmail,
   type ProfileStats, type HistoryRecord, type UserProfile, type CollectionItem,
 } from '../api/client';
 import CandidateCard from '../components/CandidateCard';
@@ -33,9 +34,16 @@ export default function Profile() {
   const [, setProfile] = useState<UserProfile | null>(null);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
   const [bio, setBio] = useState('');
   const [profileMsg, setProfileMsg] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
+
+  // Email verification
+  const [verifyCodeSent, setVerifyCodeSent] = useState(false);
+  const [verifyCode, setVerifyCode] = useState('');
+  const [verifyMsg, setVerifyMsg] = useState('');
+  const [verifySending, setVerifySending] = useState(false);
 
   // Password change
   const [oldPwd, setOldPwd] = useState('');
@@ -58,6 +66,7 @@ export default function Profile() {
         setProfile(p);
         setAvatarUrl(p.avatar_url || '');
         setProfileEmail(p.email || '');
+        setEmailVerified(p.email_verified ?? false);
         setBio(p.bio || '');
         setCollection(col);
         setCollectedIds(new Set(cids.ids));
@@ -389,7 +398,18 @@ export default function Profile() {
 
             {/* Email */}
             <div className="mb-4">
-              <label className="text-[0.75rem] text-text-dim mb-1 block">{t('email') as string}</label>
+              <div className="flex items-center gap-2 mb-1">
+                <label className="text-[0.75rem] text-text-dim">{t('email') as string}</label>
+                {profileEmail && (
+                  <span className={`text-[0.65rem] px-1.5 py-0.5 rounded-full font-medium ${
+                    emailVerified
+                      ? 'bg-green-50 text-green-600 border border-green-200'
+                      : 'bg-amber-50 text-amber-600 border border-amber-200'
+                  }`}>
+                    {emailVerified ? t('emailVerified') as string : t('emailUnverified') as string}
+                  </span>
+                )}
+              </div>
               <input
                 type="email"
                 value={profileEmail}
@@ -397,6 +417,64 @@ export default function Profile() {
                 placeholder={t('emailOptional') as string}
                 className={inputClass}
               />
+              {/* Verification flow */}
+              {profileEmail && !emailVerified && (
+                <div className="mt-2">
+                  {!verifyCodeSent ? (
+                    <button
+                      onClick={async () => {
+                        setVerifySending(true);
+                        setVerifyMsg('');
+                        try {
+                          await sendVerificationCode(lang);
+                          setVerifyCodeSent(true);
+                          setVerifyMsg(t('verifyCodeSent') as string);
+                        } catch (e: unknown) {
+                          setVerifyMsg(e instanceof Error ? e.message : t('operationFailed') as string);
+                        } finally {
+                          setVerifySending(false);
+                        }
+                      }}
+                      disabled={verifySending}
+                      className="text-[0.78rem] text-accent hover:underline disabled:opacity-50"
+                    >
+                      {verifySending ? '...' : t('sendVerifyCode') as string}
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={verifyCode}
+                        onChange={e => setVerifyCode(e.target.value)}
+                        placeholder={t('enterVerifyCode') as string}
+                        maxLength={6}
+                        className="w-32 px-2 py-1.5 text-[0.82rem] border border-border rounded-lg focus:border-accent outline-none tracking-widest text-center font-mono"
+                      />
+                      <button
+                        onClick={async () => {
+                          setVerifyMsg('');
+                          try {
+                            await verifyEmail(verifyCode);
+                            setEmailVerified(true);
+                            setVerifyMsg(t('emailVerifySuccess') as string);
+                            setVerifyCodeSent(false);
+                            setVerifyCode('');
+                          } catch (e: unknown) {
+                            setVerifyMsg(e instanceof Error ? e.message : t('operationFailed') as string);
+                          }
+                        }}
+                        disabled={verifyCode.length < 4}
+                        className="text-[0.78rem] font-medium text-white bg-accent hover:bg-accent/90 px-3 py-1.5 rounded-lg disabled:opacity-40 transition-colors"
+                      >
+                        {t('verifyBtn') as string}
+                      </button>
+                    </div>
+                  )}
+                  {verifyMsg && (
+                    <div className={`text-[0.72rem] mt-1 ${emailVerified ? 'text-success' : 'text-text-dim'}`}>{verifyMsg}</div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Bio */}

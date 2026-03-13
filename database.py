@@ -181,6 +181,17 @@ def init_db() -> None:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+        CREATE TABLE IF NOT EXISTS email_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            email TEXT NOT NULL,
+            code TEXT NOT NULL,
+            purpose TEXT NOT NULL DEFAULT 'verify',
+            expires_at TIMESTAMP NOT NULL,
+            used INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
     """)
     # Migration: add email column for existing databases
     try:
@@ -191,6 +202,11 @@ def init_db() -> None:
         conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
     except sqlite3.OperationalError:
         pass
+    # Migration: add email_verified column
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass  # column already exists
     conn.commit()
     conn.close()
 
@@ -553,7 +569,7 @@ def get_user_profile(user_id: int) -> dict | None:
     """Returns user profile info (username, email, avatar_url, bio, created_at)."""
     conn = _get_conn()
     row = conn.execute(
-        "SELECT username, email, avatar_url, bio, created_at FROM users WHERE id = ?",
+        "SELECT username, email, email_verified, avatar_url, bio, created_at FROM users WHERE id = ?",
         (user_id,),
     ).fetchone()
     conn.close()
@@ -562,6 +578,7 @@ def get_user_profile(user_id: int) -> dict | None:
     return {
         "username": row["username"],
         "email": row["email"] or "",
+        "email_verified": bool(row["email_verified"]),
         "avatar_url": row["avatar_url"],
         "bio": row["bio"],
         "created_at": row["created_at"],
@@ -1551,6 +1568,104 @@ def _migrate_encrypt_configs() -> None:
             )
     conn.commit()
     conn.close()
+
+
+# ── Email verification codes ──────────────────────────────────────────
+def create_email_code(user_id: int, email: str, code: str, purpose: str = "verify",
+                      ttl_minutes: int = 15) -> int:
+    """Insert a verification/reset code. Returns row id."""
+    from datetime import datetime, timedelta
+    expires = datetime.utcnow() + timedelta(minutes=ttl_minutes)
+    conn = _get_conn()
+    cur = conn.execute(
+        "INSERT INTO email_codes (user_id, email, code, purpose, expires_at) VALUES (?, ?, ?, ?, ?)",
+        (user_id, email, code, purpose, expires.isoformat()),
+    )
+    cid = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return cid
+
+
+def verify_email_code(email: str, code: str, purpose: str = "verify") -> int | None:
+    """Check code validity. Returns user_id if valid, None otherwise. Marks code as used."""
+    from datetime import datetime
+    conn = _get_conn()
+    row = conn.execute(
+        """SELECT id, user_id, expires_at FROM email_codes
+           WHERE email = ? AND code = ? AND purpose = ? AND used = 0
+           ORDER BY created_at DESC LIMIT 1""",
+        (email, code, purpose),
+    ).fetchone()
+    if row is None:
+        conn.close()
+        return None
+    if datetime.utcnow() > datetime.fromisoformat(row["expires_at"]):
+        conn.close()
+        return None
+    # Mark as used
+    conn.execute("UPDATE email_codes SET used = 1 WHERE id = ?", (row["id"],))
+    conn.commit()
+    conn.close()
+    return row["user_id"]
+
+
+def set_email_verified(user_id: int) -> None:
+    conn = _get_conn()
+    conn.execute("UPDATE users SET email_verified = 1 WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+
+def is_email_verified(user_id: int) -> bool:
+    conn = _get_conn()
+    row = conn.execute("SELECT email_verified FROM users WHERE id = ?", (user_id,)).fetchone()
+    conn.close()
+    return bool(row and row["email_verified"])
+
+
+def get_user_email(user_id: int) -> str | None:
+    conn = _get_conn()
+    row = conn.execute("SELECT email FROM users WHERE id = ?", (user_id,)).fetchone()
+    conn.close()
+    return row["email"] if row and row["email"] else None
+
+
+def get_user_by_email(email: str) -> dict | None:
+    """Find user by email. Returns {id, username, email} or None."""
+    conn = _get_conn()
+    row = conn.execute(
+        "SELECT id, username, email FROM users WHERE email = ?", (email,),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def reset_password(user_id: int, new_password: str) -> None:
+    """Reset a user's password (for forgot-password flow)."""
+    salt = secrets.token_hex(16)
+    pw_hash = _hash_password(new_password, salt)
+    conn = _get_conn()
+    conn.execute(
+        "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?",
+        (pw_hash, salt, user_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def cleanup_expired_codes() -> int:
+    """Remove expired codes. Returns deleted count."""
+    from datetime import datetime
+    conn = _get_conn()
+    cur = conn.execute(
+        "DELETE FROM email_codes WHERE expires_at < ? OR used = 1",
+        (datetime.utcnow().isoformat(),),
+    )
+    count = cur.rowcount
+    conn.commit()
+    conn.close()
+    return count
 
 
 # Auto-initialize on import

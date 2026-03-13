@@ -14,7 +14,7 @@ import FusionLab from './pages/FusionLab';
 import Landing from './pages/Landing';
 import { useAuth } from './stores/useAuth';
 import { useConfig } from './stores/useConfig';
-import { login as apiLogin, register as apiRegister, getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from './api/client';
+import { login as apiLogin, register as apiRegister, forgotPassword as apiForgotPassword, resetPassword as apiResetPassword, getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from './api/client';
 import { useT } from './i18n';
 
 const LANG_OPTIONS = [
@@ -37,12 +37,18 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
 
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [authUser, setAuthUser] = useState('');
   const [authPass, setAuthPass] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authError, setAuthError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Forgot password flow
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotCode, setForgotCode] = useState('');
+  const [forgotNewPwd, setForgotNewPwd] = useState('');
+  const [forgotStep, setForgotStep] = useState<'email' | 'code'>('email');
+  const [forgotMsg, setForgotMsg] = useState('');
   const langRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
 
@@ -396,7 +402,9 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
             <div className="px-6 pt-6 pb-2">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-text-primary">
-                  {authMode === 'login' ? t('login') as string : t('register') as string}
+                  {authMode === 'forgot'
+                    ? t('forgotPassword') as string
+                    : authMode === 'login' ? t('login') as string : t('register') as string}
                 </h3>
                 <button
                   onClick={() => setShowAuthModal(false)}
@@ -406,75 +414,179 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
                 </button>
               </div>
 
-              <div className="flex gap-2 mb-4">
-                <button
-                  onClick={() => { setAuthMode('login'); setAuthError(''); }}
-                  className={`flex-1 py-2 text-[0.84rem] rounded-lg transition-colors ${
-                    authMode === 'login'
-                      ? 'bg-accent/10 border border-accent/30 font-semibold text-accent'
-                      : 'bg-surface-2 border border-border text-text-dim hover:bg-surface-3'
-                  }`}
-                >
-                  {t('login') as string}
-                </button>
-                <button
-                  onClick={() => { setAuthMode('register'); setAuthError(''); }}
-                  className={`flex-1 py-2 text-[0.84rem] rounded-lg transition-colors ${
-                    authMode === 'register'
-                      ? 'bg-accent/10 border border-accent/30 font-semibold text-accent'
-                      : 'bg-surface-2 border border-border text-text-dim hover:bg-surface-3'
-                  }`}
-                >
-                  {t('register') as string}
-                </button>
-              </div>
+              {authMode !== 'forgot' && (
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => { setAuthMode('login'); setAuthError(''); }}
+                    className={`flex-1 py-2 text-[0.84rem] rounded-lg transition-colors ${
+                      authMode === 'login'
+                        ? 'bg-accent/10 border border-accent/30 font-semibold text-accent'
+                        : 'bg-surface-2 border border-border text-text-dim hover:bg-surface-3'
+                    }`}
+                  >
+                    {t('login') as string}
+                  </button>
+                  <button
+                    onClick={() => { setAuthMode('register'); setAuthError(''); }}
+                    className={`flex-1 py-2 text-[0.84rem] rounded-lg transition-colors ${
+                      authMode === 'register'
+                        ? 'bg-accent/10 border border-accent/30 font-semibold text-accent'
+                        : 'bg-surface-2 border border-border text-text-dim hover:bg-surface-3'
+                    }`}
+                  >
+                    {t('register') as string}
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="px-6 pb-6 space-y-3">
-              <input
-                type="text"
-                placeholder={authMode === 'login' ? t('usernameOrEmail') as string : t('username') as string}
-                value={authUser}
-                onChange={e => setAuthUser(e.target.value)}
-                className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
-              />
-              {authMode === 'register' && (
+            {/* Forgot password flow */}
+            {authMode === 'forgot' ? (
+              <div className="px-6 pb-6 space-y-3">
+                <p className="text-[0.8rem] text-text-dim">{t('forgotPasswordDesc') as string}</p>
+                {forgotStep === 'email' ? (
+                  <>
+                    <input
+                      type="email"
+                      placeholder={t('email') as string}
+                      value={forgotEmail}
+                      onChange={e => setForgotEmail(e.target.value)}
+                      className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                    />
+                    {forgotMsg && <div className="text-[0.78rem] text-accent">{forgotMsg}</div>}
+                    <button
+                      onClick={async () => {
+                        setLoading(true);
+                        setForgotMsg('');
+                        try {
+                          await apiForgotPassword(forgotEmail.trim(), language);
+                          setForgotMsg(t('resetCodeSent') as string);
+                          setForgotStep('code');
+                        } catch (e: unknown) {
+                          setForgotMsg(e instanceof Error ? e.message : '');
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      disabled={loading || !forgotEmail.trim()}
+                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white text-[0.86rem] font-semibold py-2.5 rounded-lg transition-all shadow-md"
+                    >
+                      {loading ? t('processing') as string : t('sendResetCode') as string}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      placeholder={t('enterResetCode') as string}
+                      value={forgotCode}
+                      onChange={e => setForgotCode(e.target.value)}
+                      maxLength={6}
+                      className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none tracking-widest text-center font-mono"
+                    />
+                    <input
+                      type="password"
+                      placeholder={t('newPasswordLabel') as string}
+                      value={forgotNewPwd}
+                      onChange={e => setForgotNewPwd(e.target.value)}
+                      className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                    />
+                    {forgotMsg && <div className={`text-[0.78rem] ${forgotMsg.includes('成功') || forgotMsg.includes('success') ? 'text-success' : 'text-error'}`}>{forgotMsg}</div>}
+                    <button
+                      onClick={async () => {
+                        setLoading(true);
+                        setForgotMsg('');
+                        try {
+                          await apiResetPassword(forgotEmail.trim(), forgotCode.trim(), forgotNewPwd);
+                          setForgotMsg(t('resetPasswordSuccess') as string);
+                          setTimeout(() => {
+                            setAuthMode('login');
+                            setForgotStep('email');
+                            setForgotEmail('');
+                            setForgotCode('');
+                            setForgotNewPwd('');
+                            setForgotMsg('');
+                          }, 2000);
+                        } catch (e: unknown) {
+                          setForgotMsg(e instanceof Error ? e.message : t('operationFailed') as string);
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      disabled={loading || !forgotCode.trim() || forgotNewPwd.length < 4}
+                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white text-[0.86rem] font-semibold py-2.5 rounded-lg transition-all shadow-md"
+                    >
+                      {loading ? t('processing') as string : t('resetPasswordBtn') as string}
+                    </button>
+                  </>
+                )}
+                <p className="text-center text-[0.75rem] text-text-faint">
+                  <button
+                    onClick={() => { setAuthMode('login'); setForgotStep('email'); setForgotMsg(''); }}
+                    className="text-accent hover:underline"
+                  >
+                    {t('backToLogin') as string}
+                  </button>
+                </p>
+              </div>
+            ) : (
+              /* Login / Register form */
+              <div className="px-6 pb-6 space-y-3">
                 <input
-                  type="email"
-                  placeholder={t('emailOptional') as string}
-                  value={authEmail}
-                  onChange={e => setAuthEmail(e.target.value)}
+                  type="text"
+                  placeholder={authMode === 'login' ? t('usernameOrEmail') as string : t('username') as string}
+                  value={authUser}
+                  onChange={e => setAuthUser(e.target.value)}
                   className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
                 />
-              )}
-              <input
-                type="password"
-                placeholder={t('password') as string}
-                value={authPass}
-                onChange={e => setAuthPass(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAuth()}
-                className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
-              />
-              {authError && (
-                <div className="text-[0.78rem] text-error">{authError}</div>
-              )}
-              <button
-                onClick={handleAuth}
-                disabled={loading || !authUser.trim() || !authPass.trim()}
-                className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white text-[0.86rem] font-semibold py-2.5 rounded-lg transition-all shadow-md"
-              >
-                {loading ? t('processing') as string : authMode === 'login' ? t('login') as string : t('register') as string}
-              </button>
-              <p className="text-center text-[0.75rem] text-text-faint">
-                {authMode === 'login' ? t('noAccount') as string : t('hasAccount') as string}
+                {authMode === 'register' && (
+                  <input
+                    type="email"
+                    placeholder={t('emailOptional') as string}
+                    value={authEmail}
+                    onChange={e => setAuthEmail(e.target.value)}
+                    className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                  />
+                )}
+                <input
+                  type="password"
+                  placeholder={t('password') as string}
+                  value={authPass}
+                  onChange={e => setAuthPass(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAuth()}
+                  className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                />
+                {authError && (
+                  <div className="text-[0.78rem] text-error">{authError}</div>
+                )}
                 <button
-                  onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError(''); }}
-                  className="text-accent hover:underline ml-1"
+                  onClick={handleAuth}
+                  disabled={loading || !authUser.trim() || !authPass.trim()}
+                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white text-[0.86rem] font-semibold py-2.5 rounded-lg transition-all shadow-md"
                 >
-                  {authMode === 'login' ? t('registerNow') as string : t('goLogin') as string}
+                  {loading ? t('processing') as string : authMode === 'login' ? t('login') as string : t('register') as string}
                 </button>
-              </p>
-            </div>
+                <div className="flex items-center justify-between text-[0.75rem] text-text-faint">
+                  <span>
+                    {authMode === 'login' ? t('noAccount') as string : t('hasAccount') as string}
+                    <button
+                      onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError(''); }}
+                      className="text-accent hover:underline ml-1"
+                    >
+                      {authMode === 'login' ? t('registerNow') as string : t('goLogin') as string}
+                    </button>
+                  </span>
+                  {authMode === 'login' && (
+                    <button
+                      onClick={() => { setAuthMode('forgot'); setAuthError(''); setForgotMsg(''); }}
+                      className="text-text-faint hover:text-accent transition-colors"
+                    >
+                      {t('forgotPassword') as string}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

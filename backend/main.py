@@ -381,6 +381,104 @@ def register(req: AuthRequest):
     return TokenResponse(access_token=token, username=req.username, is_admin=db.is_admin(uid))
 
 
+# ── Email verification & password reset ─────────────────────────────────
+class SendCodeRequest(BaseModel):
+    purpose: str = "verify"  # "verify" | "reset"
+    language: str = "zh"
+
+
+class VerifyCodeRequest(BaseModel):
+    code: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+    language: str = "zh"
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    code: str
+    new_password: str
+
+
+@app.post("/api/auth/send-verification")
+def send_verification_code(req: SendCodeRequest, authorization: str | None = Header(None)):
+    """Send a verification code to the user's registered email."""
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    email = db.get_user_email(user["user_id"])
+    if not email:
+        raise HTTPException(status_code=400, detail="请先在个人设置中绑定邮箱")
+    if db.is_email_verified(user["user_id"]):
+        return {"ok": True, "message": "邮箱已验证"}
+
+    import secrets as _secrets
+    code = _secrets.token_hex(3).upper()[:6]  # 6-char hex code
+    db.create_email_code(user["user_id"], email, code, purpose="verify", ttl_minutes=15)
+
+    from backend.email_service import send_email, verification_email_html
+    subject, html = verification_email_html(code, req.language)
+    ok = send_email(email, subject, html)
+    if not ok:
+        raise HTTPException(status_code=500, detail="邮件发送失败，请检查 SMTP 配置")
+    return {"ok": True}
+
+
+@app.post("/api/auth/verify-email")
+def verify_email(req: VerifyCodeRequest, authorization: str | None = Header(None)):
+    """Verify email with the code."""
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    email = db.get_user_email(user["user_id"])
+    if not email:
+        raise HTTPException(status_code=400, detail="请先绑定邮箱")
+
+    uid = db.verify_email_code(email, req.code.strip().upper(), purpose="verify")
+    if uid is None:
+        raise HTTPException(status_code=400, detail="验证码无效或已过期")
+    db.set_email_verified(user["user_id"])
+    return {"ok": True}
+
+
+@app.post("/api/auth/forgot-password")
+def forgot_password(req: ForgotPasswordRequest):
+    """Send a password reset code to the email (no auth required)."""
+    import re
+    email = req.email.strip()
+    if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        raise HTTPException(status_code=400, detail="邮箱格式不正确")
+
+    user_info = db.get_user_by_email(email)
+    if user_info is None:
+        # Don't reveal whether email exists — always return ok
+        return {"ok": True}
+
+    import secrets as _secrets
+    code = _secrets.token_hex(3).upper()[:6]
+    db.create_email_code(user_info["id"], email, code, purpose="reset", ttl_minutes=30)
+
+    from backend.email_service import send_email, reset_password_email_html
+    subject, html = reset_password_email_html(code, req.language)
+    send_email(email, subject, html)
+    return {"ok": True}
+
+
+@app.post("/api/auth/reset-password")
+def reset_password_endpoint(req: ResetPasswordRequest):
+    """Reset password using the code sent to email (no auth required)."""
+    if len(req.new_password) < 4:
+        raise HTTPException(status_code=400, detail="密码至少 4 个字符")
+
+    uid = db.verify_email_code(req.email.strip(), req.code.strip().upper(), purpose="reset")
+    if uid is None:
+        raise HTTPException(status_code=400, detail="验证码无效或已过期")
+    db.reset_password(uid, req.new_password)
+    return {"ok": True}
+
+
 # ── Provider routes ─────────────────────────────────────────────────────
 @app.get("/api/providers")
 def list_providers():

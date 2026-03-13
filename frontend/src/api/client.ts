@@ -253,6 +253,7 @@ export function changePassword(oldPassword: string, newPassword: string) {
 export interface UserProfile {
   username: string;
   email: string;
+  email_verified: boolean;
   avatar_url: string;
   bio: string;
   created_at: string;
@@ -266,6 +267,35 @@ export function updateProfileInfo(data: { avatar_url?: string; bio?: string; ema
   return request('/api/profile/info', {
     method: 'PUT',
     body: JSON.stringify(data),
+  });
+}
+
+// ── Email verification & password reset ──
+export function sendVerificationCode(language: string = 'zh') {
+  return request<{ ok: boolean }>('/api/auth/send-verification', {
+    method: 'POST',
+    body: JSON.stringify({ purpose: 'verify', language }),
+  });
+}
+
+export function verifyEmail(code: string) {
+  return request<{ ok: boolean }>('/api/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+  });
+}
+
+export function forgotPassword(email: string, language: string = 'zh') {
+  return request<{ ok: boolean }>('/api/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, language }),
+  });
+}
+
+export function resetPassword(email: string, code: string, newPassword: string) {
+  return request<{ ok: boolean }>('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, code, new_password: newPassword }),
   });
 }
 
