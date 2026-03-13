@@ -16,6 +16,9 @@ async function request<T>(url: string, opts?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    if (res.status === 429) {
+      throw new Error(body.detail || '请求过于频繁，请稍后再试 / Too many requests');
+    }
     throw new Error(body.detail || `HTTP ${res.status}`);
   }
   return res.json();

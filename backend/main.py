@@ -7,13 +7,16 @@ import json
 import os
 import sys
 import threading
+import time
+from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from urllib import error as urlerror
 from urllib import request as urlrequest
 
-from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from jose import JWTError, jwt
 from pydantic import BaseModel
 
@@ -223,6 +226,130 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ── Rate Limiter (in-memory sliding window) ──────────────────────────
+class _RateLimiter:
+    """Per-key sliding window rate limiter with automatic cleanup."""
+
+    def __init__(self) -> None:
+        self._hits: dict[str, list[float]] = defaultdict(list)
+        self._lock = threading.Lock()
+        self._last_cleanup = time.monotonic()
+
+    def is_allowed(self, key: str, max_requests: int, window_seconds: int) -> bool:
+        now = time.monotonic()
+        cutoff = now - window_seconds
+        with self._lock:
+            # Periodic cleanup every 60s to prevent memory leak
+            if now - self._last_cleanup > 60:
+                stale_keys = [k for k, v in self._hits.items() if not v or v[-1] < cutoff]
+                for k in stale_keys:
+                    del self._hits[k]
+                self._last_cleanup = now
+
+            timestamps = self._hits[key]
+            # Remove expired entries
+            while timestamps and timestamps[0] < cutoff:
+                timestamps.pop(0)
+            if len(timestamps) >= max_requests:
+                return False
+            timestamps.append(now)
+            return True
+
+    def remaining(self, key: str, max_requests: int, window_seconds: int) -> int:
+        cutoff = time.monotonic() - window_seconds
+        with self._lock:
+            timestamps = self._hits.get(key, [])
+            active = sum(1 for t in timestamps if t >= cutoff)
+            return max(0, max_requests - active)
+
+
+_limiter = _RateLimiter()
+
+# Rate limit tiers: (max_requests, window_seconds)
+_RATE_AUTH = (5, 60)       # 5 req/min — brute force protection
+_RATE_LLM = (10, 60)      # 10 req/min — expensive LLM calls
+_RATE_WRITE = (30, 60)     # 30 req/min — mutations
+_RATE_READ = (60, 60)      # 60 req/min — read endpoints
+
+# Path → tier mapping (prefix match)
+_RATE_TIERS: list[tuple[str, tuple[int, int], str]] = [
+    # (path_prefix, (max, window), key_type: "ip" | "user")
+    ("/api/auth/login", _RATE_AUTH, "ip"),
+    ("/api/auth/register", _RATE_AUTH, "ip"),
+    ("/api/generate", _RATE_LLM, "user"),
+    ("/api/fusion", _RATE_LLM, "user"),
+    ("/api/wizard", _RATE_LLM, "user"),
+    ("/api/chat/preview", _RATE_LLM, "user"),
+    ("/api/community/share", _RATE_WRITE, "user"),
+    ("/api/community/personas/", _RATE_WRITE, "user"),  # like/delete
+    ("/api/admin/", _RATE_WRITE, "user"),
+]
+
+
+def _get_client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _extract_user_from_header(authorization: str | None) -> str | None:
+    """Lightweight JWT sub extraction for rate limiting (no full validation)."""
+    if not authorization:
+        return None
+    try:
+        _, _, token = authorization.partition(" ")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return f"user:{payload['sub']}"
+    except Exception:
+        return None
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    path = request.url.path
+
+    # Skip non-API routes
+    if not path.startswith("/api/"):
+        return await call_next(request)
+
+    # Determine tier
+    tier = _RATE_READ
+    key_type = "ip"
+    for prefix, t, kt in _RATE_TIERS:
+        if path.startswith(prefix):
+            tier, key_type = t, kt
+            break
+
+    # Build rate limit key
+    if key_type == "user":
+        auth_header = request.headers.get("authorization")
+        rate_key = _extract_user_from_header(auth_header) or f"ip:{_get_client_ip(request)}"
+    else:
+        rate_key = f"ip:{_get_client_ip(request)}"
+
+    rate_key = f"{path.split('?')[0]}|{rate_key}"
+    max_req, window = tier
+
+    if not _limiter.is_allowed(rate_key, max_req, window):
+        remaining = 0
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "请求过于频繁，请稍后再试 / Too many requests, please try again later"},
+            headers={
+                "Retry-After": str(window),
+                "X-RateLimit-Limit": str(max_req),
+                "X-RateLimit-Remaining": "0",
+            },
+        )
+
+    response = await call_next(request)
+    remaining = _limiter.remaining(rate_key, max_req, window)
+    response.headers["X-RateLimit-Limit"] = str(max_req)
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
+    return response
 
 
 # ── Auth routes ─────────────────────────────────────────────────────────
