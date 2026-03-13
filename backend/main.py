@@ -6,6 +6,18 @@ from __future__ import annotations
 import json
 import os
 import sys
+
+# Load .env file if present (before any env reads)
+from pathlib import Path as _Path
+_env_file = _Path(__file__).parent.parent / ".env"
+if _env_file.exists():
+    for _line in _env_file.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _, _v = _line.partition("=")
+            _k, _v = _k.strip(), _v.strip()
+            if _k and _k not in os.environ:  # don't override existing env vars
+                os.environ[_k] = _v
 import threading
 import time
 from collections import defaultdict
@@ -37,6 +49,25 @@ if SECRET_KEY == _default_secret and not os.environ.get("DEV_MODE"):
     warnings.warn("JWT_SECRET not set! Using insecure default. Set JWT_SECRET env var in production.", stacklevel=1)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+
+# ── Email config check ────────────────────────────────────────────────
+_email_provider = os.environ.get("EMAIL_PROVIDER", "smtp").lower()
+if _email_provider == "smtp":
+    _smtp_ready = all([
+        os.environ.get("SMTP_HOST"),
+        os.environ.get("SMTP_USER"),
+        os.environ.get("SMTP_PASSWORD"),
+    ])
+    if not _smtp_ready:
+        print("[RolerZ] SMTP 未配置 — 邮箱验证/密码重置功能不可用")
+        print("[RolerZ] 配置方法：复制 .env.example 为 .env 并填入 SMTP 信息")
+    else:
+        print(f"[RolerZ] 邮件服务就绪 (SMTP: {os.environ.get('SMTP_HOST')})")
+elif _email_provider == "resend":
+    if not os.environ.get("RESEND_API_KEY"):
+        print("[RolerZ] RESEND_API_KEY 未设置 — 邮箱功能不可用")
+    else:
+        print("[RolerZ] 邮件服务就绪 (Resend API)")
 
 
 # ── Provider metadata ──────────────────────────────────────────────────
