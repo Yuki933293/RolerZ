@@ -454,11 +454,8 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
 
       {/* Auth modal */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowAuthModal(false)}>
-          <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
-            onClick={e => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="px-6 pt-6 pb-2">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-text-primary">
