@@ -311,6 +311,8 @@ _RATE_TIERS: list[tuple[str, tuple[int, int], str]] = [
     # (path_prefix, (max, window), key_type: "ip" | "user")
     ("/api/auth/login", _RATE_AUTH, "ip"),
     ("/api/auth/register", _RATE_AUTH, "ip"),
+    ("/api/auth/send-register-code", _RATE_AUTH, "ip"),
+    ("/api/auth/forgot-password", _RATE_AUTH, "ip"),
     ("/api/generate", _RATE_LLM, "user"),
     ("/api/fusion", _RATE_LLM, "user"),
     ("/api/wizard", _RATE_LLM, "user"),
@@ -410,6 +412,84 @@ def register(req: AuthRequest):
         raise HTTPException(status_code=409, detail="用户名或邮箱已被注册")
     token = create_access_token(uid, req.username)
     return TokenResponse(access_token=token, username=req.username, is_admin=db.is_admin(uid))
+
+
+# ── Registration with email verification ──────────────────────────────
+class SendRegisterCodeRequest(BaseModel):
+    email: str
+    language: str = "zh"
+
+
+class RegisterWithCodeRequest(BaseModel):
+    username: str
+    password: str
+    email: str
+    code: str
+
+
+@app.post("/api/auth/send-register-code")
+def send_register_code(req: SendRegisterCodeRequest, request: Request):
+    """Send a verification code for registration (no auth required)."""
+    import re
+    email = req.email.strip().lower()
+    if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        raise HTTPException(status_code=400, detail="邮箱格式不正确")
+
+    # Rate limit: 1 code per email per 60s
+    ip = _get_client_ip(request)
+    code_key = f"register-code|{email}"
+    ip_key = f"register-code-ip|{ip}"
+    if not _limiter.is_allowed(code_key, 1, 60):
+        raise HTTPException(status_code=429, detail="验证码发送过于频繁，请 60 秒后再试")
+    if not _limiter.is_allowed(ip_key, 5, 300):
+        raise HTTPException(status_code=429, detail="请求过于频繁，请稍后再试")
+
+    # Don't reveal if email is taken — always send success
+    # But only actually send if email is not taken
+    if db.is_email_taken(email):
+        # Silently succeed to not reveal email existence
+        return {"ok": True}
+
+    import secrets as _secrets
+    code = _secrets.token_hex(3).upper()[:6]
+    db.create_register_code(email, code, ttl_minutes=15)
+
+    from backend.email_service import send_email, verification_email_html
+    subject, html = verification_email_html(code, req.language)
+    ok = send_email(email, subject, html)
+    if not ok:
+        raise HTTPException(status_code=500, detail="邮件发送失败，请检查 SMTP 配置")
+    return {"ok": True}
+
+
+@app.post("/api/auth/register-with-code", response_model=TokenResponse)
+def register_with_code(req: RegisterWithCodeRequest):
+    """Register a new user with email verification code."""
+    import re
+    email = req.email.strip().lower()
+    username = req.username.strip()
+
+    if not username or len(username) < 2:
+        raise HTTPException(status_code=400, detail="用户名至少 2 个字符")
+    if len(req.password) < 8:
+        raise HTTPException(status_code=400, detail="密码至少 8 个字符")
+    if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        raise HTTPException(status_code=400, detail="邮箱格式不正确")
+
+    # Verify the registration code
+    if not db.verify_register_code(email, req.code.strip().upper()):
+        raise HTTPException(status_code=400, detail="验证码无效或已过期")
+
+    # Create user with verified email
+    uid = db.create_user(username, req.password, email=email)
+    if uid is None:
+        raise HTTPException(status_code=409, detail="用户名或邮箱已被注册")
+
+    # Mark email as verified since code was validated
+    db.set_email_verified(uid)
+
+    token = create_access_token(uid, username)
+    return TokenResponse(access_token=token, username=username, is_admin=db.is_admin(uid))
 
 
 # ── Email verification & password reset ─────────────────────────────────

@@ -1,5 +1,5 @@
 import { useConfig } from '../stores/useConfig';
-import { useT } from '../i18n';
+import { useT, type TranslationKey } from '../i18n';
 
 interface LandingProps {
   onOpenAuth: () => void;
@@ -80,7 +80,7 @@ export default function Landing({ onOpenAuth }: LandingProps) {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {FEATURES(t, isZh).map((feat, i) => (
+            {FEATURES(t).map((feat, i) => (
               <div
                 key={i}
                 className="group p-6 rounded-2xl bg-white border border-border hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 transition-all duration-300"
@@ -158,7 +158,7 @@ export default function Landing({ onOpenAuth }: LandingProps) {
 }
 
 /* ── Feature cards data ── */
-function FEATURES(t: (k: string) => string | Record<string, string>, isZh: boolean) {
+function FEATURES(t: (k: TranslationKey) => unknown) {
   return [
     {
       icon: (
@@ -209,7 +209,7 @@ function FEATURES(t: (k: string) => string | Record<string, string>, isZh: boole
 }
 
 /* ── Steps data ── */
-function STEPS(t: (k: string) => string | Record<string, string>) {
+function STEPS(t: (k: TranslationKey) => unknown) {
   return [
     { title: t('landingStep1Title') as string, desc: t('landingStep1Desc') as string },
     { title: t('landingStep2Title') as string, desc: t('landingStep2Desc') as string },

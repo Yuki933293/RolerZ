@@ -1,7 +1,8 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useConfig } from '../stores/useConfig';
 import { useAuth } from '../stores/useAuth';
 import { useT } from '../i18n';
+import { useLangNavigate, stripLangPrefix } from '../hooks/useLangNavigate';
 
 const IconGenerate = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -88,7 +89,7 @@ const PROVIDER_NAMES: Record<string, string> = {
 
 export default function Sidebar() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useLangNavigate();
   const config = useConfig();
   const { isAdmin } = useAuth();
   const t = useT(config.language);
@@ -141,7 +142,7 @@ export default function Sidebar() {
             </div>
             <nav className="space-y-0.5">
               {section.items.map(item => {
-                const isActive = location.pathname === item.id;
+                const isActive = stripLangPrefix(location.pathname) === item.id;
                 return (
                   <button
                     key={item.id}

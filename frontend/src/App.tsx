@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Generate from './pages/Generate';
 import ModelProvider from './pages/ModelProvider';
@@ -14,8 +14,11 @@ import FusionLab from './pages/FusionLab';
 import Landing from './pages/Landing';
 import { useAuth } from './stores/useAuth';
 import { useConfig } from './stores/useConfig';
-import { login as apiLogin, register as apiRegister, forgotPassword as apiForgotPassword, resetPassword as apiResetPassword, getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from './api/client';
+import { login as apiLogin, sendRegisterCode as apiSendRegisterCode, registerWithCode as apiRegisterWithCode, forgotPassword as apiForgotPassword, resetPassword as apiResetPassword, getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from './api/client';
 import { useT } from './i18n';
+import { stripLangPrefix } from './hooks/useLangNavigate';
+
+const VALID_LANGS = ['zh', 'zh-Hant', 'en'];
 
 const LANG_OPTIONS = [
   { value: 'zh', label: '简体中文' },
@@ -28,8 +31,11 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
   showAuthModal: boolean; setShowAuthModal: (v: boolean) => void;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { lang: urlLang } = useParams<{ lang: string }>();
   const language = useConfig(s => s.language);
   const setLanguage = useConfig(s => s.setLanguage);
+  const activeLang = urlLang && VALID_LANGS.includes(urlLang) ? urlLang : language;
   const theme = useConfig(s => s.theme);
   const toggleTheme = useConfig(s => s.toggleTheme);
   const { token, username, logout, login } = useAuth();
@@ -43,6 +49,11 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
   const [authEmail, setAuthEmail] = useState('');
   const [authError, setAuthError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Register-with-code flow
+  const [regStep, setRegStep] = useState<1 | 2>(1);
+  const [regCode, setRegCode] = useState('');
+  const [regCountdown, setRegCountdown] = useState(0);
+  const [regMsg, setRegMsg] = useState('');
   // Forgot password flow
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotCode, setForgotCode] = useState('');
@@ -106,17 +117,57 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Register countdown timer
+  useEffect(() => {
+    if (regCountdown <= 0) return;
+    const timer = setTimeout(() => setRegCountdown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [regCountdown]);
+
+  const handleSendRegisterCode = async () => {
+    if (!authEmail.trim()) return;
+    if (authPass.length < 8) {
+      setAuthError(t('passwordMin8') as string);
+      return;
+    }
+    setLoading(true);
+    setAuthError('');
+    setRegMsg('');
+    try {
+      await apiSendRegisterCode(authEmail.trim(), language);
+      setRegStep(2);
+      setRegCountdown(60);
+      setRegMsg(t('verifyCodeSent') as string);
+    } catch (e: unknown) {
+      setAuthError(e instanceof Error ? e.message : t('operationFailed') as string);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegisterWithCode = async () => {
+    if (!authUser.trim() || !authPass.trim() || !authEmail.trim() || !regCode.trim()) return;
+    setLoading(true);
+    setAuthError('');
+    try {
+      const res = await apiRegisterWithCode(authUser.trim(), authPass, authEmail.trim(), regCode.trim());
+      login(res.access_token, res.username, res.is_admin);
+      setShowAuthModal(false);
+      setAuthUser(''); setAuthPass(''); setAuthEmail('');
+      setRegCode(''); setRegStep(1); setRegMsg('');
+    } catch (e: unknown) {
+      setAuthError(e instanceof Error ? e.message : t('operationFailed') as string);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAuth = async () => {
     if (!authUser.trim() || !authPass.trim()) return;
     setLoading(true);
     setAuthError('');
     try {
-      let res;
-      if (authMode === 'login') {
-        res = await apiLogin(authUser.trim(), authPass);
-      } else {
-        res = await apiRegister(authUser.trim(), authPass, authEmail.trim() || undefined);
-      }
+      const res = await apiLogin(authUser.trim(), authPass);
       login(res.access_token, res.username, res.is_admin);
       setShowAuthModal(false);
       setAuthUser('');
@@ -148,13 +199,16 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
             </svg>
           </button>
 
-          <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => navigate(`/${activeLang}/`)}
+            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+          >
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-              ✦
+              R
             </div>
-            <span className="font-bold text-[0.95rem] text-text-primary">Persona Forge</span>
+            <span className="font-bold text-[0.95rem] text-text-primary">RolerZ</span>
             <span className="text-[0.62rem] text-text-faint font-mono tracking-wide">v0.3</span>
-          </div>
+          </button>
         </div>
 
         {/* Right: language + user */}
@@ -181,7 +235,13 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
                 {LANG_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
-                    onClick={() => { setLanguage(opt.value); setShowLangMenu(false); }}
+                    onClick={() => {
+                      setLanguage(opt.value);
+                      setShowLangMenu(false);
+                      // Navigate to the same page but with the new lang prefix
+                      const pagePath = stripLangPrefix(location.pathname);
+                      navigate(`/${opt.value}${pagePath}`);
+                    }}
                     className={`w-full text-left px-3 py-2 text-[0.8rem] transition-colors ${
                       language === opt.value
                         ? 'text-accent font-semibold bg-accent/5'
@@ -323,7 +383,7 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
 
                     {/* Account settings */}
                     <button
-                      onClick={() => { setShowUserMenu(false); navigate('/profile'); }}
+                      onClick={() => { setShowUserMenu(false); navigate(`/${activeLang}/profile`); }}
                       className="w-full text-left px-3 py-2 text-[0.78rem] text-text-dim hover:bg-surface-2 transition-colors flex items-center gap-2"
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -532,45 +592,114 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
             ) : (
               /* Login / Register form */
               <div className="px-6 pb-6 space-y-3">
-                <input
-                  type="text"
-                  placeholder={authMode === 'login' ? t('usernameOrEmail') as string : t('username') as string}
-                  value={authUser}
-                  onChange={e => setAuthUser(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
-                />
-                {authMode === 'register' && (
-                  <input
-                    type="email"
-                    placeholder={t('emailOptional') as string}
-                    value={authEmail}
-                    onChange={e => setAuthEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
-                  />
+                {authMode === 'login' ? (
+                  /* ── Login form ── */
+                  <>
+                    <input
+                      type="text"
+                      placeholder={t('usernameOrEmail') as string}
+                      value={authUser}
+                      onChange={e => setAuthUser(e.target.value)}
+                      className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                    />
+                    <input
+                      type="password"
+                      placeholder={t('password') as string}
+                      value={authPass}
+                      onChange={e => setAuthPass(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleAuth()}
+                      className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                    />
+                    {authError && <div className="text-[0.78rem] text-error">{authError}</div>}
+                    <button
+                      onClick={handleAuth}
+                      disabled={loading || !authUser.trim() || !authPass.trim()}
+                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white text-[0.86rem] font-semibold py-2.5 rounded-lg transition-all shadow-md"
+                    >
+                      {loading ? t('processing') as string : t('login') as string}
+                    </button>
+                  </>
+                ) : regStep === 1 ? (
+                  /* ── Register Step 1: username + email + password → send code ── */
+                  <>
+                    <input
+                      type="text"
+                      placeholder={t('username') as string}
+                      value={authUser}
+                      onChange={e => setAuthUser(e.target.value)}
+                      className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                    />
+                    <input
+                      type="email"
+                      placeholder={t('emailRequired') as string}
+                      value={authEmail}
+                      onChange={e => setAuthEmail(e.target.value)}
+                      className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                    />
+                    <input
+                      type="password"
+                      placeholder={t('password') as string}
+                      value={authPass}
+                      onChange={e => setAuthPass(e.target.value)}
+                      className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                    />
+                    <p className="text-[0.72rem] text-text-faint">{t('passwordMin8') as string}</p>
+                    {authError && <div className="text-[0.78rem] text-error">{authError}</div>}
+                    <button
+                      onClick={handleSendRegisterCode}
+                      disabled={loading || !authUser.trim() || !authEmail.trim() || authPass.length < 8}
+                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white text-[0.86rem] font-semibold py-2.5 rounded-lg transition-all shadow-md"
+                    >
+                      {loading ? t('processing') as string : t('sendRegisterCode') as string}
+                    </button>
+                  </>
+                ) : (
+                  /* ── Register Step 2: enter verification code → register ── */
+                  <>
+                    <div className="text-[0.8rem] text-text-dim">
+                      {regMsg}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={t('verificationCode') as string}
+                      value={regCode}
+                      onChange={e => setRegCode(e.target.value)}
+                      maxLength={12}
+                      onKeyDown={e => e.key === 'Enter' && handleRegisterWithCode()}
+                      className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none tracking-widest text-center font-mono"
+                    />
+                    {authError && <div className="text-[0.78rem] text-error">{authError}</div>}
+                    <button
+                      onClick={handleRegisterWithCode}
+                      disabled={loading || !regCode.trim()}
+                      className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white text-[0.86rem] font-semibold py-2.5 rounded-lg transition-all shadow-md"
+                    >
+                      {loading ? t('processing') as string : t('register') as string}
+                    </button>
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => { setRegStep(1); setRegCode(''); setAuthError(''); setRegMsg(''); }}
+                        className="text-[0.75rem] text-accent hover:underline"
+                      >
+                        {t('backToLogin') as string}
+                      </button>
+                      <button
+                        onClick={handleSendRegisterCode}
+                        disabled={regCountdown > 0 || loading}
+                        className="text-[0.75rem] text-accent hover:underline disabled:text-text-faint disabled:no-underline"
+                      >
+                        {regCountdown > 0
+                          ? (t('resendIn') as (n: number) => string)(regCountdown)
+                          : t('sendRegisterCode') as string}
+                      </button>
+                    </div>
+                  </>
                 )}
-                <input
-                  type="password"
-                  placeholder={t('password') as string}
-                  value={authPass}
-                  onChange={e => setAuthPass(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAuth()}
-                  className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
-                />
-                {authError && (
-                  <div className="text-[0.78rem] text-error">{authError}</div>
-                )}
-                <button
-                  onClick={handleAuth}
-                  disabled={loading || !authUser.trim() || !authPass.trim()}
-                  className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-40 text-white text-[0.86rem] font-semibold py-2.5 rounded-lg transition-all shadow-md"
-                >
-                  {loading ? t('processing') as string : authMode === 'login' ? t('login') as string : t('register') as string}
-                </button>
                 <div className="flex items-center justify-between text-[0.75rem] text-text-faint">
                   <span>
                     {authMode === 'login' ? t('noAccount') as string : t('hasAccount') as string}
                     <button
-                      onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError(''); }}
+                      onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError(''); setRegStep(1); setRegCode(''); setRegMsg(''); }}
                       className="text-accent hover:underline ml-1"
                     >
                       {authMode === 'login' ? t('registerNow') as string : t('goLogin') as string}
@@ -594,8 +723,83 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
   );
 }
 
-export default function App() {
+/** Sync URL lang param → config store (runs inside /:lang/* layout) */
+function LangSync() {
+  const { lang } = useParams<{ lang: string }>();
+  const storeLanguage = useConfig(s => s.language);
+  const setLanguage = useConfig(s => s.setLanguage);
+
+  useEffect(() => {
+    if (lang && VALID_LANGS.includes(lang) && lang !== storeLanguage) {
+      setLanguage(lang);
+    }
+  }, [lang, storeLanguage, setLanguage]);
+
+  return null;
+}
+
+/** Redirect bare paths (/) to /<lang>/ */
+function LangRedirect() {
+  const language = useConfig(s => s.language);
+  const location = useLocation();
+  const lang = VALID_LANGS.includes(language) ? language : 'zh';
+  return <Navigate to={`/${lang}${location.pathname}`} replace />;
+}
+
+function AppShell({ sidebarOpen, setSidebarOpen, showAuthModal, setShowAuthModal }: {
+  sidebarOpen: boolean;
+  setSidebarOpen: (v: boolean) => void;
+  showAuthModal: boolean;
+  setShowAuthModal: (v: boolean) => void;
+}) {
   const token = useAuth(s => s.token);
+
+  return (
+    <div className="flex flex-col h-screen overflow-hidden">
+      <LangSync />
+      <TopBar
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        showAuthModal={showAuthModal}
+        setShowAuthModal={setShowAuthModal}
+      />
+
+      <div className="flex flex-1 overflow-hidden">
+        {token && (
+          <div
+            className="flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
+            style={{ width: sidebarOpen ? 240 : 0 }}
+          >
+            <div className="w-60 h-full">
+              <Sidebar />
+            </div>
+          </div>
+        )}
+
+        <main className="flex-1 overflow-y-auto">
+          <Routes>
+            <Route path="/" element={
+              token
+                ? <div className="max-w-[1100px] mx-auto px-8 py-6"><Generate /></div>
+                : <Landing onOpenAuth={() => setShowAuthModal(true)} />
+            } />
+            <Route path="/fusion" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><FusionLab /></div>} />
+            <Route path="/discover" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Discover /></div>} />
+            <Route path="/model" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><ModelProvider /></div>} />
+            <Route path="/inspirations" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Inspirations /></div>} />
+            <Route path="/announcements" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Announcements /></div>} />
+            <Route path="/help" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Help /></div>} />
+            <Route path="/profile" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Profile /></div>} />
+            <Route path="/admin/users" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><UserManagement /></div>} />
+            <Route path="/admin/dashboard" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><AdminDashboard /></div>} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -605,6 +809,7 @@ export default function App() {
     if (saved) document.documentElement.setAttribute('data-theme', saved);
   }, []);
 
+  const token = useAuth(s => s.token);
   useEffect(() => {
     if (token) {
       useConfig.getState().loadFromServer();
@@ -613,49 +818,17 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex flex-col h-screen overflow-hidden">
-        {/* Top navbar — full width */}
-        <TopBar
-          sidebarOpen={sidebarOpen}
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          showAuthModal={showAuthModal}
-          setShowAuthModal={setShowAuthModal}
-        />
-
-        {/* Body: sidebar + main */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar with smooth transition — hidden on landing */}
-          {token && (
-            <div
-              className="flex-shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out"
-              style={{ width: sidebarOpen ? 240 : 0 }}
-            >
-              <div className="w-60 h-full">
-                <Sidebar />
-              </div>
-            </div>
-          )}
-
-          <main className="flex-1 overflow-y-auto">
-            <Routes>
-              <Route path="/" element={
-                token
-                  ? <div className="max-w-[1100px] mx-auto px-8 py-6"><Generate /></div>
-                  : <Landing onOpenAuth={() => setShowAuthModal(true)} />
-              } />
-              <Route path="/fusion" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><FusionLab /></div>} />
-              <Route path="/discover" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Discover /></div>} />
-              <Route path="/model" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><ModelProvider /></div>} />
-              <Route path="/inspirations" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Inspirations /></div>} />
-              <Route path="/announcements" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Announcements /></div>} />
-              <Route path="/help" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Help /></div>} />
-              <Route path="/profile" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><Profile /></div>} />
-              <Route path="/admin/users" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><UserManagement /></div>} />
-              <Route path="/admin/dashboard" element={<div className="max-w-[1100px] mx-auto px-8 py-6"><AdminDashboard /></div>} />
-            </Routes>
-          </main>
-        </div>
-      </div>
+      <Routes>
+        <Route path="/:lang/*" element={
+          <AppShell
+            sidebarOpen={sidebarOpen}
+            setSidebarOpen={setSidebarOpen}
+            showAuthModal={showAuthModal}
+            setShowAuthModal={setShowAuthModal}
+          />
+        } />
+        <Route path="*" element={<LangRedirect />} />
+      </Routes>
     </BrowserRouter>
   );
 }

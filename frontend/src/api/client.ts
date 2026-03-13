@@ -46,6 +46,20 @@ export function register(username: string, password: string, email?: string) {
   });
 }
 
+export function sendRegisterCode(email: string, language: string = 'zh') {
+  return request<{ ok: boolean }>('/api/auth/send-register-code', {
+    method: 'POST',
+    body: JSON.stringify({ email, language }),
+  });
+}
+
+export function registerWithCode(username: string, password: string, email: string, code: string) {
+  return request<TokenResponse>('/api/auth/register-with-code', {
+    method: 'POST',
+    body: JSON.stringify({ username, password, email, code }),
+  });
+}
+
 // ── Providers ──
 export interface ProviderInfo {
   id: string;

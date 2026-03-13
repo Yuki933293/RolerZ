@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useConfig } from '../stores/useConfig';
 import { useAuth } from '../stores/useAuth';
 import { useGenerateSession } from '../stores/useGenerateSession';
@@ -9,10 +8,11 @@ import InspirationPicker from '../components/InspirationPicker';
 import ChatWizard from '../components/ChatWizard';
 import LoginPrompt from '../components/LoginPrompt';
 import { useT } from '../i18n';
+import { useLangNavigate } from '../hooks/useLangNavigate';
 
 export default function Generate() {
   const config = useConfig();
-  const navigate = useNavigate();
+  const navigate = useLangNavigate();
   const token = useAuth(s => s.token);
   const t = useT(config.language);
   const [activeTab, setActiveTab] = useState<'create' | 'chat'>('create');

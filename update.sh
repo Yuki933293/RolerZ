@@ -25,7 +25,7 @@ echo "[2/4] 更新 Python 依赖..."
 sudo -u "$APP_USER" bash -c "
     source $APP_DIR/venv/bin/activate
     pip install -q --upgrade pip
-    pip install -q fastapi uvicorn python-jose[cryptography] pydantic anthropic openai httpx
+    pip install -q fastapi uvicorn 'psycopg[binary]' python-jose[cryptography] pydantic cryptography anthropic openai httpx
 "
 
 # ── 3. 前端重新构建 ──

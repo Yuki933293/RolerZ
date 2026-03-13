@@ -38,6 +38,14 @@ const translations = {
     password: '密码',
     cancel: '取消',
     operationFailed: '操作失败',
+    emailRequired: '邮箱',
+    sendRegisterCode: '发送验证码',
+    resendIn: (n: number) => `${n}s 后重发`,
+    verificationCode: '验证码',
+    registerStep1: '填写信息',
+    registerStep2: '验证邮箱',
+    passwordMin8: '密码至少 8 个字符',
+    registerSuccess: '注册成功',
 
     // Login prompt
     loginToCreate: '登录后开始创建角色',
@@ -399,6 +407,14 @@ const translations = {
     password: '密碼',
     cancel: '取消',
     operationFailed: '操作失敗',
+    emailRequired: '郵箱（必填）',
+    sendRegisterCode: '發送驗證碼',
+    resendIn: (n: number) => `${n}s 後重發`,
+    verificationCode: '驗證碼',
+    registerStep1: '填寫資訊',
+    registerStep2: '驗證郵箱',
+    passwordMin8: '密碼至少 8 個字符',
+    registerSuccess: '註冊成功',
 
     // Login prompt
     loginToCreate: '登入後開始創建角色',
@@ -760,6 +776,14 @@ const translations = {
     password: 'Password',
     cancel: 'Cancel',
     operationFailed: 'Operation failed',
+    emailRequired: 'Email (required)',
+    sendRegisterCode: 'Send Code',
+    resendIn: (n: number) => `Resend in ${n}s`,
+    verificationCode: 'Verification Code',
+    registerStep1: 'Account Info',
+    registerStep2: 'Verify Email',
+    passwordMin8: 'Password must be at least 8 characters',
+    registerSuccess: 'Registration successful',
 
     // Login prompt
     loginToCreate: 'Login to start creating',
