@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../stores/useAuth';
 import { useConfig } from '../stores/useConfig';
 import {
   getProfileStats, getProfileInfo, updateProfileInfo,
   getHistory, deleteHistory, changePassword, clearAllHistory, deleteAccount,
-  clearChatSessions,
-  type ProfileStats, type HistoryRecord, type UserProfile,
+  clearChatSessions, getCollections, getCollectionIds, removeFromCollection, clearCollection,
+  type ProfileStats, type HistoryRecord, type UserProfile, type CollectionItem,
 } from '../api/client';
 import CandidateCard from '../components/CandidateCard';
 import LoginPrompt from '../components/LoginPrompt';
 import { useT } from '../i18n';
 
-type Tab = 'history' | 'profile' | 'security' | 'data';
+type Tab = 'collection' | 'history' | 'profile' | 'security' | 'data';
 
 export default function Profile() {
   const { token, username, logout: doLogout } = useAuth();
@@ -19,11 +19,15 @@ export default function Profile() {
   const t = useT(lang);
 
   const isZh = lang === 'zh' || lang === 'zh-Hant';
-  const [tab, setTab] = useState<Tab>('history');
+  const [tab, setTab] = useState<Tab>('collection');
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Collection (favorites)
+  const [collection, setCollection] = useState<CollectionItem[]>([]);
+  const [collectedIds, setCollectedIds] = useState<Set<string>>(new Set());
 
   // Profile info
   const [, setProfile] = useState<UserProfile | null>(null);
@@ -47,18 +51,55 @@ export default function Profile() {
   useEffect(() => {
     if (!token) return;
     setLoading(true);
-    Promise.all([getProfileStats(), getHistory(), getProfileInfo()])
-      .then(([s, h, p]) => {
+    Promise.all([getProfileStats(), getHistory(), getProfileInfo(), getCollections(), getCollectionIds()])
+      .then(([s, h, p, col, cids]) => {
         setStats(s);
         setHistory(h);
         setProfile(p);
         setAvatarUrl(p.avatar_url || '');
         setProfileEmail(p.email || '');
         setBio(p.bio || '');
+        setCollection(col);
+        setCollectedIds(new Set(cids.ids));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [token]);
+
+  const handleCollectionChange = useCallback((candidateId: string, collected: boolean) => {
+    setCollectedIds(prev => {
+      const next = new Set(prev);
+      if (collected) next.add(candidateId);
+      else next.delete(candidateId);
+      return next;
+    });
+    // Refresh collection list when toggling from history tab
+    if (!collected) {
+      setCollection(prev => prev.filter(c => c.candidate_data?.id !== candidateId));
+    }
+  }, []);
+
+  const handleRemoveFromCollection = async (item: CollectionItem) => {
+    try {
+      await removeFromCollection(item.id);
+      setCollection(prev => prev.filter(c => c.id !== item.id));
+      setCollectedIds(prev => {
+        const next = new Set(prev);
+        next.delete(item.candidate_data?.id);
+        return next;
+      });
+    } catch { /* ignore */ }
+  };
+
+  const handleClearCollection = async () => {
+    const msg = isZh ? '确定要清空所有收藏吗？此操作不可撤销。' : 'Clear all collections? This cannot be undone.';
+    if (!window.confirm(msg)) return;
+    try {
+      await clearCollection();
+      setCollection([]);
+      setCollectedIds(new Set());
+    } catch { /* ignore */ }
+  };
 
   if (!token) {
     return <LoginPrompt titleKey="loginDefault" descKey="loginDefaultDesc" />;
@@ -142,6 +183,7 @@ export default function Profile() {
   };
 
   const tabs: { id: Tab; label: string }[] = [
+    { id: 'collection', label: `${isZh ? '我的收藏' : 'My Collection'} (${collection.length})` },
     { id: 'history', label: t('myCharacters') as string },
     { id: 'profile', label: t('profileInfo') as string },
     { id: 'security', label: t('securitySettings') as string },
@@ -167,16 +209,20 @@ export default function Profile() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white border border-border rounded-xl p-4 text-center">
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-white dark:bg-surface-1 border border-border rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-amber-500">{collection.length}</div>
+            <div className="text-[0.75rem] text-text-dim mt-1">{isZh ? '收藏' : 'Collected'}</div>
+          </div>
+          <div className="bg-white dark:bg-surface-1 border border-border rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-accent">{stats.total_generations}</div>
             <div className="text-[0.75rem] text-text-dim mt-1">{t('totalGenerations') as string}</div>
           </div>
-          <div className="bg-white border border-border rounded-xl p-4 text-center">
+          <div className="bg-white dark:bg-surface-1 border border-border rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-accent">{stats.total_candidates}</div>
             <div className="text-[0.75rem] text-text-dim mt-1">{t('totalCandidates') as string}</div>
           </div>
-          <div className="bg-white border border-border rounded-xl p-4 text-center">
+          <div className="bg-white dark:bg-surface-1 border border-border rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-text-primary">{username}</div>
             <div className="text-[0.75rem] text-text-dim mt-1">
               {stats.member_since ? `${t('memberSince') as string} ${stats.member_since.split('T')[0].split(' ')[0]}` : ''}
@@ -201,6 +247,54 @@ export default function Profile() {
           </button>
         ))}
       </div>
+
+      {/* Collection tab */}
+      {tab === 'collection' && (
+        <div>
+          {loading ? (
+            <div className="text-center py-12 text-text-dim text-[0.88rem]">{t('loading') as string}</div>
+          ) : collection.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 rounded-2xl bg-surface-2 flex items-center justify-center mx-auto mb-4">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-faint">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </div>
+              <p className="text-text-dim text-[0.88rem]">{isZh ? '还没有收藏的角色' : 'No collected characters yet'}</p>
+              <p className="text-text-faint text-[0.78rem] mt-1">{isZh ? '在生成页面点击星标按钮收藏喜欢的角色' : 'Click the star button on generated characters to collect them'}</p>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-[0.82rem] text-text-dim">
+                  {collection.length} {isZh ? '个收藏' : 'collected'}
+                </div>
+                <button
+                  onClick={handleClearCollection}
+                  className="text-[0.75rem] text-text-faint hover:text-error transition-colors"
+                >
+                  {isZh ? '清空收藏' : 'Clear all'}
+                </button>
+              </div>
+              <div className="space-y-3">
+                {collection.map(item => (
+                  <div key={item.id} className="relative">
+                    <CandidateCard
+                      candidate={item.candidate_data}
+                      index={0}
+                      language={item.language}
+                      collected={true}
+                      onCollectionChange={(_id, isCollected) => {
+                        if (!isCollected) handleRemoveFromCollection(item);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* History tab */}
       {tab === 'history' && (
@@ -251,7 +345,7 @@ export default function Profile() {
                   {expandedId === record.id && record.result_data?.candidates && (
                     <div className="px-5 pb-4 border-t border-border pt-3">
                       {record.result_data.candidates.map((c, i) => (
-                        <CandidateCard key={c.id} candidate={c} index={i} language={record.language} />
+                        <CandidateCard key={c.id} candidate={c} index={i} language={record.language} collected={collectedIds.has(c.id)} onCollectionChange={handleCollectionChange} />
                       ))}
                     </div>
                   )}

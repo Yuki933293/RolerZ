@@ -907,6 +907,73 @@ def delete_account(authorization: str | None = Header(None)):
     return {"ok": True}
 
 
+# ── Collections (favorites) ────────────────────────────────────────────
+class CollectRequest(BaseModel):
+    name: str
+    tags: list[str] = []
+    score: float = 0
+    language: str = "zh"
+    candidate_data: dict = {}
+    note: str = ""
+
+
+@app.post("/api/collections")
+def add_collection(req: CollectRequest, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    cid = db.add_to_collection(
+        user["user_id"], req.name, req.tags, req.score,
+        req.language, req.candidate_data, req.note,
+    )
+    return {"ok": True, "id": cid}
+
+
+@app.get("/api/collections")
+def list_collections(limit: int = 50, offset: int = 0, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    return db.list_collection(user["user_id"], limit, offset)
+
+
+@app.get("/api/collections/ids")
+def get_collection_candidate_ids(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        return {"ids": []}
+    return {"ids": list(db.get_collection_ids(user["user_id"]))}
+
+
+@app.delete("/api/collections/{collection_id}")
+def remove_collection(collection_id: int, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    ok = db.remove_from_collection(user["user_id"], collection_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="收藏不存在")
+    return {"ok": True}
+
+
+@app.delete("/api/collections/by-candidate/{candidate_id}")
+def remove_collection_by_candidate(candidate_id: str, authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    db.remove_from_collection_by_candidate(user["user_id"], candidate_id)
+    return {"ok": True}
+
+
+@app.delete("/api/collections")
+def clear_all_collections(authorization: str | None = Header(None)):
+    user = get_current_user(authorization)
+    if not user:
+        raise HTTPException(status_code=401, detail="需要登录")
+    count = db.clear_collection(user["user_id"])
+    return {"ok": True, "deleted": count}
+
+
 # ── Generation cancel registry ─────────────────────────────────────────
 _cancel_events: dict[int, threading.Event] = {}
 

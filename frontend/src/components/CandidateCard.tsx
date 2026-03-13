@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { Candidate } from '../api/client';
-import { sharePersona } from '../api/client';
+import { sharePersona, addToCollection, removeFromCollectionByCandidate } from '../api/client';
 import { useT } from '../i18n';
 import { exportTavernPNG } from '../utils/tavernExport';
 import ChatPreview from './ChatPreview';
@@ -9,6 +9,8 @@ interface Props {
   candidate: Candidate;
   index: number;
   language: string;
+  collected?: boolean;
+  onCollectionChange?: (candidateId: string, collected: boolean) => void;
 }
 
 const SPEC_LABELS: Record<string, string> = {
@@ -119,10 +121,11 @@ function SectionCard({ section, index }: { section: ParsedSection; index: number
   );
 }
 
-export default function CandidateCard({ candidate, index, language }: Props) {
+export default function CandidateCard({ candidate, index, language, collected, onCollectionChange }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState('');
-  const [favorited, setFavorited] = useState(false);
+  const [favorited, setFavorited] = useState(collected ?? false);
+  const [favLoading, setFavLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [shared, setShared] = useState(false);
@@ -353,17 +356,41 @@ export default function CandidateCard({ candidate, index, language }: Props) {
       <div className="mt-4 pt-3.5 border-t border-border flex flex-wrap items-center gap-2">
         {/* Favorite */}
         <button
-          onClick={() => setFavorited(f => !f)}
+          onClick={async () => {
+            if (favLoading) return;
+            setFavLoading(true);
+            try {
+              if (favorited) {
+                await removeFromCollectionByCandidate(candidate.id);
+                setFavorited(false);
+                onCollectionChange?.(candidate.id, false);
+              } else {
+                const spec = candidate.spec_long as Record<string, string>;
+                const name = spec?.identity || spec?.name || candidate.id;
+                await addToCollection({
+                  name,
+                  tags: candidate.tags || [],
+                  score: candidate.score,
+                  language,
+                  candidate_data: candidate as unknown as Record<string, unknown>,
+                });
+                setFavorited(true);
+                onCollectionChange?.(candidate.id, true);
+              }
+            } catch { /* ignore */ }
+            setFavLoading(false);
+          }}
+          disabled={favLoading}
           className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[0.8rem] font-medium transition-all ${
             favorited
               ? 'bg-amber-50 text-amber-600 border border-amber-200 shadow-sm dark:bg-amber-900/20 dark:border-amber-700'
               : 'bg-surface-2 text-text-dim border border-border hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200'
-          }`}
+          } disabled:opacity-50`}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill={favorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
-          {favorited ? t('unfavorite') as string : t('favorite') as string}
+          {favLoading ? '...' : favorited ? t('unfavorite') as string : t('favorite') as string}
         </button>
 
         {/* Chat preview */}

@@ -538,6 +538,52 @@ export function recordEvents(events: { event_type: 'view' | 'click' | 'save'; pe
   });
 }
 
+// ── Collections (favorites) ──
+export interface CollectionItem {
+  id: number;
+  name: string;
+  tags: string[];
+  score: number;
+  language: string;
+  candidate_data: Candidate;
+  note: string;
+  created_at: string;
+}
+
+export function addToCollection(data: {
+  name: string;
+  tags: string[];
+  score: number;
+  language: string;
+  candidate_data: Record<string, unknown>;
+  note?: string;
+}) {
+  return request<{ ok: boolean; id: number }>('/api/collections', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function getCollections(limit = 50, offset = 0) {
+  return request<CollectionItem[]>(`/api/collections?limit=${limit}&offset=${offset}`);
+}
+
+export function getCollectionIds() {
+  return request<{ ids: string[] }>('/api/collections/ids');
+}
+
+export function removeFromCollection(collectionId: number) {
+  return request<{ ok: boolean }>(`/api/collections/${collectionId}`, { method: 'DELETE' });
+}
+
+export function removeFromCollectionByCandidate(candidateId: string) {
+  return request<{ ok: boolean }>(`/api/collections/by-candidate/${candidateId}`, { method: 'DELETE' });
+}
+
+export function clearCollection() {
+  return request<{ ok: boolean; deleted: number }>('/api/collections', { method: 'DELETE' });
+}
+
 // ── Fusion Lab ──
 export interface FusionParams {
   card_ids: string[];

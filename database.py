@@ -5,11 +5,65 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import secrets
 import sqlite3
 from pathlib import Path
 
+from cryptography.fernet import Fernet, InvalidToken
+
 _DB_PATH = Path(__file__).parent / "data" / "persona_forge.db"
+_KEY_PATH = Path(__file__).parent / "data" / ".encryption_key"
+_ENC_PREFIX = "ENC:"
+
+# --------------- Fernet encryption helpers ---------------
+
+_fernet_instance: Fernet | None = None
+
+
+def _get_fernet() -> Fernet:
+    """Return a cached Fernet instance. Key source priority:
+    1. Environment variable ENCRYPTION_KEY
+    2. File data/.encryption_key (auto-generated on first run)
+    """
+    global _fernet_instance
+    if _fernet_instance is not None:
+        return _fernet_instance
+
+    key = os.environ.get("ENCRYPTION_KEY")
+    if key:
+        _fernet_instance = Fernet(key.encode() if isinstance(key, str) else key)
+        return _fernet_instance
+
+    if _KEY_PATH.exists():
+        key = _KEY_PATH.read_text().strip()
+    else:
+        key = Fernet.generate_key().decode()
+        _KEY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _KEY_PATH.write_text(key)
+        try:
+            _KEY_PATH.chmod(0o600)
+        except OSError:
+            pass  # Windows may not support chmod
+
+    _fernet_instance = Fernet(key.encode())
+    return _fernet_instance
+
+
+def _encrypt_config(plaintext: str) -> str:
+    """Encrypt a config JSON string. Returns 'ENC:<fernet_token>'."""
+    token = _get_fernet().encrypt(plaintext.encode()).decode()
+    return _ENC_PREFIX + token
+
+
+def _decrypt_config(data: str) -> str:
+    """Decrypt config data. Handles both encrypted ('ENC:...') and legacy plaintext."""
+    if not data.startswith(_ENC_PREFIX):
+        return data  # legacy plaintext — still valid
+    try:
+        return _get_fernet().decrypt(data[len(_ENC_PREFIX):].encode()).decode()
+    except InvalidToken:
+        return "{}"  # corrupted — return empty config
 
 
 def _get_conn() -> sqlite3.Connection:
@@ -115,12 +169,28 @@ def init_db() -> None:
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (persona_id) REFERENCES shared_personas(id) ON DELETE CASCADE
         );
+        CREATE TABLE IF NOT EXISTS user_collections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            tags TEXT NOT NULL DEFAULT '[]',
+            score REAL NOT NULL DEFAULT 0,
+            language TEXT NOT NULL DEFAULT 'zh',
+            candidate_data TEXT NOT NULL DEFAULT '{}',
+            note TEXT NOT NULL DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
     """)
     # Migration: add email column for existing databases
     try:
-        conn.execute("ALTER TABLE users ADD COLUMN email TEXT UNIQUE DEFAULT NULL")
+        conn.execute("ALTER TABLE users ADD COLUMN email TEXT DEFAULT NULL")
     except sqlite3.OperationalError:
         pass  # column already exists
+    try:
+        conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -253,7 +323,7 @@ def save_card_groups(user_id: int, groups: list[dict]) -> None:
 
 
 def get_user_config(user_id: int) -> dict:
-    """Returns the user's saved config dict."""
+    """Returns the user's saved config dict (auto-decrypts)."""
     conn = _get_conn()
     row = conn.execute(
         "SELECT config_data FROM user_configs WHERE user_id = ?",
@@ -263,13 +333,15 @@ def get_user_config(user_id: int) -> dict:
     if row is None:
         return {}
     try:
-        return json.loads(row["config_data"])
-    except json.JSONDecodeError:
+        plaintext = _decrypt_config(row["config_data"])
+        return json.loads(plaintext)
+    except (json.JSONDecodeError, Exception):
         return {}
 
 
 def save_user_config(user_id: int, config_data: dict) -> None:
-    """Insert or update the user's config."""
+    """Insert or update the user's config (encrypted at rest)."""
+    encrypted = _encrypt_config(json.dumps(config_data, ensure_ascii=False))
     conn = _get_conn()
     conn.execute(
         """INSERT INTO user_configs (user_id, config_data, updated_at)
@@ -277,7 +349,7 @@ def save_user_config(user_id: int, config_data: dict) -> None:
            ON CONFLICT(user_id) DO UPDATE SET
                config_data = excluded.config_data,
                updated_at = CURRENT_TIMESTAMP""",
-        (user_id, json.dumps(config_data, ensure_ascii=False)),
+        (user_id, encrypted),
     )
     conn.commit()
     conn.close()
@@ -1366,6 +1438,121 @@ def _format_persona_rows(conn: sqlite3.Connection, rows: list,
     return result
 
 
+# ── User collections (favorites) ─────────────────────────────────────
+def add_to_collection(user_id: int, name: str, tags: list[str], score: float,
+                      language: str, candidate_data: dict, note: str = "") -> int:
+    conn = _get_conn()
+    cur = conn.execute(
+        """INSERT INTO user_collections (user_id, name, tags, score, language, candidate_data, note)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (user_id, name, json.dumps(tags, ensure_ascii=False), score, language,
+         json.dumps(candidate_data, ensure_ascii=False), note),
+    )
+    cid = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return cid
+
+
+def list_collection(user_id: int, limit: int = 50, offset: int = 0) -> list[dict]:
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT * FROM user_collections WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+        (user_id, limit, offset),
+    ).fetchall()
+    conn.close()
+    result = []
+    for r in rows:
+        d = dict(r)
+        d["tags"] = json.loads(d.get("tags") or "[]")
+        d["candidate_data"] = json.loads(d.get("candidate_data") or "{}")
+        result.append(d)
+    return result
+
+
+def get_collection_ids(user_id: int) -> set[str]:
+    """Return set of candidate IDs that user has collected (for quick lookup)."""
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT candidate_data FROM user_collections WHERE user_id = ?",
+        (user_id,),
+    ).fetchall()
+    conn.close()
+    ids = set()
+    for r in rows:
+        data = json.loads(r["candidate_data"] or "{}")
+        cid = data.get("id")
+        if cid:
+            ids.add(cid)
+    return ids
+
+
+def remove_from_collection(user_id: int, collection_id: int) -> bool:
+    conn = _get_conn()
+    cur = conn.execute(
+        "DELETE FROM user_collections WHERE id = ? AND user_id = ?",
+        (collection_id, user_id),
+    )
+    conn.commit()
+    deleted = cur.rowcount > 0
+    conn.close()
+    return deleted
+
+
+def remove_from_collection_by_candidate(user_id: int, candidate_id: str) -> bool:
+    """Remove a collection entry by matching the candidate id inside candidate_data JSON."""
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT id, candidate_data FROM user_collections WHERE user_id = ?",
+        (user_id,),
+    ).fetchall()
+    for r in rows:
+        data = json.loads(r["candidate_data"] or "{}")
+        if data.get("id") == candidate_id:
+            conn.execute("DELETE FROM user_collections WHERE id = ?", (r["id"],))
+            conn.commit()
+            conn.close()
+            return True
+    conn.close()
+    return False
+
+
+def get_collection_count(user_id: int) -> int:
+    conn = _get_conn()
+    row = conn.execute(
+        "SELECT COUNT(*) as cnt FROM user_collections WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return row["cnt"] if row else 0
+
+
+def clear_collection(user_id: int) -> int:
+    conn = _get_conn()
+    cur = conn.execute("DELETE FROM user_collections WHERE user_id = ?", (user_id,))
+    count = cur.rowcount
+    conn.commit()
+    conn.close()
+    return count
+
+
+def _migrate_encrypt_configs() -> None:
+    """One-time migration: encrypt any plaintext config_data rows."""
+    conn = _get_conn()
+    rows = conn.execute("SELECT id, config_data FROM user_configs").fetchall()
+    for row in rows:
+        data = row["config_data"]
+        if data and not data.startswith(_ENC_PREFIX):
+            # plaintext — encrypt it
+            encrypted = _encrypt_config(data)
+            conn.execute(
+                "UPDATE user_configs SET config_data = ? WHERE id = ?",
+                (encrypted, row["id"]),
+            )
+    conn.commit()
+    conn.close()
+
+
 # Auto-initialize on import
 init_db()
 _migrate_users_table()
@@ -1373,3 +1560,4 @@ _migrate_shared_personas_table()
 _migrate_chat_sessions_table()
 _migrate_notifications_table()
 _migrate_events_table()
+_migrate_encrypt_configs()

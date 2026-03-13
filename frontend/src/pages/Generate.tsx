@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useConfig } from '../stores/useConfig';
 import { useAuth } from '../stores/useAuth';
 import { useGenerateSession } from '../stores/useGenerateSession';
-import { generate } from '../api/client';
+import { generate, getCollectionIds } from '../api/client';
 import CandidateCard from '../components/CandidateCard';
 import InspirationPicker from '../components/InspirationPicker';
 import ChatWizard from '../components/ChatWizard';
@@ -16,6 +16,22 @@ export default function Generate() {
   const token = useAuth(s => s.token);
   const t = useT(config.language);
   const [activeTab, setActiveTab] = useState<'create' | 'chat'>('create');
+  const [collectedIds, setCollectedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (token) {
+      getCollectionIds().then(r => setCollectedIds(new Set(r.ids))).catch(() => {});
+    }
+  }, [token]);
+
+  const handleCollectionChange = useCallback((candidateId: string, collected: boolean) => {
+    setCollectedIds(prev => {
+      const next = new Set(prev);
+      if (collected) next.add(candidateId);
+      else next.delete(candidateId);
+      return next;
+    });
+  }, []);
 
   const [concept, setConcept] = useState('');
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
@@ -245,7 +261,7 @@ export default function Generate() {
                 </span>
               </div>
               {run.candidates.map((c, i) => (
-                <CandidateCard key={c.id} candidate={c} index={i} language={config.language} />
+                <CandidateCard key={c.id} candidate={c} index={i} language={config.language} collected={collectedIds.has(c.id)} onCollectionChange={handleCollectionChange} />
               ))}
             </div>
           ))}

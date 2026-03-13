@@ -45,5 +45,8 @@ frontend/dist/
 # Database
 data/*.db
 
+# Encryption key
+data/.encryption_key
+
 # Claude
 .claude/
