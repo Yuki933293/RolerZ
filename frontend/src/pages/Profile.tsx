@@ -28,6 +28,7 @@ export default function Profile() {
   // Profile info
   const [, setProfile] = useState<UserProfile | null>(null);
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
   const [bio, setBio] = useState('');
   const [profileMsg, setProfileMsg] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
@@ -52,6 +53,7 @@ export default function Profile() {
         setHistory(h);
         setProfile(p);
         setAvatarUrl(p.avatar_url || '');
+        setProfileEmail(p.email || '');
         setBio(p.bio || '');
       })
       .catch(() => {})
@@ -74,7 +76,7 @@ export default function Profile() {
     setProfileMsg('');
     setProfileSaving(true);
     try {
-      await updateProfileInfo({ avatar_url: avatarUrl, bio });
+      await updateProfileInfo({ avatar_url: avatarUrl, bio, email: profileEmail });
       setProfileMsg(t('profileSaved') as string);
     } catch (e: unknown) {
       setProfileMsg(e instanceof Error ? e.message : t('operationFailed') as string);
@@ -289,6 +291,18 @@ export default function Profile() {
                   className={inputClass}
                 />
               </div>
+            </div>
+
+            {/* Email */}
+            <div className="mb-4">
+              <label className="text-[0.75rem] text-text-dim mb-1 block">{t('email') as string}</label>
+              <input
+                type="email"
+                value={profileEmail}
+                onChange={e => setProfileEmail(e.target.value)}
+                placeholder={t('emailOptional') as string}
+                className={inputClass}
+              />
             </div>
 
             {/* Bio */}

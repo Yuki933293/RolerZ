@@ -27,6 +27,7 @@ def init_db() -> None:
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE DEFAULT NULL,
             password_hash TEXT NOT NULL,
             salt TEXT NOT NULL,
             avatar_url TEXT NOT NULL DEFAULT '',
@@ -115,6 +116,11 @@ def init_db() -> None:
             FOREIGN KEY (persona_id) REFERENCES shared_personas(id) ON DELETE CASCADE
         );
     """)
+    # Migration: add email column for existing databases
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN email TEXT UNIQUE DEFAULT NULL")
+    except sqlite3.OperationalError:
+        pass  # column already exists
     conn.commit()
     conn.close()
 
@@ -125,15 +131,15 @@ def _hash_password(password: str, salt: str) -> str:
     ).hex()
 
 
-def create_user(username: str, password: str) -> int | None:
-    """Create a user. Returns user_id on success, None if username is taken."""
+def create_user(username: str, password: str, email: str | None = None) -> int | None:
+    """Create a user. Returns user_id on success, None if username/email is taken."""
     salt = secrets.token_hex(16)
     pw_hash = _hash_password(password, salt)
     conn = _get_conn()
     try:
         cur = conn.execute(
-            "INSERT INTO users (username, password_hash, salt) VALUES (?, ?, ?)",
-            (username, pw_hash, salt),
+            "INSERT INTO users (username, password_hash, salt, email) VALUES (?, ?, ?, ?)",
+            (username, pw_hash, salt, email or None),
         )
         uid = cur.lastrowid
         # First registered user (id=1) is auto-admin
@@ -147,18 +153,20 @@ def create_user(username: str, password: str) -> int | None:
         conn.close()
 
 
-def authenticate(username: str, password: str) -> int | None:
-    """Returns user_id if credentials are valid, else None."""
+def authenticate(username: str, password: str) -> tuple[int, str] | None:
+    """Returns (user_id, username) if credentials are valid, else None.
+    Accepts username or email as the login identifier."""
     conn = _get_conn()
+    # Try username first, then email
     row = conn.execute(
-        "SELECT id, password_hash, salt FROM users WHERE username = ?",
-        (username,),
+        "SELECT id, username, password_hash, salt FROM users WHERE username = ? OR email = ?",
+        (username, username),
     ).fetchone()
     conn.close()
     if row is None:
         return None
     if _hash_password(password, row["salt"]) == row["password_hash"]:
-        return row["id"]
+        return (row["id"], row["username"])
     return None
 
 
@@ -470,10 +478,10 @@ def delete_announcement(ann_id: str) -> bool:
 
 
 def get_user_profile(user_id: int) -> dict | None:
-    """Returns user profile info (username, avatar_url, bio, created_at)."""
+    """Returns user profile info (username, email, avatar_url, bio, created_at)."""
     conn = _get_conn()
     row = conn.execute(
-        "SELECT username, avatar_url, bio, created_at FROM users WHERE id = ?",
+        "SELECT username, email, avatar_url, bio, created_at FROM users WHERE id = ?",
         (user_id,),
     ).fetchone()
     conn.close()
@@ -481,13 +489,14 @@ def get_user_profile(user_id: int) -> dict | None:
         return None
     return {
         "username": row["username"],
+        "email": row["email"] or "",
         "avatar_url": row["avatar_url"],
         "bio": row["bio"],
         "created_at": row["created_at"],
     }
 
 
-def update_user_profile(user_id: int, avatar_url: str | None = None, bio: str | None = None) -> bool:
+def update_user_profile(user_id: int, avatar_url: str | None = None, bio: str | None = None, email: str | None = None) -> bool:
     """Update user profile fields. Returns True on success."""
     conn = _get_conn()
     fields = []
@@ -498,6 +507,9 @@ def update_user_profile(user_id: int, avatar_url: str | None = None, bio: str | 
     if bio is not None:
         fields.append("bio = ?")
         values.append(bio)
+    if email is not None:
+        fields.append("email = ?")
+        values.append(email if email else None)
     if not fields:
         conn.close()
         return True
@@ -524,7 +536,7 @@ def list_users() -> list[dict]:
     """Returns all users with basic info for admin panel."""
     conn = _get_conn()
     rows = conn.execute(
-        "SELECT u.id, u.username, u.is_admin, u.created_at, "
+        "SELECT u.id, u.username, u.email, u.is_admin, u.created_at, "
         "COALESCE(g.gen_count, 0) as generation_count "
         "FROM users u "
         "LEFT JOIN (SELECT user_id, COUNT(*) as gen_count FROM generation_history GROUP BY user_id) g "

@@ -85,6 +85,7 @@ PROVIDER_DEFAULT_URLS = {
 class AuthRequest(BaseModel):
     username: str
     password: str
+    email: str | None = None
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -134,6 +135,7 @@ class ChangePasswordRequest(BaseModel):
 class UpdateProfileRequest(BaseModel):
     avatar_url: str | None = None
     bio: str | None = None
+    email: str | None = None
 
 class FetchModelsRequest(BaseModel):
     provider: str
@@ -355,20 +357,26 @@ async def rate_limit_middleware(request: Request, call_next):
 # ── Auth routes ─────────────────────────────────────────────────────────
 @app.post("/api/auth/login", response_model=TokenResponse)
 def login(req: AuthRequest):
-    uid = db.authenticate(req.username, req.password)
-    if uid is None:
+    result = db.authenticate(req.username, req.password)
+    if result is None:
         raise HTTPException(status_code=401, detail="用户名或密码错误")
-    token = create_access_token(uid, req.username)
-    return TokenResponse(access_token=token, username=req.username, is_admin=db.is_admin(uid))
+    uid, real_username = result
+    token = create_access_token(uid, real_username)
+    return TokenResponse(access_token=token, username=real_username, is_admin=db.is_admin(uid))
 
 
 @app.post("/api/auth/register", response_model=TokenResponse)
 def register(req: AuthRequest):
     if len(req.password) < 4:
         raise HTTPException(status_code=400, detail="密码至少 4 个字符")
-    uid = db.create_user(req.username, req.password)
+    email = req.email.strip() if req.email else None
+    if email:
+        import re
+        if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+            raise HTTPException(status_code=400, detail="邮箱格式不正确")
+    uid = db.create_user(req.username, req.password, email=email)
     if uid is None:
-        raise HTTPException(status_code=409, detail="用户名已存在")
+        raise HTTPException(status_code=409, detail="用户名或邮箱已被注册")
     token = create_access_token(uid, req.username)
     return TokenResponse(access_token=token, username=req.username, is_admin=db.is_admin(uid))
 
@@ -880,7 +888,13 @@ def update_profile_info(req: UpdateProfileRequest, authorization: str | None = H
     user = get_current_user(authorization)
     if not user:
         raise HTTPException(status_code=401, detail="需要登录")
-    db.update_user_profile(user["user_id"], avatar_url=req.avatar_url, bio=req.bio)
+    if req.email is not None:
+        email = req.email.strip()
+        if email:
+            import re
+            if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+                raise HTTPException(status_code=400, detail="邮箱格式不正确")
+    db.update_user_profile(user["user_id"], avatar_url=req.avatar_url, bio=req.bio, email=req.email)
     return {"ok": True}
 
 

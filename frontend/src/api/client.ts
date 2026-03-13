@@ -39,10 +39,10 @@ export function login(username: string, password: string) {
   });
 }
 
-export function register(username: string, password: string) {
+export function register(username: string, password: string, email?: string) {
   return request<TokenResponse>('/api/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password, email: email || undefined }),
   });
 }
 
@@ -252,6 +252,7 @@ export function changePassword(oldPassword: string, newPassword: string) {
 
 export interface UserProfile {
   username: string;
+  email: string;
   avatar_url: string;
   bio: string;
   created_at: string;
@@ -261,7 +262,7 @@ export function getProfileInfo() {
   return request<UserProfile>('/api/profile/info');
 }
 
-export function updateProfileInfo(data: { avatar_url?: string; bio?: string }) {
+export function updateProfileInfo(data: { avatar_url?: string; bio?: string; email?: string }) {
   return request('/api/profile/info', {
     method: 'PUT',
     body: JSON.stringify(data),

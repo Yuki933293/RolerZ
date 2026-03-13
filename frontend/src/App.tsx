@@ -40,6 +40,7 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [authUser, setAuthUser] = useState('');
   const [authPass, setAuthPass] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
   const [authError, setAuthError] = useState('');
   const [loading, setLoading] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
@@ -104,12 +105,17 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
     setLoading(true);
     setAuthError('');
     try {
-      const fn = authMode === 'login' ? apiLogin : apiRegister;
-      const res = await fn(authUser.trim(), authPass);
+      let res;
+      if (authMode === 'login') {
+        res = await apiLogin(authUser.trim(), authPass);
+      } else {
+        res = await apiRegister(authUser.trim(), authPass, authEmail.trim() || undefined);
+      }
       login(res.access_token, res.username, res.is_admin);
       setShowAuthModal(false);
       setAuthUser('');
       setAuthPass('');
+      setAuthEmail('');
     } catch (e: unknown) {
       setAuthError(e instanceof Error ? e.message : t('operationFailed') as string);
     } finally {
@@ -427,11 +433,20 @@ function TopBar({ sidebarOpen, onToggleSidebar, showAuthModal, setShowAuthModal 
             <div className="px-6 pb-6 space-y-3">
               <input
                 type="text"
-                placeholder={t('username') as string}
+                placeholder={authMode === 'login' ? t('usernameOrEmail') as string : t('username') as string}
                 value={authUser}
                 onChange={e => setAuthUser(e.target.value)}
                 className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
               />
+              {authMode === 'register' && (
+                <input
+                  type="email"
+                  placeholder={t('emailOptional') as string}
+                  value={authEmail}
+                  onChange={e => setAuthEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 text-[0.86rem] border border-border rounded-lg focus:border-accent focus:ring-2 focus:ring-accent/25 outline-none"
+                />
+              )}
               <input
                 type="password"
                 placeholder={t('password') as string}
